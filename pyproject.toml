@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
-    { name = "hxxim", email = "" }
+    { name = "hxxim" }
 ]
 keywords = ["ai", "chatbot", "persona", "digital-twin", "llm", "mcp"]
 classifiers = [
@@ -16,7 +16,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Communications :: Chat",
-    "Topic :: Artificial Intelligence",
 ]
 
 dependencies = [

@@ -10,7 +10,7 @@ app:
   # 隐私优先：所有数据本地处理
   data_dir: "./data"
   log_dir: "./data/logs"
-  log_level: "INFO"  # DEBUG / INFO / WARNING / ERROR
+  log_level: "INFO" # DEBUG / INFO / WARNING / ERROR
 
 # -----------------------------------------------------------------------------
 # AI 后端配置（策略模式，可切换）
@@ -28,9 +28,9 @@ ai:
 
   # OpenAI 兼容 API（Qwen / DeepSeek / 等）
   openai:
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    api_key: ""  # 从环境变量 VITBOT_OPENAI_KEY 读取
-    model: "qwen-plus"
+    base_url: "https://api.deepseek.com/v1"
+    api_key: "" # 从环境变量 VIRBOT_OPENAI_KEY 读取，勿在此硬编码
+    model: "deepseek-chat"
     timeout: 60
     max_retries: 3
 
@@ -129,14 +129,14 @@ pipeline:
 mcp:
   enabled: true
   builtin_tools:
-    - "memory.query"
-    - "memory.forget"
-    - "character.update"
+    - "memory_query"
+    - "memory_forget"
+    - "character_update"
     - "calculator"
   tool_discovery:
     enabled: true
     directories:
-      - "./vir-bot/core/mcp/tools/"
+      - "./vir_bot/core/mcp/tools/"
     auto_reload: true
   hardware:
     enabled: false

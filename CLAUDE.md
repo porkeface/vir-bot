@@ -9,7 +9,7 @@
 - AI后端可切换：Ollama / OpenAI兼容API / 本地模型
 
 ## 目录结构
-- `vir-bot/core/` — 核心抽象层（AI Provider、记忆、角色卡、MCP、Pipeline）
+- `vir_bot/core/` — 核心抽象层（AI Provider、记忆、角色卡、MCP、Pipeline）
 - `vir-bot/platforms/` — 平台适配器（QQ/微信/Discord）
 - `vir-bot/modules/` — 可插拔模块（Voice/Visual/Hardware）
 - `vir-bot/api/` — Web 控制台

@@ -1,0 +1,272 @@
+2026-04-21 17:33:33.366 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 17:33:33.368 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 17:33:35.001 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 17:35:29.386 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 17:35:29.386 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 17:35:29.432 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 17:41:51.222 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 17:41:51.222 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 17:41:51.274 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 17:42:11.878 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 17:42:12.136 | INFO     | __main__:_init_core:56 - AI Provider: openai/Pro/deepseek-ai/DeepSeek-V3.2 (健康: False)
+2026-04-21 17:45:55.269 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 17:45:55.269 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 17:45:55.273 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 17:45:55.274 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 17:45:55.274 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 17:45:55.274 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 17:45:55.274 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 17:45:55.274 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 17:45:55.274 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 17:45:55.275 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 18:22:16.056 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 18:22:16.056 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 18:22:16.135 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 18:22:17.565 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 18:22:17.784 | INFO     | __main__:_init_core:56 - AI Provider: openai/Pro/deepseek-ai/DeepSeek-V3.2 (健康: False)
+2026-04-21 18:22:38.046 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 18:22:38.047 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 18:22:38.047 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 18:22:38.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 18:22:38.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 18:22:38.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 18:22:38.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 18:22:38.050 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 18:22:38.050 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 18:22:38.050 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 18:25:38.248 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 18:25:38.248 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 18:25:38.311 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 18:25:39.637 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 18:25:39.905 | INFO     | __main__:_init_core:56 - AI Provider: openai/Pro/deepseek-ai/DeepSeek-V3.2 (健康: False)
+2026-04-21 18:25:59.562 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 18:25:59.562 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 18:25:59.562 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 18:25:59.565 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 18:25:59.565 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 18:25:59.565 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 18:25:59.565 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 18:25:59.565 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 18:25:59.565 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 18:25:59.565 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 18:26:04.410 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 18:31:59.507 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 18:31:59.510 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 18:31:59.579 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 18:32:01.122 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 18:32:01.358 | INFO     | __main__:_init_core:56 - AI Provider: openai/Pro/deepseek-ai/DeepSeek-V3.2 (健康: False)
+2026-04-21 18:32:24.611 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 18:32:24.612 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 18:32:24.618 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 18:32:24.619 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 18:32:24.619 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 18:32:24.619 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 18:32:24.619 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 18:32:24.619 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 18:32:24.619 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 18:32:24.623 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 18:32:24.881 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 18:32:24.884 | INFO     | __main__:lifespan:192 - === vir-bot 关闭中 ===
+2026-04-21 18:38:00.159 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 18:38:00.159 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 18:38:00.226 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 18:38:01.931 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 18:38:02.760 | INFO     | __main__:_init_core:56 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 18:38:25.046 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 18:38:25.046 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 18:38:25.050 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 18:38:25.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 18:38:25.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 18:38:25.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 18:38:25.050 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 18:38:25.050 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 18:38:25.050 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 18:38:25.050 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 18:38:25.361 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 18:38:25.364 | INFO     | __main__:lifespan:192 - === vir-bot 关闭中 ===
+2026-04-21 18:42:39.965 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 18:42:39.966 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 18:42:40.064 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 18:42:41.838 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 18:42:42.134 | INFO     | __main__:_init_core:56 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 18:43:03.548 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 18:43:03.550 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 18:43:03.553 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 18:43:03.554 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 18:43:03.554 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 18:43:03.554 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 18:43:03.554 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 18:43:03.554 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 18:43:03.555 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 18:43:03.555 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 18:43:03.905 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 19:05:07.352 | INFO     | __main__:lifespan:192 - === vir-bot 关闭中 ===
+2026-04-21 19:05:46.340 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:05:46.340 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 19:05:46.403 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:05:48.006 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 19:05:48.307 | INFO     | __main__:_init_core:56 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 19:06:08.502 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:06:08.503 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 19:06:08.505 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 19:06:08.505 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:06:08.508 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:06:08.508 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:06:08.508 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:06:08.508 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:06:08.508 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 19:06:08.508 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 19:06:08.864 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 19:17:08.214 | INFO     | __main__:lifespan:192 - === vir-bot 关闭中 ===
+2026-04-21 19:18:04.111 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:18:04.111 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 19:18:04.173 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:18:05.460 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 19:18:05.765 | INFO     | __main__:_init_core:56 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 19:18:26.030 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:18:26.032 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 19:18:26.036 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 19:18:26.038 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:18:26.038 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:18:26.038 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:18:26.039 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:18:26.039 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:18:26.043 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 19:18:26.043 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 19:18:26.347 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 19:25:08.521 | INFO     | __main__:lifespan:192 - === vir-bot 关闭中 ===
+2026-04-21 19:25:35.460 | INFO     | __main__:run:284 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:25:35.461 | INFO     | __main__:run:285 - API 文档:   http://0.0.0.0:7860/docs
+2026-04-21 19:25:35.547 | INFO     | __main__:lifespan:162 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:25:37.310 | INFO     | __main__:_init_core:51 - 初始化核心组件...
+2026-04-21 19:25:37.893 | INFO     | __main__:_init_core:56 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 19:25:59.245 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:25:59.246 | INFO     | __main__:_init_core:75 - 记忆系统就绪
+2026-04-21 19:25:59.249 | INFO     | __main__:_init_core:79 - 角色卡: 小雅
+2026-04-21 19:25:59.250 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:25:59.250 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:25:59.250 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:25:59.250 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:25:59.250 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:25:59.252 | INFO     | __main__:_init_core:85 - MCP 工具: 4 个已注册
+2026-04-21 19:25:59.252 | INFO     | __main__:_init_core:95 - 消息管道就绪
+2026-04-21 19:25:59.545 | INFO     | __main__:lifespan:187 - === vir-bot 启动完成 ===
+2026-04-21 19:39:29.289 | INFO     | __main__:lifespan:192 - === vir-bot 关闭中 ===
+2026-04-21 19:39:39.761 | INFO     | __main__:run:277 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:39:39.761 | INFO     | __main__:run:278 - API 文档: http://0.0.0.0:7860/docs
+2026-04-21 19:39:39.834 | INFO     | __main__:lifespan:168 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:39:41.208 | INFO     | __main__:_init_core:60 - 初始化核心组件...
+2026-04-21 19:39:41.765 | INFO     | __main__:_init_core:64 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 19:40:04.117 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:40:04.119 | INFO     | __main__:_init_core:82 - 记忆系统就绪
+2026-04-21 19:40:04.122 | INFO     | __main__:_init_core:85 - 角色卡: 小雅
+2026-04-21 19:40:04.124 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:40:04.125 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:40:04.125 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:40:04.126 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:40:04.127 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:40:04.128 | INFO     | __main__:_init_core:90 - MCP 工具: 4 个已注册
+2026-04-21 19:40:04.130 | INFO     | __main__:_init_core:99 - 消息管道就绪
+2026-04-21 19:40:04.411 | INFO     | __main__:lifespan:190 - === vir-bot 启动完成 ===
+2026-04-21 19:40:10.850 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 1): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:40:12.202 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 2): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:40:14.776 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 3): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:40:47.656 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 1): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:40:49.292 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 2): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:40:51.873 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 3): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:44:20.660 | INFO     | __main__:run:277 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:44:20.664 | INFO     | __main__:run:278 - API 文档: http://0.0.0.0:7860/docs
+2026-04-21 19:44:20.785 | INFO     | __main__:lifespan:168 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:44:22.287 | INFO     | __main__:_init_core:60 - 初始化核心组件...
+2026-04-21 19:44:22.497 | INFO     | __main__:_init_core:64 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 19:44:48.064 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:44:48.064 | INFO     | __main__:_init_core:82 - 记忆系统就绪
+2026-04-21 19:44:48.067 | INFO     | __main__:_init_core:85 - 角色卡: 小雅
+2026-04-21 19:44:48.067 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:44:48.067 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:44:48.067 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:44:48.067 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:44:48.067 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:44:48.071 | INFO     | __main__:_init_core:90 - MCP 工具: 4 个已注册
+2026-04-21 19:44:48.071 | INFO     | __main__:_init_core:99 - 消息管道就绪
+2026-04-21 19:44:48.379 | INFO     | __main__:lifespan:190 - === vir-bot 启动完成 ===
+2026-04-21 19:44:56.336 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 1): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:44:59.876 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 2): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:45:02.614 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 3): 400, message='Bad Request', url='https://api.deepseek.com/chat/completions'
+2026-04-21 19:49:13.317 | INFO     | __main__:lifespan:194 - === vir-bot 关闭中 ===
+2026-04-21 19:49:28.189 | INFO     | __main__:run:277 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:49:28.189 | INFO     | __main__:run:278 - API 文档: http://0.0.0.0:7860/docs
+2026-04-21 19:49:28.287 | INFO     | __main__:lifespan:168 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:49:29.794 | INFO     | __main__:_init_core:60 - 初始化核心组件...
+2026-04-21 19:49:30.002 | INFO     | __main__:_init_core:64 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 19:49:49.927 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:49:49.929 | INFO     | __main__:_init_core:82 - 记忆系统就绪
+2026-04-21 19:49:49.938 | INFO     | __main__:_init_core:85 - 角色卡: 小雅
+2026-04-21 19:49:49.939 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:49:49.939 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:49:49.942 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:49:49.942 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:49:49.942 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:49:49.944 | INFO     | __main__:_init_core:90 - MCP 工具: 4 个已注册
+2026-04-21 19:49:49.950 | INFO     | __main__:_init_core:99 - 消息管道就绪
+2026-04-21 19:49:50.202 | INFO     | __main__:lifespan:190 - === vir-bot 启动完成 ===
+2026-04-21 19:50:37.488 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 1): 400, message='Bad Request', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 19:50:38.815 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 2): 400, message='Bad Request', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 19:50:41.765 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 3): 400, message='Bad Request', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 19:58:32.511 | INFO     | __main__:lifespan:194 - === vir-bot 关闭中 ===
+2026-04-21 19:59:01.667 | INFO     | __main__:run:277 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 19:59:01.670 | INFO     | __main__:run:278 - API 文档: http://0.0.0.0:7860/docs
+2026-04-21 19:59:01.752 | INFO     | __main__:lifespan:168 - === vir-bot 0.1.0 启动 ===
+2026-04-21 19:59:03.378 | INFO     | __main__:_init_core:60 - 初始化核心组件...
+2026-04-21 19:59:03.624 | INFO     | __main__:_init_core:64 - AI Provider: openai/deepseek-chat (健康: False)
+2026-04-21 19:59:25.002 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 19:59:25.002 | INFO     | __main__:_init_core:82 - 记忆系统就绪
+2026-04-21 19:59:25.002 | INFO     | __main__:_init_core:85 - 角色卡: 小雅
+2026-04-21 19:59:25.005 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 19:59:25.005 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 19:59:25.005 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 19:59:25.005 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 19:59:25.005 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 19:59:25.005 | INFO     | __main__:_init_core:90 - MCP 工具: 4 个已注册
+2026-04-21 19:59:25.005 | INFO     | __main__:_init_core:99 - 消息管道就绪
+2026-04-21 19:59:25.264 | INFO     | __main__:lifespan:190 - === vir-bot 启动完成 ===
+2026-04-21 19:59:51.592 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 1): 401, message='Authorization Required', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 19:59:52.980 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 2): 401, message='Authorization Required', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 19:59:55.306 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 3): 401, message='Authorization Required', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 20:00:35.198 | INFO     | __main__:lifespan:194 - === vir-bot 关闭中 ===
+2026-04-21 20:00:58.421 | INFO     | __main__:run:277 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 20:00:58.421 | INFO     | __main__:run:278 - API 文档: http://0.0.0.0:7860/docs
+2026-04-21 20:00:58.511 | INFO     | __main__:lifespan:168 - === vir-bot 0.1.0 启动 ===
+2026-04-21 20:01:00.287 | INFO     | __main__:_init_core:60 - 初始化核心组件...
+2026-04-21 20:01:00.534 | INFO     | __main__:_init_core:64 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 20:01:22.012 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 20:01:22.014 | INFO     | __main__:_init_core:82 - 记忆系统就绪
+2026-04-21 20:01:22.017 | INFO     | __main__:_init_core:85 - 角色卡: 小雅
+2026-04-21 20:01:22.017 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: calculator
+2026-04-21 20:01:22.017 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.query
+2026-04-21 20:01:22.017 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: memory.forget
+2026-04-21 20:01:22.017 | DEBUG    | vir_bot.core.mcp:register:61 - 工具已注册: character.update
+2026-04-21 20:01:22.020 | INFO     | vir_bot.core.mcp:register_builtin_tools:283 - 内置工具注册完成: 4 个
+2026-04-21 20:01:22.021 | INFO     | __main__:_init_core:90 - MCP 工具: 4 个已注册
+2026-04-21 20:01:22.023 | INFO     | __main__:_init_core:99 - 消息管道就绪
+2026-04-21 20:01:22.372 | INFO     | __main__:lifespan:190 - === vir-bot 启动完成 ===
+2026-04-21 20:01:36.559 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 1): 400, message='Bad Request', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 20:01:37.797 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 2): 400, message='Bad Request', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 20:01:40.142 | ERROR    | vir_bot.core.pipeline:process:157 - AI 调用失败 (attempt 3): 400, message='Bad Request', url='https://api.deepseek.com/v1/chat/completions'
+2026-04-21 20:04:10.209 | INFO     | __main__:lifespan:194 - === vir-bot 关闭中 ===
+2026-04-21 20:12:14.663 | INFO     | __main__:run:277 - Web 控制台: http://0.0.0.0:7860
+2026-04-21 20:12:14.663 | INFO     | __main__:run:278 - API 文档: http://0.0.0.0:7860/docs
+2026-04-21 20:12:14.749 | INFO     | __main__:lifespan:168 - === vir-bot 0.1.0 启动 ===
+2026-04-21 20:12:16.456 | INFO     | __main__:_init_core:60 - 初始化核心组件...
+2026-04-21 20:12:16.647 | INFO     | __main__:_init_core:64 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-21 20:12:43.378 | INFO     | vir_bot.core.memory.long_term:__init__:46 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2
+2026-04-21 20:12:43.381 | INFO     | __main__:_init_core:82 - 记忆系统就绪
+2026-04-21 20:12:43.384 | INFO     | __main__:_init_core:85 - 角色卡: 小雅
+2026-04-21 20:12:43.384 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-21 20:12:43.384 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-21 20:12:43.384 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-21 20:12:43.384 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-21 20:12:43.384 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-21 20:12:43.384 | INFO     | __main__:_init_core:90 - MCP 工具: 4 个已注册
+2026-04-21 20:12:43.387 | INFO     | __main__:_init_core:99 - 消息管道就绪
+2026-04-21 20:12:43.585 | INFO     | __main__:lifespan:190 - === vir-bot 启动完成 ===
