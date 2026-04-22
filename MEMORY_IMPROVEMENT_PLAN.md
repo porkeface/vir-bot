@@ -15,15 +15,49 @@
 - 短期记忆窗口
 - 长期向量记忆
 - Wiki / 角色卡
-- 主动检索的主链路雏形
+- 主动检索的主链路
+- 结构化语义记忆存储
+- LLM 记忆写入器与更新器雏形
 
 但它仍不满足“长期记忆系统”的要求，主要缺口是：
 
-1. 用户事实没有独立的结构化存储。
-2. 事件记忆仍然混在 conversation 里。
-3. 事实抽取仍以规则为主，不稳定。
-4. 问题记忆和部分索引仍是进程内状态，不是持久化存储。
-5. 没有正式的记忆更新协议和评测基线。
+1. 事件记忆仍然混在 conversation 里。
+2. LLM writer 已接入，但还没有独立的模型路由和质量评估。
+3. 问题记忆和部分索引仍是进程内状态，不是持久化存储。
+4. 没有正式的 retrieval router。
+5. 没有正式的评测基线和回归测试集。
+
+---
+
+## 当前进度快照
+
+已完成：
+
+- `Phase 0` 的主要代码工作
+  - 每轮默认主动检索
+  - 检索按 `user_id` 过滤
+  - 回答加入“不知道就别编造”约束
+- `Phase 1` 的核心骨架
+  - 新增 `semantic_store.py`
+  - 新增结构化语义记忆 API
+  - 启动时持久化加载 `semantic_memory.json`
+- `Phase 3` 的第一版骨架
+  - 新增 `memory_writer.py`
+  - 新增 `memory_updater.py`
+  - `MemoryManager.add_interaction()` 已切到 writer -> updater -> semantic_store
+  - 问句污染语义记忆的问题已加防护
+
+未完成：
+
+- `Phase 1`
+  - 结构化记忆去重和冲突更新策略仍需增强
+  - 目前只覆盖有限 namespace / predicate
+- `Phase 2`
+  - 尚未实现 `episodic_store.py`
+- `Phase 4`
+  - 尚未实现正式 `retrieval_router.py`
+- `Phase 5`
+  - 尚未建立回归测试基线
 
 ---
 
@@ -67,7 +101,7 @@
 
 状态：
 
-- 已开始
+- 核心代码已完成，文档与验证已完成，剩余少量收尾
 
 ---
 
@@ -81,6 +115,7 @@
 
 - `vir_bot/core/memory/semantic_store.py`
 - `vir_bot/core/memory/memory_updater.py`
+- `vir_bot/api/routers/memory.py` 中的 semantic 查询接口
 
 核心能力：
 
@@ -111,15 +146,19 @@ class SemanticMemoryRecord:
 需要完成的任务：
 
 1. 定义 profile namespace 规范
-2. 设计结构化存储接口
-3. 实现基于 source 和 predicate 的去重
-4. 实现冲突更新策略
-5. 给 API 增加结构化记忆查看接口
+2. 增强基于 predicate 的替换和冲突更新
+3. 增加失效/删除审计能力
+4. 增加更细粒度的 semantic search 排序
+5. 完善 API 的调试和管理接口
 
 完成标准：
 
 - “我喜欢吃什么”优先从语义记忆返回
 - 不再单靠向量命中自由文本片段
+
+状态：
+
+- 已完成基础实现，仍需增强更新策略和管理能力
 
 ---
 
@@ -200,11 +239,16 @@ class EpisodeRecord:
 2. 限制输出 schema
 3. 增加失败回退
 4. 接入 `memory_updater`
+5. 为 writer 增加独立质量验证集
 
 完成标准：
 
 - 支持多表达方式抽取，而不是只识别固定句式
 - 用户偏好更新具备冲突处理
+
+状态：
+
+- 第一版已接入主链路，仍需调优 prompt 和验证质量
 
 ---
 
@@ -360,15 +404,17 @@ class EpisodeRecord:
 
 下一批代码工作建议集中在：
 
-1. 落 `semantic_store.py`
-2. 把“喜欢/不喜欢/身份/习惯”迁移成结构化存储
-3. 让 `pipeline` 回答偏好类问题时优先读结构化记忆
-4. 给 API 增加结构化记忆查询接口
+1. 落 `retrieval_router.py`
+2. 新增 `episodic_store.py`
+3. 把问题记忆持久化
+4. 给 `memory_writer` 补最小回归测试
+5. 给 semantic memory 增加人工修正接口
 
 如果这一步不做，系统仍会继续表现为：
 
-- 能存一些对话
-- 但对“你记得我喜欢吃什么吗”这种核心问题仍不够稳
+- 能记住部分用户事实
+- 但对“昨天说了什么”“最近聊过什么”仍不够稳
+- 记忆质量仍缺少系统级评估
 
 ---
 

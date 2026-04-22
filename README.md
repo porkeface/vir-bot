@@ -24,6 +24,21 @@ Python 3.11+ · FastAPI · asyncio · ChromaDB · Loguru
 - [MEMORY_ARCHITECTURE.md](./MEMORY_ARCHITECTURE.md)：长期目标架构、数据分层、读写路径
 - [MEMORY_IMPROVEMENT_PLAN.md](./MEMORY_IMPROVEMENT_PLAN.md)：分阶段落地计划
 
+## 当前进度
+
+- 已完成基础框架、角色卡、Wiki、人设注入、Web 控制台、MCP 工具骨架。
+- 记忆系统已完成第一批长期化改造：
+  - 每轮默认主动检索，不依赖关键词触发
+  - 长期记忆检索按 `user_id` 隔离
+  - 新增结构化语义记忆 `semantic_memory.json`
+  - 新增 `memory_writer + memory_updater` 第一版链路
+  - 已增加“查不到就不要编造”的回答约束
+- 尚未完成：
+  - `retrieval_router`
+  - `episodic_store`
+  - 问题记忆持久化
+  - 记忆系统评测与回归测试
+
 ## 快速开始
 
 ```bash
@@ -60,6 +75,9 @@ vir-bot/
 │   │   ├── memory/              # 记忆系统
 │   │   │   ├── short_term.py    # 短期记忆（asyncio Ring Buffer）
 │   │   │   ├── long_term.py     # 长期记忆（ChromaDB 向量检索）
+│   │   │   ├── semantic_store.py# 结构化语义记忆
+│   │   │   ├── memory_writer.py # LLM 记忆写入器（第一版）
+│   │   │   ├── memory_updater.py# 结构化记忆更新器（第一版）
 │   │   │   └── memory_manager.py# 记忆融合管理
 │   │   ├── character/           # 角色卡系统（SillyTavern兼容JSON）
 │   │   ├── mcp/                 # MCP工具协议
@@ -100,6 +118,8 @@ vir-bot/
 | `GET /api/memory` | 记忆统计（短期/长期条数） |
 | `GET /api/memory/recent` | 最近对话记录 |
 | `GET /api/memory/search` | 长期记忆向量检索 |
+| `GET /api/memory/semantic` | 查询结构化语义记忆 |
+| `GET /api/memory/semantic/search` | 搜索结构化语义记忆 |
 | `DELETE /api/memory` | 清空所有记忆 |
 | `GET /api/tools` | 列出所有 MCP 工具 |
 | `POST /api/tools/call` | 手动调用 MCP 工具 |
@@ -258,8 +278,9 @@ export VIRBOT_OPENAI_KEY=sk-xxxxxxxx
 | Phase 1 | 项目框架 + 核心抽象层 | ✅ 完成 |
 | Phase 2 | 平台适配器（QQ/Discord/微信） | ✅ 完成 |
 | Phase 3 | Web 控制台（7个API路由） | ✅ 完成 |
-| Phase 4 | 可插拔模块（Voice/Visual/Hardware） | ✅ 完成 |
-| Phase 5 | 硬件接入（ESP32 + MQTT） | 🔲 预留接口 |
+| Phase 4 | 记忆系统长期化第一阶段（semantic store + writer/updater） | ✅ 进行中 |
+| Phase 5 | episodic memory + retrieval router + 评测体系 | ⬜ 未开始 |
+| Phase 6 | 可插拔模块与硬件扩展（Voice/Visual/Hardware） | 🔲 预留接口 |
 
 架构设计详见 [CLAUDE.md](./CLAUDE.md)
 

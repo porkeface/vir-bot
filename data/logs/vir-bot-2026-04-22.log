@@ -517,3 +517,7 @@
 2026-04-22 17:23:13.623 | INFO     | __main__:_init_core:113 - MCP 工具: 4 个已注册
 2026-04-22 17:23:13.624 | INFO     | __main__:_init_core:122 - 消息管道就绪
 2026-04-22 17:23:13.765 | INFO     | __main__:lifespan:218 - === vir-bot 启动完成 ===
+2026-04-22 17:24:07.154 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:89 - Question classified: topic=general, type=other
+2026-04-22 17:24:07.275 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=a7dc248d-6636-4431-be53-630e5361721f, type=conversation, importance=0.5
+2026-04-22 17:24:52.553 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:89 - Question classified: topic=general, type=other
+2026-04-22 17:24:52.704 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=f8ba917b-5b28-4c37-915f-08f2cff6b9fb, type=conversation, importance=0.5
