@@ -54,7 +54,14 @@ async def _init_core(config):
     from vir_bot.core.ai_provider import AIProviderFactory
     from vir_bot.core.character import load_character_card
     from vir_bot.core.mcp import ToolRegistry, register_builtin_tools
-    from vir_bot.core.memory import LongTermMemory, MemoryManager, ShortTermMemory
+    from vir_bot.core.memory import (
+        LongTermMemory,
+        MemoryManager,
+        MemoryUpdater,
+        MemoryWriter,
+        SemanticMemoryStore,
+        ShortTermMemory,
+    )
     from vir_bot.core.pipeline import MessagePipeline
 
     logger.info("=" * 60)
@@ -80,9 +87,17 @@ async def _init_core(config):
             if config.memory.long_term.enabled
             else None
         )
+        semantic_store = SemanticMemoryStore(
+            persist_path=str(config.app.data_dir) + "/memory/semantic_memory.json"
+        )
+        memory_writer = MemoryWriter(ai_provider)
+        memory_updater = MemoryUpdater(semantic_store)
         memory_manager = MemoryManager(
             short_term=short_term,
             long_term=long_term,
+            semantic_store=semantic_store,
+            memory_writer=memory_writer,
+            memory_updater=memory_updater,
             window_size=config.memory.short_term.window_size,
             wiki_dir=str(config.app.data_dir) + "/wiki",
         )

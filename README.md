@@ -6,7 +6,7 @@
 
 - **AI人格蒸馏**：角色卡 + RAG知识库，让AI"像那个人一样说话"
 - **多平台接入**：QQ (OneBot v11/v12)、Discord、企业微信（预留）
-- **记忆系统**：短期上下文 (Ring Buffer) + 长期向量记忆 (ChromaDB)
+- **记忆系统**：短期上下文 + 长期记忆过渡实现（当前为 Ring Buffer + ChromaDB，长期目标见记忆架构文档）
 - **MCP工具协议**：内置工具 + 可扩展注册，支持 AI 主动调用工具
 - **可切换AI后端**：Ollama / OpenAI兼容API / 本地模型文件，一行配置切换
 - **Web 控制台**：角色卡管理、记忆查询、MCP工具测试、平台状态、日志查看
@@ -18,6 +18,11 @@
 ## 技术栈
 
 Python 3.11+ · FastAPI · asyncio · ChromaDB · Loguru
+
+## 记忆架构文档
+
+- [MEMORY_ARCHITECTURE.md](./MEMORY_ARCHITECTURE.md)：长期目标架构、数据分层、读写路径
+- [MEMORY_IMPROVEMENT_PLAN.md](./MEMORY_IMPROVEMENT_PLAN.md)：分阶段落地计划
 
 ## 快速开始
 

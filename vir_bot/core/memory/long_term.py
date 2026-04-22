@@ -366,33 +366,27 @@ class LongTermMemory:
     # =================
 
     def _apply_filters(self, records: list[MemoryRecord], filters: dict) -> list[MemoryRecord]:
-        """应用过滤条件
-
-        filters 支持的格式:
-            {
-                "type": ["personality", "habit"],
-                "importance_min": 0.7,
-                "importance_max": 1.0,
-            }
-        """
+        """应用过滤条件。"""
         filtered = records
 
-        # 按类型过滤
         if "type" in filters:
             allowed_types = filters["type"]
             if isinstance(allowed_types, str):
                 allowed_types = [allowed_types]
             filtered = [r for r in filtered if r.type in allowed_types]
 
-        # 按最小重要性过滤
         if "importance_min" in filters:
             min_imp = filters["importance_min"]
             filtered = [r for r in filtered if r.importance >= min_imp]
 
-        # 按最大重要性过滤
         if "importance_max" in filters:
             max_imp = filters["importance_max"]
             filtered = [r for r in filtered if r.importance <= max_imp]
+
+        for key, value in filters.items():
+            if key in {"type", "importance_min", "importance_max"}:
+                continue
+            filtered = [r for r in filtered if r.metadata.get(key) == value]
 
         return filtered
 
@@ -492,3 +486,4 @@ class LongTermMemory:
                 )
 
         return export_data
+

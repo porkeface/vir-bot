@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "updated_at": 1776849015.3832266,
+  "records": [
+    {
+      "memory_id": "486284bf-bc27-4e52-94fb-4cf15a86ed13",
+      "user_id": "u1",
+      "namespace": "profile.preference",
+      "subject": "user",
+      "predicate": "likes",
+      "object": "火锅",
+      "confidence": 0.95,
+      "source_text": "我喜欢吃火锅",
+      "source_message_id": "m1",
+      "created_at": 1776849015.3832266,
+      "updated_at": 1776849015.3832266,
+      "is_active": true
+    }
+  ]
+}
