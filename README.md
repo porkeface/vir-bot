@@ -38,7 +38,7 @@ export VIRBOT_OPENAI_KEY=sk-xxxxxxxx
 # 编辑 data/characters/default.json（SillyTavern JSON格式）
 
 # 4. 启动
-python -m vir-bot.main
+python -m vir_bot.main
 
 # 5. 打开 Web 控制台
 # http://localhost:7860
@@ -49,7 +49,7 @@ python -m vir-bot.main
 
 ```
 vir-bot/
-├── vir-bot/
+├── vir_bot/
 │   ├── core/                    # 核心抽象层（与平台/硬件无关）
 │   │   ├── ai_provider.py       # AI策略模式（Ollama/OpenAI/本地模型）
 │   │   ├── memory/              # 记忆系统
@@ -59,6 +59,7 @@ vir-bot/
 │   │   ├── character/           # 角色卡系统（SillyTavern兼容JSON）
 │   │   ├── mcp/                 # MCP工具协议
 │   │   │   └── __init__.py      # 内置工具：计算器/记忆查询/角色卡更新
+│   │   ├── wiki/                # Wiki知识库（角色人设卡解析）
 │   │   └── pipeline/            # 消息处理管道（核心编排器）
 │   ├── platforms/               # 平台适配器（平台隔离）
 │   │   ├── qq_adapter.py        # QQ (OneBot v11/v12 WebSocket)
@@ -74,9 +75,10 @@ vir-bot/
 │   ├── main.py                  # 应用入口 + 生命周期管理
 │   └── utils/                   # 日志等工具
 ├── data/
-│   ├── characters/              # 角色卡（.json）
+│   ├── characters/              # 角色卡（.json / .md）
 │   ├── knowledge/               # RAG 知识库原始文档
 │   ├── memory/chroma_db/        # ChromaDB 持久化
+│   ├── wiki/                    # Wiki 知识库
 │   └── logs/                    # 日志文件
 ├── config.yaml                  # 全局配置（所有配置集中于此）
 ├── requirements.txt             # Python 依赖
@@ -171,6 +173,79 @@ class MyTool(Tool):
 registry.register(MyTool())
 ```
 
+## 故障排除
+
+### 1. SyntaxError: invalid syntax (中文双引号错误)
+
+**问题**：启动时出现 `SyntaxError: invalid syntax. Perhaps you forgot a comma?`
+
+**原因**：代码中使用了中文双引号 `""` 而不是英文双引号 `""`
+
+**解决方案**：
+- 检查 `vir_bot/core/wiki/__init__.py` 等文件
+- 将所有中文引号 `""` 替换为英文引号 `""`
+- 使用 IDE 的查找替换功能（Ctrl+H）
+
+### 2. ImportError: No module named 'xxx'
+
+**问题**：导入模块失败
+
+**解决方案**：
+```bash
+# 重新安装依赖
+pip install -r requirements.txt --upgrade
+
+# 或使用 UV 包管理器
+uv pip install -r requirements.txt
+```
+
+### 3. ChromaDB 连接失败
+
+**问题**：`ChromaDB connection error` 或 `Cannot connect to Chroma server`
+
+**解决方案**：
+```bash
+# 清除 ChromaDB 缓存
+rm -rf data/memory/chroma_db/
+
+# 重新启动应用
+python -m vir_bot.main
+```
+
+### 4. AI Provider 无响应
+
+**问题**：`AI provider unavailable` 或超时
+
+**解决方案**：
+```bash
+# 如果使用 Ollama
+ollama serve  # 先启动 Ollama 服务
+
+# 验证连接
+curl http://localhost:11434/api/tags
+
+# 如果使用 OpenAI API
+export VIRBOT_OPENAI_KEY=sk-xxxxxxxx
+```
+
+### 5. Web 控制台无法访问
+
+**问题**：`http://localhost:7860` 无法打开
+
+**解决方案**：
+- 检查防火墙设置
+- 确认应用正常启动（查看日志中的 `Web 控制台: http://0.0.0.0:7860` 信息）
+- 尝试 `http://127.0.0.1:7860` 或 `http://localhost:7860/docs`
+
+### 6. 角色卡文件格式错误
+
+**问题**：`Error loading character` 或解析失败
+
+**解决方案**：
+- 确保角色卡为有效的 JSON 或 Markdown 格式
+- 检查文件编码为 UTF-8
+- 参考 `data/characters/template.md` 的模板格式
+
 ## 项目阶段
 
 | 阶段 | 内容 | 状态 |
@@ -181,7 +256,7 @@ registry.register(MyTool())
 | Phase 4 | 可插拔模块（Voice/Visual/Hardware） | ✅ 完成 |
 | Phase 5 | 硬件接入（ESP32 + MQTT） | 🔲 预留接口 |
 
-架构设计详见 [ARCHITECTURE.md](./ARCHITECTURE.md)（可由本项目生成）
+架构设计详见 [CLAUDE.md](./CLAUDE.md)
 
 ## 许可证
 

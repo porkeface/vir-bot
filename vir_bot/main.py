@@ -1,4 +1,5 @@
 """vir-bot 主入口"""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,13 +7,12 @@ import sys
 from contextlib import asynccontextmanager
 from typing import Any
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
-from vir_bot.config import load_config, get_config
-from vir_bot.utils.logger import setup_logger, logger
-
+from vir_bot.config import get_config, load_config
+from vir_bot.utils.logger import logger, setup_logger
 
 # =============================================================================
 # 全局状态（放在 sys.modules 里确保跨模块实例一致）
@@ -52,51 +52,62 @@ app_state = _AppState()
 
 async def _init_core(config):
     from vir_bot.core.ai_provider import AIProviderFactory
-    from vir_bot.core.memory import ShortTermMemory, LongTermMemory, MemoryManager
     from vir_bot.core.character import load_character_card
     from vir_bot.core.mcp import ToolRegistry, register_builtin_tools
+    from vir_bot.core.memory import LongTermMemory, MemoryManager, ShortTermMemory
     from vir_bot.core.pipeline import MessagePipeline
 
+    logger.info("=" * 60)
     logger.info("初始化核心组件...")
+    logger.info("=" * 60)
 
     ai_provider = AIProviderFactory.create(config.ai)
-    healthy = await ai_provider.health_check()
-    logger.info(f"AI Provider: {config.ai.provider}/{ai_provider.model_name} (健康: {healthy})")
+    try:
+        healthy = await ai_provider.health_check()
+        logger.info(f"AI Provider: {config.ai.provider}/{ai_provider.model_name} (健康: {healthy})")
 
-    short_term = ShortTermMemory(max_turns=config.memory.short_term.max_turns)
-    long_term = (
-        LongTermMemory(
-            persist_dir=config.memory.long_term.persist_dir,
-            collection_name=config.memory.long_term.collection_name,
-            embedding_model=config.memory.long_term.embedding_model,
-            top_k=config.memory.long_term.top_k,
+        character_card = load_character_card(config.character.card_path)
+        logger.info(f"角色卡已加载: {character_card.name}")
+
+        short_term = ShortTermMemory(max_turns=config.memory.short_term.max_turns)
+        long_term = (
+            LongTermMemory(
+                persist_dir=config.memory.long_term.persist_dir,
+                collection_name=config.memory.long_term.collection_name,
+                embedding_model=config.memory.long_term.embedding_model,
+                top_k=config.memory.long_term.top_k,
+            )
+            if config.memory.long_term.enabled
+            else None
         )
-        if config.memory.long_term.enabled
-        else None
-    )
-    memory_manager = MemoryManager(
-        short_term=short_term,
-        long_term=long_term,
-        window_size=config.memory.short_term.window_size,
-    )
-    logger.info("记忆系统就绪")
+        memory_manager = MemoryManager(
+            short_term=short_term,
+            long_term=long_term,
+            window_size=config.memory.short_term.window_size,
+            wiki_dir=str(config.app.data_dir) + "/wiki",
+        )
 
-    character_card = load_character_card(config.character.card_path)
-    logger.info(f"角色卡: {character_card.name}")
+        await memory_manager.set_character(character_card.name)
 
-    mcp_registry = ToolRegistry()
-    if config.mcp.enabled:
-        register_builtin_tools(mcp_registry, memory_manager, character_card)
-        logger.info(f"MCP 工具: {mcp_registry.count()} 个已注册")
+        logger.info("记忆系统就绪")
+        logger.info(f"Wiki 系统已初始化，当前角色: {character_card.name}")
 
-    pipeline = MessagePipeline(
-        ai_provider=ai_provider,
-        memory_manager=memory_manager,
-        character_card=character_card,
-        mcp_registry=mcp_registry,
-        config=config.pipeline,
-    )
-    logger.info("消息管道就绪")
+        mcp_registry = ToolRegistry()
+        if config.mcp.enabled:
+            register_builtin_tools(mcp_registry, memory_manager, character_card)
+            logger.info(f"MCP 工具: {mcp_registry.count()} 个已注册")
+
+        pipeline = MessagePipeline(
+            ai_provider=ai_provider,
+            memory_manager=memory_manager,
+            character_card=character_card,
+            mcp_registry=mcp_registry,
+            config=config.pipeline,
+        )
+        logger.info("消息管道就绪")
+    except Exception:
+        await ai_provider.close()
+        raise
 
     return {
         "ai_provider": ai_provider,
@@ -108,8 +119,8 @@ async def _init_core(config):
 
 
 async def _init_platforms(config, pipeline):
-    from vir_bot.platforms.qq_adapter import QQAdapter
     from vir_bot.platforms.discord_adapter import DiscordAdapter
+    from vir_bot.platforms.qq_adapter import QQAdapter
 
     adapters = {}
     if config.platforms.qq.enabled:
@@ -134,6 +145,7 @@ async def _init_platforms(config, pipeline):
 
 async def _init_hardware(config):
     from vir_bot.modules.hardware import create_hardware_module
+
     hw = create_hardware_module(config.mcp)
     if hw:
         await hw.initialize()
@@ -143,6 +155,7 @@ async def _init_hardware(config):
 
 async def _init_visual(config):
     from vir_bot.modules.visual import create_visual_module
+
     vis = create_visual_module(config.visual)
     if vis:
         await vis.start_auto_capture(config.visual.camera.capture_interval)
@@ -225,7 +238,7 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
-    from vir_bot.api.routers import character, memory, config_router, tools, logs, platforms, chat
+    from vir_bot.api.routers import character, chat, config_router, logs, memory, platforms, tools
 
     app.include_router(character.router, prefix="/api/character", tags=["角色卡"])
     app.include_router(memory.router, prefix="/api/memory", tags=["记忆"])
@@ -240,7 +253,9 @@ def create_app() -> FastAPI:
         return {
             "status": "ok",
             "version": config.app.version,
-            "ai_healthy": await app_state.ai_provider.health_check() if app_state.ai_provider else False,
+            "ai_healthy": await app_state.ai_provider.health_check()
+            if app_state.ai_provider
+            else False,
         }
 
     @app.get("/")
@@ -265,6 +280,7 @@ def run():
     setup_logger(level=config.app.log_level, log_dir=config.app.log_dir)
 
     import os
+
     os.makedirs(f"{config.app.data_dir}/cache", exist_ok=True)
 
     # 在 __main__ 模块注册 app_state（关键！）

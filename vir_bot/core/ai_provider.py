@@ -295,6 +295,11 @@ class OpenAIProvider(AIProvider):
         except Exception:
             return False
 
+    async def close(self) -> None:
+        if self._client is not None and not self._client.closed:
+            await self._client.close()
+        self._client = None
+
     @property
     def model_name(self) -> str:
         return self.config.openai.model

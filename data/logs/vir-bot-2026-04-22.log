@@ -1,0 +1,90 @@
+2026-04-22 08:30:02.313 | INFO     | __main__:run:291 - Web 控制台: http://0.0.0.0:7860
+2026-04-22 08:30:02.313 | INFO     | __main__:run:292 - API 文档: http://0.0.0.0:7860/docs
+2026-04-22 08:30:02.457 | INFO     | __main__:lifespan:179 - === vir-bot 0.1.0 启动 ===
+2026-04-22 09:10:34.056 | INFO     | __main__:run:291 - Web 控制台: http://0.0.0.0:7860
+2026-04-22 09:10:34.058 | INFO     | __main__:run:292 - API 文档: http://0.0.0.0:7860/docs
+2026-04-22 09:10:34.117 | INFO     | __main__:lifespan:179 - === vir-bot 0.1.0 启动 ===
+2026-04-22 09:14:02.189 | INFO     | __main__:run:291 - Web 控制台: http://0.0.0.0:7860
+2026-04-22 09:14:02.189 | INFO     | __main__:run:292 - API 文档: http://0.0.0.0:7860/docs
+2026-04-22 09:14:02.237 | INFO     | __main__:lifespan:179 - === vir-bot 0.1.0 启动 ===
+2026-04-22 09:14:03.199 | INFO     | __main__:_init_core:60 - ============================================================
+2026-04-22 09:14:03.199 | INFO     | __main__:_init_core:61 - 初始化核心组件...
+2026-04-22 09:14:03.199 | INFO     | __main__:_init_core:62 - ============================================================
+2026-04-22 09:14:03.529 | INFO     | __main__:_init_core:66 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-22 09:14:54.924 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-22 09:14:54.927 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-22 09:14:54.927 | INFO     | vir_bot.core.memory.memory_manager:__init__:36 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-22 09:20:50.385 | INFO     | __main__:run:293 - Web 控制台: http://0.0.0.0:7860
+2026-04-22 09:20:50.385 | INFO     | __main__:run:294 - API 文档: http://0.0.0.0:7860/docs
+2026-04-22 09:20:50.441 | INFO     | __main__:lifespan:181 - === vir-bot 0.1.0 启动 ===
+2026-04-22 09:20:51.537 | INFO     | __main__:_init_core:60 - ============================================================
+2026-04-22 09:20:51.537 | INFO     | __main__:_init_core:61 - 初始化核心组件...
+2026-04-22 09:20:51.538 | INFO     | __main__:_init_core:62 - ============================================================
+2026-04-22 09:20:52.360 | INFO     | __main__:_init_core:67 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-22 09:20:52.362 | INFO     | __main__:_init_core:70 - 角色卡已加载: 小雅
+2026-04-22 09:21:11.954 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-22 09:21:11.955 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-22 09:21:11.955 | INFO     | vir_bot.core.memory.memory_manager:__init__:36 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-22 09:21:11.955 | WARNING  | vir_bot.core.wiki:load_character:201 - Character file not found: data\wiki\characters\小雅.md
+2026-04-22 09:21:11.955 | WARNING  | vir_bot.core.memory.memory_manager:set_character:46 - Character not found: 小雅
+2026-04-22 09:21:11.955 | INFO     | __main__:_init_core:92 - 记忆系统就绪
+2026-04-22 09:21:11.955 | INFO     | __main__:_init_core:93 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-22 09:21:11.957 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-22 09:21:11.957 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-22 09:21:11.957 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-22 09:21:11.957 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-22 09:21:11.957 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-22 09:21:11.957 | INFO     | __main__:_init_core:98 - MCP 工具: 4 个已注册
+2026-04-22 09:21:11.957 | INFO     | __main__:_init_core:107 - 消息管道就绪
+2026-04-22 09:21:12.157 | INFO     | __main__:lifespan:203 - === vir-bot 启动完成 ===
+2026-04-22 09:24:30.062 | INFO     | __main__:run:293 - Web 控制台: http://0.0.0.0:7860
+2026-04-22 09:24:30.062 | INFO     | __main__:run:294 - API 文档: http://0.0.0.0:7860/docs
+2026-04-22 09:24:30.110 | INFO     | __main__:lifespan:181 - === vir-bot 0.1.0 启动 ===
+2026-04-22 09:24:31.094 | INFO     | __main__:_init_core:60 - ============================================================
+2026-04-22 09:24:31.094 | INFO     | __main__:_init_core:61 - 初始化核心组件...
+2026-04-22 09:24:31.095 | INFO     | __main__:_init_core:62 - ============================================================
+2026-04-22 09:24:31.384 | INFO     | __main__:_init_core:67 - AI Provider: openai/deepseek-chat (健康: False)
+2026-04-22 09:24:31.384 | INFO     | __main__:_init_core:70 - 角色卡已加载: 小雅
+2026-04-22 09:24:49.693 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-22 09:24:49.695 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-22 09:24:49.695 | INFO     | vir_bot.core.memory.memory_manager:__init__:36 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-22 09:24:49.695 | WARNING  | vir_bot.core.wiki:load_character:201 - Character file not found: data\wiki\characters\小雅.md
+2026-04-22 09:24:49.695 | WARNING  | vir_bot.core.memory.memory_manager:set_character:46 - Character not found: 小雅
+2026-04-22 09:24:49.695 | INFO     | __main__:_init_core:92 - 记忆系统就绪
+2026-04-22 09:24:49.698 | INFO     | __main__:_init_core:93 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-22 09:24:49.698 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-22 09:24:49.698 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-22 09:24:49.698 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-22 09:24:49.698 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-22 09:24:49.698 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-22 09:24:49.700 | INFO     | __main__:_init_core:98 - MCP 工具: 4 个已注册
+2026-04-22 09:24:49.701 | INFO     | __main__:_init_core:107 - 消息管道就绪
+2026-04-22 09:24:49.823 | INFO     | __main__:lifespan:203 - === vir-bot 启动完成 ===
+2026-04-22 09:24:49.826 | INFO     | __main__:lifespan:207 - === vir-bot 关闭中 ===
+2026-04-22 09:25:07.980 | INFO     | __main__:run:293 - Web 控制台: http://0.0.0.0:7860
+2026-04-22 09:25:07.982 | INFO     | __main__:run:294 - API 文档: http://0.0.0.0:7860/docs
+2026-04-22 09:25:08.028 | INFO     | __main__:lifespan:181 - === vir-bot 0.1.0 启动 ===
+2026-04-22 09:25:08.976 | INFO     | __main__:_init_core:60 - ============================================================
+2026-04-22 09:25:08.980 | INFO     | __main__:_init_core:61 - 初始化核心组件...
+2026-04-22 09:25:08.980 | INFO     | __main__:_init_core:62 - ============================================================
+2026-04-22 09:25:09.396 | INFO     | __main__:_init_core:67 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-22 09:25:09.397 | INFO     | __main__:_init_core:70 - 角色卡已加载: 小雅
+2026-04-22 09:25:28.336 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-22 09:25:28.338 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-22 09:25:28.338 | INFO     | vir_bot.core.memory.memory_manager:__init__:36 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-22 09:25:28.338 | WARNING  | vir_bot.core.wiki:load_character:201 - Character file not found: data\wiki\characters\小雅.md
+2026-04-22 09:25:28.338 | WARNING  | vir_bot.core.memory.memory_manager:set_character:46 - Character not found: 小雅
+2026-04-22 09:25:28.338 | INFO     | __main__:_init_core:92 - 记忆系统就绪
+2026-04-22 09:25:28.342 | INFO     | __main__:_init_core:93 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-22 09:25:28.342 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-22 09:25:28.342 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-22 09:25:28.342 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-22 09:25:28.342 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-22 09:25:28.342 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-22 09:25:28.345 | INFO     | __main__:_init_core:98 - MCP 工具: 4 个已注册
+2026-04-22 09:25:28.345 | INFO     | __main__:_init_core:107 - 消息管道就绪
+2026-04-22 09:25:28.481 | INFO     | __main__:lifespan:203 - === vir-bot 启动完成 ===
+2026-04-22 09:25:28.484 | INFO     | __main__:lifespan:207 - === vir-bot 关闭中 ===
+2026-04-22 09:27:00.514 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=d7f3a478-d175-418b-a4ac-395a6d2898d7, type=conversation, importance=0.5
+2026-04-22 09:28:04.254 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=51b6652e-7d54-4c8d-bc7d-cd11302b1b40, type=conversation, importance=0.5
+2026-04-22 09:35:12.108 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=02c1cb41-4247-4ff8-8ea1-c5f92230505e, type=conversation, importance=0.5
