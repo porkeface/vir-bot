@@ -6,7 +6,10 @@
       "Bash(python -c \"print\\('hello'\\)\")",
       "Bash(.venv/Scripts/python.exe -m vir_bot.main)",
       "Bash(curl -s -X POST \"http://localhost:7860/api/chat\" -H \"Content-Type: application/json\" -d \"{\\\\\"content\\\\\":\\\\\"你好\\\\\"}\" --max-time 60)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

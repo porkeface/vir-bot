@@ -253,7 +253,16 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
-    from vir_bot.api.routers import character, chat, config_router, logs, memory, platforms, tools
+    from vir_bot.api.routers import (
+        character,
+        chat,
+        config_router,
+        distillation,
+        logs,
+        memory,
+        platforms,
+        tools,
+    )
 
     app.include_router(character.router, prefix="/api/character", tags=["角色卡"])
     app.include_router(memory.router, prefix="/api/memory", tags=["记忆"])
@@ -261,6 +270,25 @@ def create_app() -> FastAPI:
     app.include_router(tools.router, prefix="/api/tools", tags=["工具"])
     app.include_router(logs.router, prefix="/api/logs", tags=["日志"])
     app.include_router(platforms.router, prefix="/api/platforms", tags=["平台"])
+    app.include_router(distillation.router, prefix="/api/distillation", tags=["蒸馏"])
+    # Serve the distillation static UI (if present)
+    # StaticFiles is imported here to avoid changing top-level imports; this will
+    # mount the directory vir_bot/api/static/distillation at the route /distillation.
+    try:
+        from pathlib import Path
+
+        from fastapi.staticfiles import StaticFiles
+
+        static_dir = Path(__file__).parent / "api" / "static" / "distillation"
+        if static_dir.exists():
+            app.mount(
+                "/distillation",
+                StaticFiles(directory=str(static_dir), html=True),
+                name="distillation",
+            )
+    except Exception:
+        # If StaticFiles or the directory is not available, continue without mounting.
+        pass
     app.include_router(chat.router, prefix="/api/chat", tags=["对话"])
 
     @app.get("/health")
