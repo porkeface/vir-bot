@@ -1,724 +1,1081 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Persona Distillation — 蒸馏控制台</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --secondary: #64748b;
-      --accent: #06b6d4;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --border: #e2e8f0;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --radius: 12px;
-      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text-main);
-      line-height: 1.5;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Prevents flickering before Vue loads */
-    [v-cloak] { display: none; }
-
-    .loading-fallback {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-weight: 500;
-      color: var(--secondary);
-    }
-
-    .app-wrapper {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    header {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    header .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin: 0;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .main-content {
-      flex: 1;
-      max-width: 1400px;
-      width: 100%;
-      margin: 2rem auto;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 2rem;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-header {
-      padding: 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 1rem;
-      margin: 0;
-    }
-
-    .card-body {
-      padding: 1.25rem;
-    }
-
-    /* Form Styles */
-    .form-group { margin-bottom: 1.25rem; }
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: var(--text-main);
-    }
-
-    input[type="text"], input[type="number"], select, textarea {
-      width: 100%;
-      padding: 0.625rem 0.875rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.875rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    .file-upload {
-      border: 2px dashed var(--border);
-      padding: 1.5rem;
-      border-radius: 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .file-upload:hover { background-color: #f1f5f9; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.625rem 1rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-    }
-
-    .btn-primary {
-      background-color: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover { background-color: var(--primary-hover); }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .btn-outline {
-      background-color: white;
-      border-color: var(--border);
-      color: var(--text-main);
-    }
-
-    .btn-outline:hover { background-color: #f8fafc; border-color: var(--secondary); }
-
-    .btn-danger {
-      background-color: var(--danger);
-      color: white;
-    }
-
-    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.75rem; }
-
-    /* Job List Styles */
-    .job-list {
-      max-height: 600px;
-      overflow-y: auto;
-    }
-
-    .job-item {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .job-item:last-child { border-bottom: none; }
-    .job-item:hover { background-color: #f8fafc; }
-    .job-item.active { background-color: #f1f5f9; border-left: 4px solid var(--primary); }
-
-    .job-info { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
-    .job-name { font-weight: 600; font-size: 0.9375rem; }
-    .job-status { font-size: 0.75rem; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: #e2e8f0; }
-    .status-running { background: #dcfce7; color: #166534; }
-    .status-done { background: #dcfce7; color: #166534; }
-    .status-error { background: #fee2e2; color: #991b1b; }
-
-    .progress-bar {
-      height: 6px;
-      background: #e2e8f0;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      transition: width 0.3s ease;
-    }
-
-    /* Logs & Preview */
-    .logs-container {
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 1rem;
-      border-radius: 8px;
-      font-family: 'Fira Code', 'Courier New', monospace;
-      font-size: 0.8125rem;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-top: 0.5rem;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    .preview-container {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-      max-height: 600px;
-      overflow-y: auto;
-      margin-top: 0.5rem;
-    }
-
-    .preview-container h1, .preview-container h2, .preview-container h3 {
-      color: var(--text-main);
-      margin-top: 1.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .metric-card {
-      background: #f8fafc;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      text-align: center;
-    }
-
-    .metric-value { font-size: 1.125rem; font-weight: 700; color: var(--primary); }
-    .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-
-    footer {
-      padding: 2rem;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      border-top: 1px solid var(--border);
-      background: white;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: #f1f5f9;
-      color: var(--text-main);
-    }
-
-    .toast-container {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .toast {
-      padding: 1rem 1.5rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-      border-left: 4px solid var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      animation: slideIn 0.3s ease-out;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    .grid-2-cols {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 1024px) {
-      .main-content { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <!-- Visible before Vue mounts -->
-    <div v-if="!mounted" class="loading-fallback">
-      正在加载蒸馏控制台... (若长时间无响应请检查网络)
-    </div>
-
-    <!-- Main UI -->
-    <div class="app-wrapper" v-cloak v-if="mounted">
-      <header>
-        <div class="container">
-          <h1>Persona Distillation 控制台</h1>
-          <div class="header-actions">
-            <button class="btn btn-outline btn-sm" @click="refreshJobs">
-              刷新任务
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main class="main-content">
-        <!-- Sidebar: Config & Jobs -->
-        <div class="sidebar">
-          <!-- Upload Card -->
-          <div class="card" style="margin-bottom: 2rem;">
-            <div class="card-header">
-              <h2 class="card-title">1. 开始新任务</h2>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label>上传聊天记录</label>
-                <div class="file-upload" @click="$refs.fileInput.click()">
-                  <div v-if="!upload.filename" style="color: var(--text-muted)">
-                    点击或拖拽文件上传<br>
-                    <small>(JSON, NDJSON, TXT, LOG)</small>
-                  </div>
-                  <div v-else>
-                    <span class="badge">{{ upload.filename }}</span>
-                    <div style="font-size: 0.75rem; color: var(--success); margin-top: 0.5rem;">文件就绪</div>
-                  </div>
-                  <input type="file" ref="fileInput" @change="onFileChange" hidden accept=".json,.ndjson,.txt,.log,.chat,.html" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>角色名称</label>
-                <input type="text" v-model="params.name" placeholder="例如：小雅" />
-              </div>
-
-              <div class="grid-2-cols">
-                <div class="form-group">
-                  <label>解析器</label>
-                  <select v-model="params.parser">
-                    <option value="">自动 (Generic)</option>
-                    <option value="generic">Generic</option>
-                    <option value="wechat">WeChat</option>
-                    <option value="qq">QQ</option>
-                    <option value="discord">Discord</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>超时时间</label>
-                  <select v-model="params.timeout">
-                    <option :value="60">60s</option>
-                    <option :value="120">120s</option>
-                    <option :value="300">300s</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group" style="display: flex; gap: 1rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0;">
-                  <input type="checkbox" v-model="params.evaluate" /> 运行评估
-                </label>
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0;">
-                  <input type="checkbox" v-model="params.dry_run" /> 仅预览
-                </label>
-              </div>
-
-              <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-primary" style="flex: 1;" @click="startJob" :disabled="starting || !upload.file_id">
-                  {{ starting ? '排队中...' : '开始蒸馏' }}
-                </button>
-                <button class="btn btn-outline" @click="clearUploaded">清除</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Job List Card -->
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">任务列表</h2>
-              <span class="badge">{{ jobs.length }}</span>
-            </div>
-            <div class="job-list">
-              <div v-if="jobs.length === 0" style="padding: 2rem; text-align: center; color: var(--text-muted);">
-                暂无历史任务
-              </div>
-              <div v-for="j in jobs" 
-                   :key="j.job_id" 
-                   class="job-item" 
-                   :class="{ active: selectedJobId === j.job_id }"
-                   @click="selectJob(j.job_id)">
-                <div class="job-info">
-                  <span class="job-name">{{ j.name || '未命名' }}</span>
-                  <span class="job-status" :class="'status-' + j.status">{{ j.status }}</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" :style="{ width: (j.progress * 100) + '%' }"></div>
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; display: flex; justify-content: space-between;">
-                  <span>{{ j.job_id.substring(0, 8) }}...</span>
-                  <span>{{ (j.progress * 100).toFixed(0) }}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Detail Panel -->
-        <div class="detail-panel">
-          <div v-if="selected" class="card">
-            <div class="card-header">
-              <div>
-                <h2 class="card-title">{{ selected.name }}</h2>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">ID: {{ selected.job_id }}</div>
-              </div>
-              <div style="display: flex; gap: 0.5rem;">
-                <a v-if="selected.status === 'done'" 
-                   :href="downloadUrl(selected.job_id, 'markdown')" 
-                   target="_blank" 
-                   class="btn btn-outline btn-sm">下载 Markdown</a>
-                <a v-if="selected.status === 'done'" 
-                   :href="downloadUrl(selected.job_id, 'json')" 
-                   class="btn btn-outline btn-sm">下载 JSON</a>
-                <button class="btn btn-danger btn-sm" @click="cancelSelection">关闭</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="metrics-grid">
-                <div class="metric-card">
-                  <div class="metric-value">{{ (selected.progress * 100).toFixed(0) }}%</div>
-                  <div class="metric-label">总进度</div>
-                </div>
-                <div v-for="(v, k) in metrics" :key="k" class="metric-card">
-                  <div class="metric-value">{{ typeof v === 'number' ? v.toFixed(2) : v }}</div>
-                  <div class="metric-label">{{ k }}</div>
-                </div>
-              </div>
-
-              <div class="grid-2-cols" style="grid-template-columns: 1fr 1.2fr;">
-                <section>
-                  <label>实时执行日志</label>
-                  <div class="logs-container" ref="logsBox">
-                    <div v-if="logs.length === 0" style="color: var(--text-muted)">等待日志输出...</div>
-                    <div v-for="(log, index) in logs" :key="index">{{ log }}</div>
-                  </div>
-                </section>
-                <section>
-                  <label>生成预览 (Markdown)</label>
-                  <div class="preview-container" v-html="markdownHtml || '<div style=\'color: var(--text-muted)\'>等待内容生成...</div>'"></div>
-                </section>
-              </div>
-            </div>
-          </div>
-          <div v-else class="card" style="height: 100%; justify-content: center; align-items: center; min-height: 400px; color: var(--text-muted);">
-            <div>从左侧选择一个任务查看详情</div>
-          </div>
-        </div>
-      </main>
-
-      <footer>
-        <p>Built-in Distillation UI · Powered by Vir-Bot · 2026</p>
-      </footer>
-
-      <!-- Toasts -->
-      <div class="toast-container">
-        <div v-for="t in toasts" :key="t.id" class="toast" :style="{ borderLeftColor: t.type === 'err' ? 'var(--danger)' : 'var(--success)' }">
-          <span v-if="t.type === 'err'">❌</span>
-          <span v-else>✅</span>
-          <span>{{ t.msg }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Use JSDelivr for better reliability in some regions -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
-  <script>
-    (function() {
-      const { createApp, ref, reactive, onMounted, computed, nextTick } = Vue;
-
-      createApp({
-        setup() {
-          const mounted = ref(false);
-          const upload = reactive({ file: null, file_id: null, filename: null });
-          const params = reactive({ name: '', parser: '', evaluate: true, dry_run: false, timeout: 120 });
-          const jobs = ref([]);
-          const selectedJobId = ref(null);
-          const logs = ref([]);
-          const metrics = ref({});
-          const markdownHtml = ref('');
-          const starting = ref(false);
-          const toasts = ref([]);
-          let ws = null;
-
-          const apiPath = (path) => `/api/distillation${path}`;
-
-          const toast = (msg, type = 'info') => {
-            const id = Date.now();
-            toasts.value.push({ id, msg, type });
-            setTimeout(() => {
-              toasts.value = toasts.value.filter(t => t.id !== id);
-            }, 3000);
-          };
-
-          const onFileChange = async (e) => {
-            const f = e.target.files[0];
-            if (!f) return;
-            upload.filename = f.name;
-            upload.file = f;
-            await uploadFile();
-          };
-
-          const uploadFile = async () => {
-            if (!upload.file) return;
-            const fd = new FormData();
-            fd.append('file', upload.file);
-            try {
-              const res = await fetch(apiPath('/upload'), { method: 'POST', body: fd });
-              if (!res.ok) throw new Error(await res.text() || 'Upload failed');
-              const data = await res.json();
-              upload.file_id = data.file_id;
-              toast('文件上传成功', 'ok');
-            } catch (err) {
-              toast('上传失败: ' + err.message, 'err');
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Persona Distillation — 蒸馏控制台</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        />
+        <style>
+            :root {
+                --bg: #f8fafc;
+                --card: #ffffff;
+                --primary: #4f46e5;
+                --primary-hover: #4338ca;
+                --secondary: #64748b;
+                --accent: #06b6d4;
+                --success: #10b981;
+                --danger: #ef4444;
+                --warning: #f59e0b;
+                --border: #e2e8f0;
+                --text-main: #1e293b;
+                --text-muted: #64748b;
+                --radius: 12px;
+                --shadow:
+                    0 4px 6px -1px rgb(0 0 0 / 0.1),
+                    0 2px 4px -2px rgb(0 0 0 / 0.1);
             }
-          };
 
-          const startJob = async () => {
-            if (!upload.file_id) return toast('请先上传文件', 'err');
-            if (!params.name.trim()) return toast('请输入角色名称', 'err');
-            
-            starting.value = true;
-            try {
-              const res = await fetch(apiPath('/start'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...params, file_id: upload.file_id })
-              });
-              if (!res.ok) throw new Error(await res.text() || 'Start failed');
-              const data = await res.json();
-              toast('任务已启动', 'ok');
-              await refreshJobs();
-              selectJob(data.job_id);
-            } catch (err) {
-              toast('启动失败: ' + err.message, 'err');
-            } finally {
-              starting.value = false;
+            * {
+                box-sizing: border-box;
             }
-          };
 
-          const refreshJobs = async () => {
-            try {
-              const res = await fetch(apiPath('/jobs'));
-              if (!res.ok) throw new Error('Failed to fetch jobs');
-              jobs.value = await res.json();
-            } catch (err) {
-              console.error(err);
-              toast('刷新列表失败', 'err');
+            body {
+                font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background-color: var(--bg);
+                color: var(--text-main);
+                line-height: 1.5;
+                margin: 0;
+                padding: 0;
             }
-          };
 
-          const selectJob = async (job_id) => {
-            stopWebsocket();
-            selectedJobId.value = job_id;
-            logs.value = [];
-            metrics.value = {};
-            markdownHtml.value = '';
-            
-            try {
-              const res = await fetch(apiPath(`/status/${job_id}`));
-              if (res.ok) {
-                const j = await res.json();
-                const idx = jobs.value.findIndex(x => x.job_id === j.job_id);
-                if (idx >= 0) jobs.value[idx] = j;
-                else jobs.value.unshift(j);
-                startWebsocket(job_id);
-              }
-            } catch (err) {
-              toast('获取任务状态失败', 'err');
+            /* Prevents flickering before Vue loads */
+            [v-cloak] {
+                display: none;
             }
-          };
 
-          const startWebsocket = (job_id) => {
-            const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-            const wsUrl = `${protocol}${location.host}${apiPath(`/ws/${job_id}`)}`;
-            ws = new WebSocket(wsUrl);
-            
-            ws.onmessage = (ev) => {
-              try {
-                const data = JSON.parse(ev.data);
-                if (data.type === 'update') {
-                  if (data.metrics) metrics.value = data.metrics;
-                  if (data.logs_tail) {
-                    logs.value = data.logs_tail.map(l => `[${l.ts.split('T')[1].substring(0,8)}] ${l.msg}`);
-                    scrollLogs();
-                  }
-                } else if (data.type === 'final') {
-                  fetchJobResult(job_id);
+            .loading-fallback {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                font-weight: 500;
+                color: var(--secondary);
+            }
+
+            .app-wrapper {
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+
+            header {
+                background: white;
+                border-bottom: 1px solid var(--border);
+                padding: 1rem 2rem;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            header .container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+                font-weight: 700;
+                margin: 0;
+                background: linear-gradient(
+                    135deg,
+                    var(--primary),
+                    var(--accent)
+                );
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .main-content {
+                flex: 1;
+                max-width: 1400px;
+                width: 100%;
+                margin: 2rem auto;
+                padding: 0 2rem;
+                display: grid;
+                grid-template-columns: 380px 1fr;
+                gap: 2rem;
+            }
+
+            .card {
+                background: var(--card);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .card-header {
+                padding: 1.25rem;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .card-title {
+                font-weight: 600;
+                font-size: 1rem;
+                margin: 0;
+            }
+
+            .card-body {
+                padding: 1.25rem;
+            }
+
+            /* Form Styles */
+            .form-group {
+                margin-bottom: 1.25rem;
+            }
+            label {
+                display: block;
+                font-size: 0.875rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                color: var(--text-main);
+            }
+
+            input[type="text"],
+            input[type="number"],
+            select,
+            textarea {
+                width: 100%;
+                padding: 0.625rem 0.875rem;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                font-size: 0.875rem;
+                transition:
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+            }
+
+            input:focus,
+            select:focus,
+            textarea:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+            .file-upload {
+                border: 2px dashed var(--border);
+                padding: 1.5rem;
+                border-radius: 8px;
+                text-align: center;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .file-upload:hover {
+                background-color: #f1f5f9;
+            }
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                padding: 0.625rem 1rem;
+                border-radius: 8px;
+                font-size: 0.875rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+                border: 1px solid transparent;
+            }
+
+            .btn-primary {
+                background-color: var(--primary);
+                color: white;
+            }
+
+            .btn-primary:hover {
+                background-color: var(--primary-hover);
+            }
+            .btn-primary:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+            .btn-outline {
+                background-color: white;
+                border-color: var(--border);
+                color: var(--text-main);
+            }
+
+            .btn-outline:hover {
+                background-color: #f8fafc;
+                border-color: var(--secondary);
+            }
+
+            .btn-danger {
+                background-color: var(--danger);
+                color: white;
+            }
+
+            .btn-sm {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            /* Job List Styles */
+            .job-list {
+                max-height: 600px;
+                overflow-y: auto;
+            }
+
+            .job-item {
+                padding: 1rem;
+                border-bottom: 1px solid var(--border);
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .job-item:last-child {
+                border-bottom: none;
+            }
+            .job-item:hover {
+                background-color: #f8fafc;
+            }
+            .job-item.active {
+                background-color: #f1f5f9;
+                border-left: 4px solid var(--primary);
+            }
+
+            .job-info {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.5rem;
+            }
+            .job-name {
+                font-weight: 600;
+                font-size: 0.9375rem;
+            }
+            .job-status {
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                padding: 2px 8px;
+                border-radius: 99px;
+                background: #e2e8f0;
+            }
+            .status-running {
+                background: #dcfce7;
+                color: #166534;
+            }
+            .status-done {
+                background: #dcfce7;
+                color: #166534;
+            }
+            .status-error {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+            .progress-bar {
+                height: 6px;
+                background: #e2e8f0;
+                border-radius: 99px;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(
+                    90deg,
+                    var(--primary),
+                    var(--accent)
+                );
+                transition: width 0.3s ease;
+            }
+
+            /* Logs & Preview */
+            .logs-container {
+                background: #0f172a;
+                color: #e2e8f0;
+                padding: 1rem;
+                border-radius: 8px;
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 0.8125rem;
+                max-height: 300px;
+                overflow-y: auto;
+                margin-top: 0.5rem;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+
+            .preview-container {
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 1.5rem;
+                max-height: 600px;
+                overflow-y: auto;
+                margin-top: 0.5rem;
+            }
+
+            .preview-container h1,
+            .preview-container h2,
+            .preview-container h3 {
+                color: var(--text-main);
+                margin-top: 1.5rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .metric-card {
+                background: #f8fafc;
+                padding: 0.75rem;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                text-align: center;
+            }
+
+            .metric-value {
+                font-size: 1.125rem;
+                font-weight: 700;
+                color: var(--primary);
+            }
+            .metric-label {
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+            }
+
+            footer {
+                padding: 2rem;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.875rem;
+                border-top: 1px solid var(--border);
+                background: white;
+            }
+
+            .badge {
+                display: inline-block;
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                background: #f1f5f9;
+                color: var(--text-main);
+            }
+
+            .toast-container {
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                z-index: 100;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .toast {
+                padding: 1rem 1.5rem;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                border-left: 4px solid var(--primary);
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
                 }
-              } catch (e) { console.error('WS Error', e); }
-            };
-          };
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
 
-          const stopWebsocket = () => {
-            if (ws) { ws.close(); ws = null; }
-          };
+            .grid-2-cols {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+            }
 
-          const fetchJobResult = async (job_id) => {
-            try {
-              const res = await fetch(apiPath(`/result/${job_id}`));
-              if (!res.ok) return;
-              const data = await res.json();
-              if (data.metrics) metrics.value = data.metrics;
-              if (data.logs) logs.value = data.logs.map(l => `[${l.ts.split('T')[1].substring(0,8)}] ${l.msg}`);
-              
-              let md = data.result?.markdown || '';
-              if (!md && data.markdown_path) {
-                const r = await fetch(data.markdown_path);
-                if (r.ok) md = await r.text();
-              }
-              markdownHtml.value = formatMarkdown(md);
-              scrollLogs();
-            } catch (err) { console.error(err); }
-          };
+            @media (max-width: 1024px) {
+                .main-content {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <!-- Visible before Vue mounts -->
+            <div v-if="!mounted" class="loading-fallback">
+                正在加载蒸馏控制台... (若长时间无响应请检查网络)
+            </div>
 
-          const formatMarkdown = (md) => {
-            if (!md) return '';
-            // Simple markdown renderer
-            return md
-              .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-              .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-              .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-              .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>')
-              .replace(/\n/g, '<br/>');
-          };
+            <!-- Main UI -->
+            <div class="app-wrapper" v-cloak v-if="mounted">
+                <header>
+                    <div class="container">
+                        <h1>Persona Distillation 控制台</h1>
+                        <div class="header-actions">
+                            <button
+                                class="btn btn-outline btn-sm"
+                                @click="refreshJobs"
+                            >
+                                刷新任务
+                            </button>
+                        </div>
+                    </div>
+                </header>
 
-          const scrollLogs = () => {
-            nextTick(() => {
-              const el = document.querySelector('.logs-container');
-              if (el) el.scrollTop = el.scrollHeight;
-            });
-          };
+                <main class="main-content">
+                    <!-- Sidebar: Config & Jobs -->
+                    <div class="sidebar">
+                        <!-- Upload Card -->
+                        <div class="card" style="margin-bottom: 2rem">
+                            <div class="card-header">
+                                <h2 class="card-title">开始新任务</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>上传聊天记录</label>
+                                    <div
+                                        class="file-upload"
+                                        @click="$refs.fileInput.click()"
+                                    >
+                                        <div
+                                            v-if="!upload.filename"
+                                            style="color: var(--text-muted)"
+                                        >
+                                            点击或拖拽文件上传<br />
+                                            <small
+                                                >(JSON, NDJSON, TXT, LOG)</small
+                                            >
+                                        </div>
+                                        <div v-else>
+                                            <span class="badge"
+                                                >{{ upload.filename }}</span
+                                            >
+                                            <div
+                                                style="
+                                                    font-size: 0.75rem;
+                                                    color: var(--success);
+                                                    margin-top: 0.5rem;
+                                                "
+                                            >
+                                                文件就绪
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            ref="fileInput"
+                                            @change="onFileChange"
+                                            hidden
+                                            accept=".json,.ndjson,.txt,.log,.chat,.html"
+                                        />
+                                    </div>
+                                </div>
 
-          const downloadUrl = (job_id, typ) => apiPath(`/download/${job_id}?typ=${typ}`);
+                                <div class="form-group">
+                                    <label>角色名称</label>
+                                    <input
+                                        type="text"
+                                        v-model="params.name"
+                                        placeholder="例如：小雅"
+                                    />
+                                </div>
 
-          const clearUploaded = () => {
-            upload.file = null; upload.file_id = null; upload.filename = null;
-            const input = document.querySelector('input[type=file]');
-            if (input) input.value = '';
-          };
+                                <div class="grid-2-cols">
+                                    <div class="form-group">
+                                        <label>解析器</label>
+                                        <select v-model="params.parser">
+                                            <option value="">
+                                                自动 (Generic)
+                                            </option>
+                                            <option value="generic">
+                                                Generic
+                                            </option>
+                                            <option value="wechat">
+                                                WeChat
+                                            </option>
+                                            <option value="qq">QQ</option>
+                                            <option value="discord">
+                                                Discord
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>超时时间</label>
+                                        <select v-model="params.timeout">
+                                            <option :value="60">60s</option>
+                                            <option :value="120">120s</option>
+                                            <option :value="300">300s</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-          const cancelSelection = () => {
-            stopWebsocket();
-            selectedJobId.value = null;
-          };
+                                <div
+                                    class="form-group"
+                                    style="display: flex; gap: 1rem"
+                                >
+                                    <label
+                                        style="
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 0.5rem;
+                                            cursor: pointer;
+                                            margin-bottom: 0;
+                                        "
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="params.evaluate"
+                                        />
+                                        运行评估
+                                    </label>
+                                    <label
+                                        style="
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 0.5rem;
+                                            cursor: pointer;
+                                            margin-bottom: 0;
+                                        "
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="params.dry_run"
+                                        />
+                                        仅预览
+                                    </label>
+                                </div>
 
-          const selected = computed(() => jobs.value.find(x => x.job_id === selectedJobId.value));
+                                <div style="display: flex; gap: 0.5rem">
+                                    <button
+                                        class="btn btn-primary"
+                                        style="flex: 1"
+                                        @click="startJob"
+                                        :disabled="starting || !upload.file_id"
+                                    >
+                                        {{ starting ? '排队中...' : '开始蒸馏'
+                                        }}
+                                    </button>
+                                    <button
+                                        class="btn btn-outline"
+                                        @click="clearUploaded"
+                                    >
+                                        清除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-          onMounted(async () => {
-            await refreshJobs();
-            mounted.value = true;
-          });
+                        <!-- Job List Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">任务列表</h2>
+                                <span class="badge">{{ jobs.length }}</span>
+                            </div>
+                            <div class="job-list">
+                                <div
+                                    v-if="jobs.length === 0"
+                                    style="
+                                        padding: 2rem;
+                                        text-align: center;
+                                        color: var(--text-muted);
+                                    "
+                                >
+                                    暂无历史任务
+                                </div>
+                                <div
+                                    v-for="j in jobs"
+                                    :key="j.job_id"
+                                    class="job-item"
+                                    :class="{ active: selectedJobId === j.job_id }"
+                                    @click="selectJob(j.job_id)"
+                                >
+                                    <div class="job-info">
+                                        <span class="job-name"
+                                            >{{ j.name || '未命名' }}</span
+                                        >
+                                        <span
+                                            class="job-status"
+                                            :class="'status-' + j.status"
+                                            >{{ j.status }}</span
+                                        >
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div
+                                            class="progress-fill"
+                                            :style="{ width: (j.progress * 100) + '%' }"
+                                        ></div>
+                                    </div>
+                                    <div
+                                        style="
+                                            font-size: 0.7rem;
+                                            color: var(--text-muted);
+                                            margin-top: 0.4rem;
+                                            display: flex;
+                                            justify-content: space-between;
+                                        "
+                                    >
+                                        <span
+                                            >{{ j.job_id.substring(0, 8)
+                                            }}...</span
+                                        >
+                                        <span
+                                            >{{ (j.progress * 100).toFixed(0)
+                                            }}%</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-          return {
-            mounted, upload, params, jobs, selectedJobId, selected, logs, metrics, markdownHtml, 
-            starting, toasts, onFileChange, startJob, refreshJobs, selectJob, 
-            cancelSelection, downloadUrl, clearUploaded
-          };
-        }
-      }).mount('#app');
-    })();
-  </script>
-</body>
+                    <!-- Detail Panel -->
+                    <div class="detail-panel">
+                        <div v-if="selected" class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h2 class="card-title">
+                                        {{ selected.name }}
+                                    </h2>
+                                    <div
+                                        style="
+                                            font-size: 0.75rem;
+                                            color: var(--text-muted);
+                                        "
+                                    >
+                                        ID: {{ selected.job_id }}
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem">
+                                    <a
+                                        v-if="selected.status === 'done'"
+                                        :href="downloadUrl(selected.job_id, 'markdown')"
+                                        target="_blank"
+                                        class="btn btn-outline btn-sm"
+                                        >下载 Markdown</a
+                                    >
+                                    <a
+                                        v-if="selected.status === 'done'"
+                                        :href="downloadUrl(selected.job_id, 'json')"
+                                        class="btn btn-outline btn-sm"
+                                        >下载 JSON</a
+                                    >
+                                    <button
+                                        class="btn btn-danger btn-sm"
+                                        @click="cancelSelection"
+                                    >
+                                        关闭
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="metrics-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-value">
+                                            {{ (selected.progress *
+                                            100).toFixed(0) }}%
+                                        </div>
+                                        <div class="metric-label">总进度</div>
+                                    </div>
+                                    <div
+                                        v-for="(v, k) in metrics"
+                                        :key="k"
+                                        class="metric-card"
+                                    >
+                                        <div class="metric-value">
+                                            {{ typeof v === 'number' ?
+                                            v.toFixed(2) : v }}
+                                        </div>
+                                        <div class="metric-label">{{ k }}</div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="grid-2-cols"
+                                    style="grid-template-columns: 1fr 1.2fr"
+                                >
+                                    <section>
+                                        <label>实时执行日志</label>
+                                        <div
+                                            class="logs-container"
+                                            ref="logsBox"
+                                        >
+                                            <div
+                                                v-if="logs.length === 0"
+                                                style="color: var(--text-muted)"
+                                            >
+                                                等待日志输出...
+                                            </div>
+                                            <div
+                                                v-for="(log, index) in logs"
+                                                :key="index"
+                                            >
+                                                {{ log }}
+                                            </div>
+                                        </div>
+                                    </section>
+                                    <section>
+                                        <label>生成预览 (Markdown)</label>
+                                        <div
+                                            class="preview-container"
+                                            v-html="markdownHtml || '<div style=\'color: var(--text-muted)\'>等待内容生成...</div>'"
+                                        ></div>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="card"
+                            style="
+                                height: 100%;
+                                justify-content: center;
+                                align-items: center;
+                                min-height: 400px;
+                                color: var(--text-muted);
+                            "
+                        >
+                            <div>从左侧选择一个任务查看详情</div>
+                        </div>
+                    </div>
+                </main>
+
+                <footer>
+                    <p>Built-in Distillation UI · Powered by Vir-Bot · 2026</p>
+                </footer>
+
+                <!-- Toasts -->
+                <div class="toast-container">
+                    <div
+                        v-for="t in toasts"
+                        :key="t.id"
+                        class="toast"
+                        :style="{ borderLeftColor: t.type === 'err' ? 'var(--danger)' : 'var(--success)' }"
+                    >
+                        <span v-if="t.type === 'err'">❌</span>
+                        <span v-else>✅</span>
+                        <span>{{ t.msg }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Use JSDelivr for better reliability in some regions -->
+        <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
+        <script>
+            (function () {
+                const {
+                    createApp,
+                    ref,
+                    reactive,
+                    onMounted,
+                    computed,
+                    nextTick,
+                } = Vue;
+
+                createApp({
+                    setup() {
+                        const mounted = ref(false);
+                        const upload = reactive({
+                            file: null,
+                            file_id: null,
+                            filename: null,
+                        });
+                        const params = reactive({
+                            name: "",
+                            parser: "",
+                            evaluate: true,
+                            dry_run: false,
+                            timeout: 120,
+                        });
+                        const jobs = ref([]);
+                        const selectedJobId = ref(null);
+                        const logs = ref([]);
+                        const metrics = ref({});
+                        const markdownHtml = ref("");
+                        const starting = ref(false);
+                        const toasts = ref([]);
+                        let ws = null;
+
+                        const apiPath = (path) => `/api/distillation${path}`;
+
+                        const toast = (msg, type = "info") => {
+                            const id = Date.now();
+                            toasts.value.push({ id, msg, type });
+                            setTimeout(() => {
+                                toasts.value = toasts.value.filter(
+                                    (t) => t.id !== id,
+                                );
+                            }, 3000);
+                        };
+
+                        const onFileChange = async (e) => {
+                            const f = e.target.files[0];
+                            if (!f) return;
+                            upload.filename = f.name;
+                            upload.file = f;
+                            await uploadFile();
+                        };
+
+                        const uploadFile = async () => {
+                            if (!upload.file) return;
+                            const fd = new FormData();
+                            fd.append("file", upload.file);
+                            try {
+                                const res = await fetch(apiPath("/upload"), {
+                                    method: "POST",
+                                    body: fd,
+                                });
+                                if (!res.ok)
+                                    throw new Error(
+                                        (await res.text()) || "Upload failed",
+                                    );
+                                const data = await res.json();
+                                upload.file_id = data.file_id;
+                                toast("文件上传成功", "ok");
+                            } catch (err) {
+                                toast("上传失败: " + err.message, "err");
+                            }
+                        };
+
+                        const startJob = async () => {
+                            if (!upload.file_id)
+                                return toast("请先上传文件", "err");
+                            if (!params.name.trim())
+                                return toast("请输入角色名称", "err");
+
+                            starting.value = true;
+                            try {
+                                const res = await fetch(apiPath("/start"), {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                        ...params,
+                                        file_id: upload.file_id,
+                                    }),
+                                });
+                                if (!res.ok)
+                                    throw new Error(
+                                        (await res.text()) || "Start failed",
+                                    );
+                                const data = await res.json();
+                                toast("任务已启动", "ok");
+                                await refreshJobs();
+                                selectJob(data.job_id);
+                            } catch (err) {
+                                toast("启动失败: " + err.message, "err");
+                            } finally {
+                                starting.value = false;
+                            }
+                        };
+
+                        const refreshJobs = async () => {
+                            try {
+                                const res = await fetch(apiPath("/jobs"));
+                                if (!res.ok)
+                                    throw new Error("Failed to fetch jobs");
+                                jobs.value = await res.json();
+                            } catch (err) {
+                                console.error(err);
+                                toast("刷新列表失败", "err");
+                            }
+                        };
+
+                        const selectJob = async (job_id) => {
+                            stopWebsocket();
+                            selectedJobId.value = job_id;
+                            logs.value = [];
+                            metrics.value = {};
+                            markdownHtml.value = "";
+
+                            try {
+                                const res = await fetch(
+                                    apiPath(`/status/${job_id}`),
+                                );
+                                if (res.ok) {
+                                    const j = await res.json();
+                                    const idx = jobs.value.findIndex(
+                                        (x) => x.job_id === j.job_id,
+                                    );
+                                    if (idx >= 0) jobs.value[idx] = j;
+                                    else jobs.value.unshift(j);
+                                    startWebsocket(job_id);
+                                }
+                            } catch (err) {
+                                toast("获取任务状态失败", "err");
+                            }
+                        };
+
+                        const startWebsocket = (job_id) => {
+                            const protocol =
+                                location.protocol === "https:"
+                                    ? "wss://"
+                                    : "ws://";
+                            const wsUrl = `${protocol}${location.host}${apiPath(`/ws/${job_id}`)}`;
+                            ws = new WebSocket(wsUrl);
+
+                            ws.onmessage = (ev) => {
+                                try {
+                                    const data = JSON.parse(ev.data);
+                                    if (data.type === "update") {
+                                        if (data.metrics)
+                                            metrics.value = data.metrics;
+                                        if (data.logs_tail) {
+                                            logs.value = data.logs_tail.map(
+                                                (l) =>
+                                                    `[${l.ts.split("T")[1].substring(0, 8)}] ${l.msg}`,
+                                            );
+                                            scrollLogs();
+                                        }
+                                    } else if (data.type === "final") {
+                                        fetchJobResult(job_id);
+                                    }
+                                } catch (e) {
+                                    console.error("WS Error", e);
+                                }
+                            };
+                        };
+
+                        const stopWebsocket = () => {
+                            if (ws) {
+                                ws.close();
+                                ws = null;
+                            }
+                        };
+
+                        const fetchJobResult = async (job_id) => {
+                            try {
+                                const res = await fetch(
+                                    apiPath(`/result/${job_id}`),
+                                );
+                                if (!res.ok) return;
+                                const data = await res.json();
+                                if (data.metrics) metrics.value = data.metrics;
+                                if (data.logs)
+                                    logs.value = data.logs.map(
+                                        (l) =>
+                                            `[${l.ts.split("T")[1].substring(0, 8)}] ${l.msg}`,
+                                    );
+
+                                let md = data.result?.markdown || "";
+                                if (!md && data.markdown_path) {
+                                    const r = await fetch(data.markdown_path);
+                                    if (r.ok) md = await r.text();
+                                }
+                                markdownHtml.value = formatMarkdown(md);
+                                scrollLogs();
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        };
+
+                        const formatMarkdown = (md) => {
+                            if (!md) return "";
+                            // Simple markdown renderer
+                            return md
+                                .replace(/&/g, "&amp;")
+                                .replace(/</g, "&lt;")
+                                .replace(/>/g, "&gt;")
+                                .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+                                .replace(/^## (.*$)/gm, "<h2>$1</h2>")
+                                .replace(/^### (.*$)/gm, "<h3>$1</h3>")
+                                .replace(
+                                    /\*\*(.*?)\*\*/g,
+                                    "<strong>$1</strong>",
+                                )
+                                .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                                .replace(/\n/g, "<br/>");
+                        };
+
+                        const scrollLogs = () => {
+                            nextTick(() => {
+                                const el =
+                                    document.querySelector(".logs-container");
+                                if (el) el.scrollTop = el.scrollHeight;
+                            });
+                        };
+
+                        const downloadUrl = (job_id, typ) =>
+                            apiPath(`/download/${job_id}?typ=${typ}`);
+
+                        const clearUploaded = () => {
+                            upload.file = null;
+                            upload.file_id = null;
+                            upload.filename = null;
+                            const input =
+                                document.querySelector("input[type=file]");
+                            if (input) input.value = "";
+                        };
+
+                        const cancelSelection = () => {
+                            stopWebsocket();
+                            selectedJobId.value = null;
+                        };
+
+                        const selected = computed(() =>
+                            jobs.value.find(
+                                (x) => x.job_id === selectedJobId.value,
+                            ),
+                        );
+
+                        onMounted(async () => {
+                            await refreshJobs();
+                            mounted.value = true;
+                        });
+
+                        return {
+                            mounted,
+                            upload,
+                            params,
+                            jobs,
+                            selectedJobId,
+                            selected,
+                            logs,
+                            metrics,
+                            markdownHtml,
+                            starting,
+                            toasts,
+                            onFileChange,
+                            startJob,
+                            refreshJobs,
+                            selectJob,
+                            cancelSelection,
+                            downloadUrl,
+                            clearUploaded,
+                        };
+                    },
+                }).mount("#app");
+            })();
+        </script>
+    </body>
 </html>

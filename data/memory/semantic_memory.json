@@ -1,21 +1,7 @@
 {
   "version": "1.0",
-  "updated_at": 1776849456.8201816,
+  "updated_at": 1776923144.3542545,
   "records": [
-    {
-      "memory_id": "f9a7a42a-e632-4479-b969-ee9a3ecac31c",
-      "user_id": "web_user",
-      "namespace": "profile.preference",
-      "subject": "user",
-      "predicate": "likes",
-      "object": "什么",
-      "confidence": 0.88,
-      "source_text": "所以我喜欢吃什么，回答我",
-      "source_message_id": null,
-      "created_at": 1776848066.7421753,
-      "updated_at": 1776849039.6963007,
-      "is_active": false
-    },
     {
       "memory_id": "02b1776d-8750-49f6-9800-e00b7610a701",
       "user_id": "web_user",
@@ -23,11 +9,25 @@
       "subject": "user",
       "predicate": "likes",
       "object": "香蕉",
-      "confidence": 0.93,
-      "source_text": "我喜欢吃香蕉",
+      "confidence": 0.94,
+      "source_text": "我喜欢吃香蕉啊",
       "source_message_id": "web_test",
       "created_at": 1776849456.8191867,
-      "updated_at": 1776849456.8191867,
+      "updated_at": 1776918805.7270527,
+      "is_active": false
+    },
+    {
+      "memory_id": "3113213a-ca46-476f-916e-73d75f3156b9",
+      "user_id": "web_user",
+      "namespace": "profile.preference",
+      "subject": "user",
+      "predicate": "likes",
+      "object": "香蕉",
+      "confidence": 0.94,
+      "source_text": "我喜欢吃香蕉",
+      "source_message_id": "web_test",
+      "created_at": 1776923138.0853844,
+      "updated_at": 1776923144.3542545,
       "is_active": true
     }
   ]

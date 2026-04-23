@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Literal
 
 from vir_bot.utils.logger import logger
@@ -36,6 +38,13 @@ class QuestionMemory:
     # ==================== 关联维度 ====================
     related_question_ids: list[str] = field(default_factory=list)  # 相关问题ID
     follow_up_count: int = 0  # 用户后续追问次数（越多说明越重要）
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "QuestionMemory":
+        return cls(**data)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 
 @dataclass
@@ -122,3 +131,68 @@ class QuestionMemoryIndex:
         self.type_index.clear()
         self.all_question_ids.clear()
         logger.info("QuestionMemoryIndex cleared")
+
+    def rebuild(self, questions: list[QuestionMemory]) -> None:
+        """根据问题列表重建索引。"""
+        self.clear()
+        for question in sorted(questions, key=lambda item: item.timestamp):
+            self.add(question)
+
+
+class QuestionMemoryStore:
+    """基于本地 JSON 的问题记忆存储。"""
+
+    def __init__(self, persist_path: str = "./data/memory/question_memory.json"):
+        self.persist_path = Path(persist_path)
+        self.persist_path.parent.mkdir(parents=True, exist_ok=True)
+        self._records: dict[str, QuestionMemory] = {}
+        self._load()
+        logger.info(f"QuestionMemoryStore initialized: path={self.persist_path}")
+
+    def _load(self) -> None:
+        if not self.persist_path.exists():
+            return
+
+        try:
+            data = json.loads(self.persist_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            logger.warning(f"Question memory file is invalid JSON: {self.persist_path}")
+            return
+
+        for item in data.get("records", []):
+            question = QuestionMemory.from_dict(item)
+            self._records[question.id] = question
+
+    def _save(self) -> None:
+        payload = {
+            "version": "1.0",
+            "updated_at": time.time(),
+            "records": [question.to_dict() for question in self._records.values()],
+        }
+        self.persist_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    def upsert(self, question: QuestionMemory) -> None:
+        self._records[question.id] = question
+        self._save()
+
+    def get(self, question_id: str) -> QuestionMemory | None:
+        return self._records.get(question_id)
+
+    def list_by_user(self, user_id: str | None = None) -> list[QuestionMemory]:
+        questions = list(self._records.values())
+        if user_id:
+            questions = [question for question in questions if question.user_id == user_id]
+        questions.sort(key=lambda item: item.timestamp, reverse=True)
+        return questions
+
+    def count(self, user_id: str | None = None) -> int:
+        if user_id is None:
+            return len(self._records)
+        return len([question for question in self._records.values() if question.user_id == user_id])
+
+    def clear(self) -> None:
+        self._records.clear()
+        self._save()

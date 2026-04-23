@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
+from vir_bot.core.memory.episodic_store import EpisodicMemoryStore, EpisodeRecord
 from vir_bot.core.memory.long_term import LongTermMemory, MemoryRecord
 from vir_bot.core.memory.memory_updater import MemoryUpdater
 from vir_bot.core.memory.memory_writer import MemoryWriter
-from vir_bot.core.memory.question_memory import QuestionMemory, QuestionMemoryIndex
+from vir_bot.core.memory.question_memory import (
+    QuestionMemory,
+    QuestionMemoryIndex,
+    QuestionMemoryStore,
+)
+from vir_bot.core.memory.retrieval_router import RetrievalRouter
 from vir_bot.core.memory.semantic_store import SemanticMemoryRecord, SemanticMemoryStore
 from vir_bot.core.memory.short_term import ShortTermMemory
 from vir_bot.core.wiki import CharacterProfile, WikiKnowledgeBase
 from vir_bot.utils.logger import logger
+
+if TYPE_CHECKING:
+    from vir_bot.core.ai_provider import AIProvider
 
 
 class MemoryManager:
@@ -33,6 +42,9 @@ class MemoryManager:
         memory_updater: MemoryUpdater,
         window_size: int = 10,
         wiki_dir: str = "./data/wiki",
+        episodic_store: EpisodicMemoryStore | None = None,
+        question_store: QuestionMemoryStore | None = None,
+        ai_provider: "AIProvider | None" = None,
     ):
         self.short_term = short_term
         self.long_term = long_term
@@ -42,11 +54,33 @@ class MemoryManager:
         self.window_size = window_size
         self.wiki = WikiKnowledgeBase(wiki_dir=wiki_dir)
         self.current_character: Optional[CharacterProfile] = None
+        self._ai_provider = ai_provider
 
+        self.episodic_store = episodic_store or EpisodicMemoryStore()
+        self.question_store = question_store or QuestionMemoryStore()
         self.question_index = QuestionMemoryIndex()
-        self.questions: dict[str, QuestionMemory] = {}
+
+        self._rebuild_question_index()
+
+        self.retrieval_router = RetrievalRouter(
+            semantic_store=self.semantic_store,
+            episodic_store=self.episodic_store,
+            question_store=self.question_store,
+            long_term=self.long_term,
+            ai_provider=ai_provider,
+        )
 
         logger.info("MemoryManager initialized with Wiki + RAG hybrid system")
+
+    def set_ai_provider(self, ai_provider: "AIProvider") -> None:
+        self._ai_provider = ai_provider
+        self.retrieval_router.set_ai_provider(ai_provider)
+
+    def _rebuild_question_index(self) -> None:
+        """从持久化存储重建问题索引。"""
+        all_questions = self.question_store.list_by_user()
+        self.question_index.rebuild(all_questions)
+        logger.info(f"Question index rebuilt: {len(all_questions)} questions")
 
     async def set_character(self, character_name: str) -> bool:
         """设置当前角色"""
@@ -70,6 +104,7 @@ class MemoryManager:
     ) -> None:
         """添加一轮对话到记忆。"""
         metadata = metadata or {}
+        user_id = metadata.get("user_id", "")
 
         if memory_type == "conversation":
             q_info = self._classify_question(user_msg)
@@ -82,9 +117,9 @@ class MemoryManager:
                 answer_summary=assistant_msg[:150],
                 key_points=[],
                 importance=importance,
-                user_id=metadata.get("user_id", ""),
+                user_id=user_id,
             )
-            self.questions[question_mem.id] = question_mem
+            self.question_store.upsert(question_mem)
             self.question_index.add(question_mem)
             logger.debug(
                 f"Question classified: topic={q_info['topic']}, type={q_info['question_type']}"
@@ -115,6 +150,40 @@ class MemoryManager:
             user_msg=user_msg,
             assistant_msg=assistant_msg,
             metadata=metadata,
+        )
+
+        await self._write_episodic_memory(
+            user_msg=user_msg,
+            assistant_msg=assistant_msg,
+            user_id=user_id,
+            metadata=metadata,
+        )
+
+    async def _write_episodic_memory(
+        self,
+        *,
+        user_msg: str,
+        assistant_msg: str,
+        user_id: str,
+        metadata: dict,
+    ) -> None:
+        """写入事件记忆。"""
+        if not user_id:
+            return
+
+        summary = f"用户说：{user_msg[:80]}"
+        if len(user_msg) > 80:
+            summary += "..."
+
+        entities = self._extract_entities(user_msg)
+
+        self.episodic_store.add(
+            user_id=user_id,
+            summary=summary,
+            entities=entities,
+            importance=0.5,
+            source_message_ids=[metadata.get("msg_id", "")],
+            episode_type="session",
         )
 
     async def _write_semantic_memory(
@@ -206,7 +275,13 @@ class MemoryManager:
                 "personality",
                 [
                     (
-                        r"我叫(?P<value>[^，。！？；\n]+)",
+                        r"我叫(?!你)(?P<value>[^，。！？；\n]+)",
+                        "用户的名字是{value}",
+                        0.95,
+                        ["身份"],
+                    ),
+                    (
+                        r"我的名字是(?P<value>[^，。！？；\n]+)",
                         "用户的名字是{value}",
                         0.95,
                         ["身份"],
@@ -218,7 +293,7 @@ class MemoryManager:
                         ["身份", "地点"],
                     ),
                     (
-                        r"我是(?P<value>[^，。！？；\n]{1,20})",
+                        r"我是(?!不)(?P<value>[^，。！？；\n]{1,20})",
                         "用户是{value}",
                         0.72,
                         ["身份"],
@@ -307,6 +382,8 @@ class MemoryManager:
             return ""
         if value in {"这个", "那个", "这些", "那些"}:
             return ""
+        if value.endswith(("好不好", "行不行", "可以吗", "好吗", "对不对", "行吗")):
+            return ""
         return value
 
     def _looks_like_question(self, text: str) -> bool:
@@ -349,6 +426,49 @@ class MemoryManager:
             ("event", "用户提到近况：{value}"): "mentioned_event",
         }
         return mapping.get((memory_type, template), memory_type)
+
+    def _infer_semantic_namespaces(self, query: str) -> set[str]:
+        """根据查询文本推断相关的语义记忆命名空间"""
+        normalized = query.lower()
+        namespaces: set[str] = set()
+
+        # 偏好相关查询
+        if any(
+            keyword in normalized
+            for keyword in ["喜欢", "讨厌", "爱吃", "不喜欢", "吃什么", "最喜欢", "讨厌什么"]
+        ):
+            namespaces.add("profile.preference")
+
+        # 习惯相关查询
+        if any(
+            keyword in normalized for keyword in ["习惯", "经常", "每天", "平时", "通常", "一般"]
+        ):
+            namespaces.add("profile.habit")
+
+        # 身份相关查询
+        if any(
+            keyword in normalized
+            for keyword in ["名字", "叫", "来自", "哪里", "哪里人", "是谁", "身份", "职业"]
+        ):
+            namespaces.add("profile.identity")
+
+        # 事件/近况相关查询
+        if any(
+            keyword in normalized
+            for keyword in [
+                "昨天",
+                "今天",
+                "最近",
+                "上次",
+                "上周",
+                "最近在干",
+                "忙什么",
+                "在做什么",
+            ]
+        ):
+            namespaces.add("profile.event")
+
+        return namespaces
 
     def _classify_question(self, user_msg: str) -> dict:
         """简单的基于规则的问题分类。"""
@@ -410,7 +530,7 @@ class MemoryManager:
 
         results = []
         for qid in indexed_ids:
-            question = self.questions.get(qid)
+            question = self.question_store.get(qid)
             if question is None:
                 continue
             if user_id and question.user_id and question.user_id != user_id:
@@ -422,7 +542,7 @@ class MemoryManager:
 
     async def get_question(self, question_id: str) -> QuestionMemory | None:
         """获取单个问题记忆。"""
-        return self.questions.get(question_id)
+        return self.question_store.get(question_id)
 
     async def search_long_term(
         self,
@@ -487,65 +607,195 @@ class MemoryManager:
         long_term_top_k: int = 5,
         user_id: str | None = None,
     ) -> str:
-        """构建增强系统提示词，默认主动检索相关记忆。"""
+        """构建系统提示词，在回答前先做服务端记忆检索。"""
         if character_name and character_name != getattr(self.current_character, "name", None):
             await self.set_character(character_name)
 
         sections = []
 
+        # 基础系统提示词
         if include_wiki and self.current_character:
             sections.append(self.current_character.get_system_prompt_injection())
         sections.append(base_system_prompt)
 
-        proactive_memories = await self._gather_proactive_memories(
-            current_query=current_query,
-            long_term_top_k=long_term_top_k,
-            include_personality_memory=include_personality_memory,
-            include_habit_memory=include_habit_memory,
-            user_id=user_id,
-        )
-        semantic_memories: list[SemanticMemoryRecord] = []
-        if user_id:
-            semantic_memories = self.search_semantic_memory(
-                user_id=user_id,
-                query=current_query,
-                top_k=4,
-            )
-        if semantic_memories:
-            semantic_lines = "\n".join(
-                f"- [{record.namespace}] {record.object}"
-                for record in semantic_memories
-            )
-            sections.append(f"【用户事实记忆】\n{semantic_lines}")
-        if proactive_memories:
-            memory_lines = "\n".join(
-                f"- [{record.type}] {self._format_memory_content(record.content)}"
-                for record in proactive_memories
-            )
-            sections.append(f"【已检索到的记忆】\n{memory_lines}")
-
-        if self.questions:
-            related_questions = await self.search_questions(
-                query=current_query,
-                top_k=2,
-                user_id=user_id,
-            )
-            if related_questions:
-                qa_lines = []
-                for q in related_questions:
-                    qa_lines.append(f"- 用户之前问过：{q.question_text}")
-                    qa_lines.append(f"  回答概要：{q.answer_summary}")
-                sections.append("【相关历史问答】\n" + "\n".join(qa_lines))
-
+        # 核心指导：对用户事实先查证，查不到就坦诚回答不知道
         sections.append(
-            "【重要提醒】\n"
-            "- 你必须始终保持上述人设\n"
-            "- 在对话中自然地展现这些特点，不要生硬\n"
-            "- 回答涉及用户事实、偏好、过往事件时，优先依据已检索到的记忆\n"
-            "- 如果记忆里没有明确依据，直接说你现在没有记住，不要编造"
+            "【本轮回答要求】\n"
+            "- 只把系统本轮检索到的用户记忆当作已知事实使用\n"
+            "- 当用户在问“你记不记得”“之前有没有发生过”“我以前说过什么”“我叫什么/喜欢什么”这类问题时，优先依据记忆检索结果回答\n"
+            "- 如果本轮没有检索到足够信息，直接明确回答不知道、还没记住或目前没有这条记录\n"
+            "- 重要：永远不要凭空编造、猜测或脑补用户信息"
         )
+
+        # 根据当前查询智能注入相关的记忆信息
+        if user_id:
+            memory_info = await self._build_query_specific_memory_context(
+                current_query=current_query,
+                user_id=user_id,
+                long_term_top_k=long_term_top_k,
+            )
+            if memory_info:
+                sections.append(memory_info)
 
         return "\n\n".join(section for section in sections if section)
+
+    async def _build_query_specific_memory_context(
+        self,
+        current_query: str,
+        user_id: str,
+        long_term_top_k: int,
+    ) -> str | None:
+        """
+        根据当前查询主动检索相关记忆。
+        使用检索路由器进行智能路由（AI分类 + 规则回退）。
+        """
+        context = await self.retrieval_router.retrieve_for_context(
+            query=current_query,
+            user_id=user_id,
+            force_lookup=False,
+        )
+
+        return context
+
+    def _collect_semantic_records(
+        self,
+        *,
+        current_query: str,
+        user_id: str,
+        force_lookup: bool,
+    ) -> list[SemanticMemoryRecord]:
+        search_results = self.search_semantic_memory(
+            user_id=user_id,
+            query=current_query,
+            top_k=6,
+        )
+        namespaces = self._semantic_lookup_namespaces(current_query, force_lookup=force_lookup)
+        namespace_results = self.semantic_store.list_by_user(
+            user_id=user_id,
+            namespaces=namespaces if namespaces else None,
+        )
+
+        merged: list[SemanticMemoryRecord] = []
+        seen_ids: set[str] = set()
+        for group in (search_results, namespace_results):
+            for record in group:
+                if record.memory_id in seen_ids:
+                    continue
+                seen_ids.add(record.memory_id)
+                merged.append(record)
+                if len(merged) >= 8:
+                    return merged
+        return merged
+
+    async def _collect_long_term_records(
+        self,
+        *,
+        current_query: str,
+        user_id: str,
+        top_k: int,
+        force_lookup: bool,
+    ) -> list[MemoryRecord]:
+        if not self.long_term:
+            return []
+        if not force_lookup and not any(
+            signal in current_query.lower()
+            for signal in ["昨天", "今天", "最近", "上次", "之前", "聊过", "说过", "发生过"]
+        ):
+            return []
+        return await self._gather_proactive_memories(
+            current_query=current_query,
+            long_term_top_k=min(max(top_k, 3), 5),
+            include_personality_memory=False,
+            include_habit_memory=False,
+            user_id=user_id,
+        )
+
+    def _format_semantic_records(self, records: list[SemanticMemoryRecord]) -> list[str]:
+        if not records:
+            return []
+
+        ns_labels = {
+            "profile.identity": "【用户信息】",
+            "profile.preference": "【用户偏好】",
+            "profile.habit": "【用户习惯】",
+            "profile.event": "【用户事件】",
+        }
+        pred_map = {
+            "name_is": "名字",
+            "from": "来自",
+            "is": "身份",
+            "likes": "喜欢",
+            "dislikes": "讨厌",
+            "often_does": "经常做",
+            "daily_does": "每天做",
+            "mentioned_event": "提到过",
+        }
+
+        grouped: dict[str, list[str]] = {}
+        for record in records:
+            label = ns_labels.get(record.namespace, f"【{record.namespace}】")
+            grouped.setdefault(label, []).append(
+                f"- 用户{pred_map.get(record.predicate, record.predicate)}：{record.object}"
+            )
+
+        lines: list[str] = []
+        for label in ["【用户信息】", "【用户偏好】", "【用户习惯】", "【用户事件】"]:
+            entries = grouped.pop(label, None)
+            if not entries:
+                continue
+            lines.append(label)
+            lines.extend(entries)
+
+        for label, entries in grouped.items():
+            lines.append(label)
+            lines.extend(entries)
+        return lines
+
+    def _semantic_lookup_namespaces(self, query: str, *, force_lookup: bool) -> list[str] | None:
+        inferred = self._infer_semantic_namespaces(query)
+        if inferred:
+            return list(inferred)
+        if force_lookup:
+            return [
+                "profile.identity",
+                "profile.preference",
+                "profile.habit",
+                "profile.event",
+            ]
+        return None
+
+    def _is_memory_sensitive_query(self, query: str) -> bool:
+        normalized = query.lower().strip()
+        explicit_signals = [
+            "记得",
+            "不记得",
+            "忘了",
+            "有没有",
+            "发生过",
+            "之前",
+            "上次",
+            "以前",
+            "聊过",
+            "说过",
+            "提过",
+            "记住",
+            "还记得",
+        ]
+        if any(signal in normalized for signal in explicit_signals):
+            return True
+
+        personal_fact_signals = [
+            "我叫什么",
+            "我的名字",
+            "我是谁",
+            "我来自",
+            "我喜欢",
+            "我讨厌",
+            "我平时",
+            "我经常",
+            "我每天",
+        ]
+        return any(signal in normalized for signal in personal_fact_signals)
 
     async def _gather_proactive_memories(
         self,
@@ -682,9 +932,10 @@ class MemoryManager:
         if self.long_term:
             await self.long_term.clear()
         self.semantic_store.clear()
-        self.wiki.clear_cache()
+        self.episodic_store.clear()
+        self.question_store.clear()
         self.question_index.clear()
-        self.questions.clear()
+        self.wiki.clear_cache()
         logger.info("All memories cleared")
 
     @property
@@ -713,7 +964,8 @@ class MemoryManager:
             },
             "long_term": long_term_stats,
             "semantic_count": self.semantic_store.count(),
-            "question_count": len(self.questions),
+            "episodic_count": self.episodic_store.count(),
+            "question_count": self.question_store.count(),
             "character": self.current_character.name if self.current_character else None,
         }
 

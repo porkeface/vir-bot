@@ -44,9 +44,6 @@ class SemanticMemoryStore:
         self.persist_path.parent.mkdir(parents=True, exist_ok=True)
         self._records: dict[str, SemanticMemoryRecord] = {}
         self._load()
-        removed = self.cleanup_invalid_records()
-        if removed:
-            logger.info(f"SemanticMemoryStore cleaned invalid records: removed={removed}")
         logger.info(f"SemanticMemoryStore initialized: path={self.persist_path}")
 
     def _load(self) -> None:
@@ -116,6 +113,15 @@ class SemanticMemoryStore:
                 user_id=user_id,
                 namespace=namespace,
                 predicate=predicate,
+            )
+
+        # 只有完全是疑问词的情况才跳过写入
+        if self._is_pure_question_word(normalized_object):
+            logger.warning(
+                f"Skipping semantic memory write: object is pure question word: {normalized_object}"
+            )
+            raise ValueError(
+                f"invalid semantic memory object (pure question word): {normalized_object}"
             )
 
         record = SemanticMemoryRecord(
@@ -212,7 +218,11 @@ class SemanticMemoryStore:
         for record in self._records.values():
             if not record.is_active:
                 continue
-            if record.user_id != user_id or record.namespace != namespace or record.predicate != predicate:
+            if (
+                record.user_id != user_id
+                or record.namespace != namespace
+                or record.predicate != predicate
+            ):
                 continue
             if object_value is not None and record.object != object_value:
                 continue
@@ -255,11 +265,13 @@ class SemanticMemoryStore:
         return None
 
     def cleanup_invalid_records(self) -> int:
+        """清理明确无效的记录（仅在手动调用时）"""
         removed = 0
         for record in self._records.values():
             if not record.is_active:
                 continue
-            if self._is_invalid_object(record.object):
+            # 只清理那些完全是疑问词的记录
+            if self._is_pure_question_word(record.object):
                 record.is_active = False
                 record.updated_at = time.time()
                 removed += 1
@@ -314,10 +326,19 @@ class SemanticMemoryStore:
         return namespaces
 
     def _is_invalid_object(self, value: str) -> bool:
+        """检查是否是无效的记忆对象（例如纯问句词）"""
         lowered = value.strip().lower()
-        invalid_values = {"什么", "哪些", "哪个", "吗", "呢", "吧", "么", "啥"}
-        if lowered in invalid_values:
+        # 只有当 object 完全就是这些疑问词时才认为无效
+        pure_question_words = {"什么", "哪些", "哪个", "吗", "呢", "吧", "么", "啥"}
+        if lowered in pure_question_words:
             return True
-        if any(token in value for token in ["?", "？"]):
+        # 如果含有问号，但不是只有问号，也是无效的
+        if value.strip() in ["?", "？"]:
             return True
         return False
+
+    def _is_pure_question_word(self, value: str) -> bool:
+        """检查是否是纯疑问词"""
+        lowered = value.strip().lower()
+        pure_question_words = {"什么", "哪些", "哪个", "吗", "呢", "吧", "么", "啥"}
+        return lowered in pure_question_words

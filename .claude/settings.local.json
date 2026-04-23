@@ -9,7 +9,11 @@
       "Bash(curl *)",
       "WebSearch",
       "WebFetch(domain:arxiv.org)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(python -c ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)",
+      "PowerShell(python -c \"print\\('hello'\\)\")"
     ]
   }
 }

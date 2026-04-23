@@ -1,0 +1,92 @@
+{
+  "version": "1.0",
+  "updated_at": 1776923170.4843116,
+  "records": [
+    {
+      "episode_id": "567c3a16-e0e7-4aa5-9e9a-f08226e977ba",
+      "user_id": "web_user",
+      "summary": "用户说：还记得的我喜欢吃吃什么吗",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776923121.1389356,
+      "end_at": 1776923121.1389356,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776923121.1389356,
+      "updated_at": 1776923121.1389356,
+      "is_active": true
+    },
+    {
+      "episode_id": "781bfd27-4a12-4f5e-b548-421d31147f6c",
+      "user_id": "web_user",
+      "summary": "用户说：我喜欢吃香蕉",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776923138.087242,
+      "end_at": 1776923138.087242,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776923138.087242,
+      "updated_at": 1776923138.087242,
+      "is_active": true
+    },
+    {
+      "episode_id": "9bff824d-f563-4693-9d71-f7258247dc03",
+      "user_id": "web_user",
+      "summary": "用户说：我喜欢吃香蕉",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776923144.3567288,
+      "end_at": 1776923144.3567288,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776923144.3567288,
+      "updated_at": 1776923144.3567288,
+      "is_active": true
+    },
+    {
+      "episode_id": "fc470651-e8c0-4cad-8d9b-e4ad0837165d",
+      "user_id": "web_user",
+      "summary": "用户说：你叫什么",
+      "entities": [],
+      "start_at": 1776923155.9556298,
+      "end_at": 1776923155.9556298,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776923155.9556298,
+      "updated_at": 1776923155.9556298,
+      "is_active": true
+    },
+    {
+      "episode_id": "d715b5ce-1e45-46be-8fac-7ad49902ea8b",
+      "user_id": "web_user",
+      "summary": "用户说：你好",
+      "entities": [],
+      "start_at": 1776923170.4843116,
+      "end_at": 1776923170.4843116,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776923170.4843116,
+      "updated_at": 1776923170.4843116,
+      "is_active": true
+    }
+  ]
+}

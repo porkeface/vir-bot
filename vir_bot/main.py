@@ -100,6 +100,7 @@ async def _init_core(config):
             memory_updater=memory_updater,
             window_size=config.memory.short_term.window_size,
             wiki_dir=str(config.app.data_dir) + "/wiki",
+            ai_provider=ai_provider,
         )
 
         await memory_manager.set_character(character_card.name)
