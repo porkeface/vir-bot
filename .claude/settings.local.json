@@ -13,7 +13,20 @@
       "Bash(python -c ' *)",
       "Bash(python3 -c ' *)",
       "Bash(python3 *)",
-      "PowerShell(python -c \"print\\('hello'\\)\")"
+      "PowerShell(python -c \"print\\('hello'\\)\")",
+      "Bash(node *)",
+      "Bash(git checkout *)",
+      "Bash(python -m py_compile \"D:/code Project/vir-bot/vir_bot/core/memory/semantic_store.py\")",
+      "Bash(python -m py_compile \"D:/code Project/vir-bot/vir_bot/core/memory/retrieval_router.py\")",
+      "Bash(python -m py_compile \"D:/code Project/vir-bot/vir_bot/core/memory/memory_manager.py\")",
+      "Bash(timeout 15 python -m vir_bot.main)",
+      "Bash(ls /c/Python*)",
+      "Read(//c/Users/Hxxim/AppData/Local/Programs/Python//**)",
+      "Read(//c/Users/Hxxim/AppData/Local/Microsoft/WindowsApps/**)",
+      "Bash(./.venv/Scripts/python -m py_compile vir_bot/core/memory/semantic_store.py)",
+      "Bash(./.venv/Scripts/python -m py_compile vir_bot/core/memory/retrieval_router.py)",
+      "Bash(./.venv/Scripts/python -m py_compile vir_bot/core/memory/memory_manager.py)",
+      "Bash(./.venv/Scripts/python -m vir_bot.main)"
     ]
   }
 }

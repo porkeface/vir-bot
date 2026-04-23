@@ -697,10 +697,15 @@ class MemoryManager:
     ) -> list[MemoryRecord]:
         if not self.long_term:
             return []
-        if not force_lookup and not any(
-            signal in current_query.lower()
-            for signal in ["昨天", "今天", "最近", "上次", "之前", "聊过", "说过", "发生过"]
-        ):
+        needs_lookup = force_lookup
+        if not needs_lookup and self._ai_provider:
+            try:
+                classification = await self.retrieval_router.classify_query_async(current_query)
+                needs_lookup = classification.get("needs_memory_lookup", False)
+            except Exception:
+                needs_lookup = True
+
+        if not needs_lookup:
             return []
         return await self._gather_proactive_memories(
             current_query=current_query,

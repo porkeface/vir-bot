@@ -246,32 +246,29 @@ class RetrievalRouter:
             return None
 
     def _classify_with_rules(self, query: str) -> dict:
+        """AI 分类失败时的保守回退（删除所有硬编码关键词短路）。
+        回退策略：检测到任何个人相关语义信号 → 认为需要查记忆，
+        由后续检索层面的向量匹配决定相关性。"""
         query_lower = query.lower().strip()
 
-        preference_signals = ["喜欢", "讨厌", "不喜欢", "爱吃", "吃什么", "最喜欢", "讨厌什么", "偏好", "口味"]
-        identity_signals = ["名字", "叫什么", "我是谁", "来自", "哪里人", "身份", "职业", "多大", "年龄"]
-        habit_signals = ["习惯", "经常", "每天", "平时", "通常", "一般", "作息", "规律"]
-        episodic_signals = ["昨天", "今天", "最近", "上次", "之前", "以前", "发生过", "聊过", "说过", "提过", "什么时候", "几天前", "上周", "前天"]
-        question_signals = ["问过", "问什么", "问了", "提过什么问题", "今天问", "刚才问", "之前问"]
-        conversation_signals = ["我们聊", "我们说", "对话", "聊天", "记得吗", "还记得", "不记得", "忘了"]
-        memory_signals = ["记得", "不记得", "忘了", "有没有", "发生过", "之前", "上次", "以前", "聊过", "说过", "提过", "记住", "还记得"]
+        if not query_lower:
+            return {"query_type": "general", "needs_memory_lookup": False}
 
-        if any(s in query_lower for s in preference_signals):
-            return {"query_type": "preference", "needs_memory_lookup": True}
-        if any(s in query_lower for s in identity_signals):
-            return {"query_type": "identity", "needs_memory_lookup": True}
-        if any(s in query_lower for s in habit_signals):
-            return {"query_type": "habit", "needs_memory_lookup": True}
-        if any(s in query_lower for s in episodic_signals):
-            return {"query_type": "episodic", "needs_memory_lookup": True}
-        if any(s in query_lower for s in question_signals):
-            return {"query_type": "question", "needs_memory_lookup": True}
-        if any(s in query_lower for s in conversation_signals):
-            return {"query_type": "conversation", "needs_memory_lookup": True}
+        # 宽泛的个人/话题触发：几乎所有涉及「我」「你」「什么」「哪里」的都查记忆
+        broad_signals = [
+            "我", "你", "他", "她",
+            "什么", "哪些", "哪个", "谁", "怎", "哪", "为",
+            "喜欢", "讨厌", "爱好", "习惯", "每天", "平时", "经常",
+            "名字", "叫", "来自", "哪里", "人", "身份", "职业",
+            "昨天", "今天", "明天", "最近", "做", "去", "来", "会",
+            "记得", "记得吗", "还记得", "不记得", "忘了", "说过",
+            "之前", "上次", "以前", "聊过", "提过", "发生过",
+            "能", "要", "想", "觉得",
+        ]
+        if any(s in query_lower for s in broad_signals):
+            return {"query_type": "general", "needs_memory_lookup": True}
 
-        needs_lookup = any(s in query_lower for s in memory_signals)
-        return {"query_type": "general", "needs_memory_lookup": needs_lookup}
-
+        return {"query_type": "general", "needs_memory_lookup": False}
     def classify_query(self, query: str) -> str:
         result = self._classify_with_rules(query)
         return result.get("query_type", "general")

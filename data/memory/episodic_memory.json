@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": 1776923170.4843116,
+  "updated_at": 1776947408.7303338,
   "records": [
     {
       "episode_id": "567c3a16-e0e7-4aa5-9e9a-f08226e977ba",
@@ -86,6 +86,158 @@
       "episode_type": "session",
       "created_at": 1776923170.4843116,
       "updated_at": 1776923170.4843116,
+      "is_active": true
+    },
+    {
+      "episode_id": "d24a70c4-6012-4d65-a7a1-2913c947bba5",
+      "user_id": "web_user",
+      "summary": "用户说：你知道我喜欢吃什么吗",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776946635.9844985,
+      "end_at": 1776946635.9844985,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776946635.9844985,
+      "updated_at": 1776946635.9844985,
+      "is_active": true
+    },
+    {
+      "episode_id": "c2814444-c875-4f9c-8379-e3f2a329bac2",
+      "user_id": "web_user",
+      "summary": "用户说：我可以教你小美吗，因为这个名字好听",
+      "entities": [],
+      "start_at": 1776946718.444574,
+      "end_at": 1776946718.444574,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776946718.444574,
+      "updated_at": 1776946718.444574,
+      "is_active": true
+    },
+    {
+      "episode_id": "b5160a60-5ddf-4fcb-80bb-75030851f408",
+      "user_id": "web_user",
+      "summary": "用户说：从今以后你就叫小美了，你喜欢吃什么",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776946750.3795838,
+      "end_at": 1776946750.3795838,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776946750.3795838,
+      "updated_at": 1776946750.3795838,
+      "is_active": true
+    },
+    {
+      "episode_id": "f1abfc2b-1117-4794-b0c2-3252e5b9b81d",
+      "user_id": "web_user",
+      "summary": "用户说：我还喜欢吃苹果",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776946785.5586445,
+      "end_at": 1776946785.5586445,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776946785.5586445,
+      "updated_at": 1776946785.5586445,
+      "is_active": true
+    },
+    {
+      "episode_id": "786f65c5-51c3-4c33-8215-250d7d6ba402",
+      "user_id": "web_user",
+      "summary": "用户说：还记得我帮你取的新名字吗",
+      "entities": [],
+      "start_at": 1776947181.446916,
+      "end_at": 1776947181.446916,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776947181.446916,
+      "updated_at": 1776947181.446916,
+      "is_active": true
+    },
+    {
+      "episode_id": "a3b3a943-d184-445a-9f48-744d288f286f",
+      "user_id": "web_user",
+      "summary": "用户说：还记得我喜欢吃什么吗",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1776947200.1987576,
+      "end_at": 1776947200.1987576,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776947200.1987576,
+      "updated_at": 1776947200.1987576,
+      "is_active": true
+    },
+    {
+      "episode_id": "ab25e765-f455-41b6-a7bc-6bb968bd43ec",
+      "user_id": "web_user",
+      "summary": "用户说：那我今天问过你几个问题",
+      "entities": [],
+      "start_at": 1776947331.4646256,
+      "end_at": 1776947331.4646256,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776947331.4646256,
+      "updated_at": 1776947331.4646256,
+      "is_active": true
+    },
+    {
+      "episode_id": "2c3b9913-24f7-4cb2-95a3-c6ddfe2b49fb",
+      "user_id": "web_user",
+      "summary": "用户说：现在几点了",
+      "entities": [],
+      "start_at": 1776947382.6989965,
+      "end_at": 1776947382.6989965,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776947382.6989965,
+      "updated_at": 1776947382.6989965,
+      "is_active": true
+    },
+    {
+      "episode_id": "9f2ed341-f825-4277-bf1c-7b3fa310f64b",
+      "user_id": "web_user",
+      "summary": "用户说：你看错时间了吧",
+      "entities": [],
+      "start_at": 1776947408.7303338,
+      "end_at": 1776947408.7303338,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1776947408.7303338,
+      "updated_at": 1776947408.7303338,
       "is_active": true
     }
   ]

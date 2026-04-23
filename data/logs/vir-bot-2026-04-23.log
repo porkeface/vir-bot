@@ -326,3 +326,160 @@
 2026-04-23 13:46:09.029 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:114 - Question classified: topic=general, type=other
 2026-04-23 13:46:09.171 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=9261d6e5-4e07-4b1e-862c-e3e15bb4e145, type=conversation, importance=0.5
 2026-04-23 13:51:14.660 | INFO     | __main__:lifespan:222 - === vir-bot 关闭中 ===
+2026-04-23 16:57:11.202 | INFO     | __main__:run:337 - Web 控制台: http://0.0.0.0:7860
+2026-04-23 16:57:11.202 | INFO     | __main__:run:338 - API 文档: http://0.0.0.0:7860/docs
+2026-04-23 16:57:11.465 | INFO     | __main__:lifespan:197 - === vir-bot 0.1.0 启动 ===
+2026-04-23 16:57:16.234 | INFO     | __main__:_init_core:67 - ============================================================
+2026-04-23 16:57:16.237 | INFO     | __main__:_init_core:68 - 初始化核心组件...
+2026-04-23 16:57:16.237 | INFO     | __main__:_init_core:69 - ============================================================
+2026-04-23 16:57:16.511 | INFO     | __main__:_init_core:74 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-23 16:57:16.530 | INFO     | __main__:_init_core:77 - 角色卡已加载: 小雅
+2026-04-23 16:58:37.008 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-23 16:58:37.008 | INFO     | vir_bot.core.memory.semantic_store:__init__:47 - SemanticMemoryStore initialized: path=data\memory\semantic_memory.json
+2026-04-23 16:58:37.008 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-23 16:58:37.011 | INFO     | vir_bot.core.memory.episodic_store:__init__:54 - EpisodicMemoryStore initialized: path=data\memory\episodic_memory.json
+2026-04-23 16:58:37.014 | INFO     | vir_bot.core.memory.question_memory:__init__:150 - QuestionMemoryStore initialized: path=data\memory\question_memory.json
+2026-04-23 16:58:37.014 | INFO     | vir_bot.core.memory.question_memory:__init__:78 - QuestionMemoryIndex initialized
+2026-04-23 16:58:37.016 | INFO     | vir_bot.core.memory.question_memory:clear:133 - QuestionMemoryIndex cleared
+2026-04-23 16:58:37.016 | INFO     | vir_bot.core.memory.memory_manager:_rebuild_question_index:83 - Question index rebuilt: 5 questions
+2026-04-23 16:58:37.017 | INFO     | vir_bot.core.memory.retrieval_router:__init__:190 - RetrievalRouter initialized with AI-powered intent classification
+2026-04-23 16:58:37.017 | INFO     | vir_bot.core.memory.memory_manager:__init__:73 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-23 16:58:37.038 | INFO     | vir_bot.core.wiki:load_character:207 - Character loaded: 小雅
+2026-04-23 16:58:37.038 | INFO     | vir_bot.core.memory.memory_manager:set_character:90 - Current character set to: 小雅
+2026-04-23 16:58:37.038 | INFO     | __main__:_init_core:108 - 记忆系统就绪
+2026-04-23 16:58:37.040 | INFO     | __main__:_init_core:109 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-23 16:58:37.040 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-23 16:58:37.040 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-23 16:58:37.040 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-23 16:58:37.040 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-23 16:58:37.040 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-23 16:58:37.041 | INFO     | __main__:_init_core:114 - MCP 工具: 4 个已注册
+2026-04-23 16:58:37.041 | INFO     | __main__:_init_core:123 - 消息管道就绪
+2026-04-23 16:58:37.175 | INFO     | __main__:lifespan:219 - === vir-bot 启动完成 ===
+2026-04-23 17:33:55.433 | INFO     | __main__:lifespan:223 - === vir-bot 关闭中 ===
+2026-04-23 20:11:02.398 | INFO     | __main__:run:337 - Web 控制台: http://0.0.0.0:7860
+2026-04-23 20:11:02.401 | INFO     | __main__:run:338 - API 文档: http://0.0.0.0:7860/docs
+2026-04-23 20:11:02.459 | INFO     | __main__:lifespan:197 - === vir-bot 0.1.0 启动 ===
+2026-04-23 20:11:03.744 | INFO     | __main__:_init_core:67 - ============================================================
+2026-04-23 20:11:03.744 | INFO     | __main__:_init_core:68 - 初始化核心组件...
+2026-04-23 20:11:03.744 | INFO     | __main__:_init_core:69 - ============================================================
+2026-04-23 20:11:04.123 | INFO     | __main__:_init_core:74 - AI Provider: openai/deepseek-chat (健康: False)
+2026-04-23 20:11:04.126 | INFO     | __main__:_init_core:77 - 角色卡已加载: 小雅
+2026-04-23 20:11:21.184 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-23 20:11:21.186 | INFO     | vir_bot.core.memory.semantic_store:__init__:47 - SemanticMemoryStore initialized: path=data\memory\semantic_memory.json
+2026-04-23 20:11:21.187 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-23 20:11:21.189 | INFO     | vir_bot.core.memory.episodic_store:__init__:54 - EpisodicMemoryStore initialized: path=data\memory\episodic_memory.json
+2026-04-23 20:11:21.189 | INFO     | vir_bot.core.memory.question_memory:__init__:150 - QuestionMemoryStore initialized: path=data\memory\question_memory.json
+2026-04-23 20:11:21.189 | INFO     | vir_bot.core.memory.question_memory:__init__:78 - QuestionMemoryIndex initialized
+2026-04-23 20:11:21.189 | INFO     | vir_bot.core.memory.question_memory:clear:133 - QuestionMemoryIndex cleared
+2026-04-23 20:11:21.189 | INFO     | vir_bot.core.memory.memory_manager:_rebuild_question_index:83 - Question index rebuilt: 5 questions
+2026-04-23 20:11:21.192 | INFO     | vir_bot.core.memory.retrieval_router:__init__:190 - RetrievalRouter initialized with AI-powered intent classification
+2026-04-23 20:11:21.193 | INFO     | vir_bot.core.memory.memory_manager:__init__:73 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-23 20:11:21.200 | INFO     | vir_bot.core.wiki:load_character:207 - Character loaded: 小雅
+2026-04-23 20:11:21.200 | INFO     | vir_bot.core.memory.memory_manager:set_character:90 - Current character set to: 小雅
+2026-04-23 20:11:21.200 | INFO     | __main__:_init_core:108 - 记忆系统就绪
+2026-04-23 20:11:21.200 | INFO     | __main__:_init_core:109 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-23 20:11:21.200 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-23 20:11:21.200 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-23 20:11:21.200 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-23 20:11:21.200 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-23 20:11:21.200 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-23 20:11:21.202 | INFO     | __main__:_init_core:114 - MCP 工具: 4 个已注册
+2026-04-23 20:11:21.202 | INFO     | __main__:_init_core:123 - 消息管道就绪
+2026-04-23 20:11:21.347 | INFO     | __main__:lifespan:219 - === vir-bot 启动完成 ===
+2026-04-23 20:15:26.443 | INFO     | __main__:run:337 - Web 控制台: http://0.0.0.0:7860
+2026-04-23 20:15:26.443 | INFO     | __main__:run:338 - API 文档: http://0.0.0.0:7860/docs
+2026-04-23 20:15:26.488 | INFO     | __main__:lifespan:197 - === vir-bot 0.1.0 启动 ===
+2026-04-23 20:15:27.573 | INFO     | __main__:_init_core:67 - ============================================================
+2026-04-23 20:15:27.573 | INFO     | __main__:_init_core:68 - 初始化核心组件...
+2026-04-23 20:15:27.573 | INFO     | __main__:_init_core:69 - ============================================================
+2026-04-23 20:15:27.789 | INFO     | __main__:_init_core:74 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-23 20:15:27.792 | INFO     | __main__:_init_core:77 - 角色卡已加载: 小雅
+2026-04-23 20:15:44.241 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-23 20:15:44.243 | INFO     | vir_bot.core.memory.semantic_store:__init__:47 - SemanticMemoryStore initialized: path=data\memory\semantic_memory.json
+2026-04-23 20:15:44.243 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-23 20:15:44.246 | INFO     | vir_bot.core.memory.episodic_store:__init__:54 - EpisodicMemoryStore initialized: path=data\memory\episodic_memory.json
+2026-04-23 20:15:44.249 | INFO     | vir_bot.core.memory.question_memory:__init__:150 - QuestionMemoryStore initialized: path=data\memory\question_memory.json
+2026-04-23 20:15:44.249 | INFO     | vir_bot.core.memory.question_memory:__init__:78 - QuestionMemoryIndex initialized
+2026-04-23 20:15:44.249 | INFO     | vir_bot.core.memory.question_memory:clear:133 - QuestionMemoryIndex cleared
+2026-04-23 20:15:44.249 | INFO     | vir_bot.core.memory.memory_manager:_rebuild_question_index:83 - Question index rebuilt: 5 questions
+2026-04-23 20:15:44.249 | INFO     | vir_bot.core.memory.retrieval_router:__init__:190 - RetrievalRouter initialized with AI-powered intent classification
+2026-04-23 20:15:44.249 | INFO     | vir_bot.core.memory.memory_manager:__init__:73 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-23 20:15:44.256 | INFO     | vir_bot.core.wiki:load_character:207 - Character loaded: 小雅
+2026-04-23 20:15:44.256 | INFO     | vir_bot.core.memory.memory_manager:set_character:90 - Current character set to: 小雅
+2026-04-23 20:15:44.258 | INFO     | __main__:_init_core:108 - 记忆系统就绪
+2026-04-23 20:15:44.258 | INFO     | __main__:_init_core:109 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-23 20:15:44.258 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-23 20:15:44.258 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-23 20:15:44.258 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-23 20:15:44.258 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-23 20:15:44.258 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-23 20:15:44.258 | INFO     | __main__:_init_core:114 - MCP 工具: 4 个已注册
+2026-04-23 20:15:44.261 | INFO     | __main__:_init_core:123 - 消息管道就绪
+2026-04-23 20:15:44.398 | INFO     | __main__:lifespan:219 - === vir-bot 启动完成 ===
+2026-04-23 20:17:13.003 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '你知道我喜欢吃什么吗...' as preference
+2026-04-23 20:17:13.005 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: preference
+2026-04-23 20:17:14.046 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:17:14.337 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=445fc571-5a26-4428-8db5-c07d072a414a, type=conversation, importance=0.5
+2026-04-23 20:18:36.212 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '我可以教你小美吗，因为这个名字好听...' as general
+2026-04-23 20:18:37.411 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:18:37.581 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=4a502630-d0e1-452c-bbcb-082dbfe4b898, type=conversation, importance=0.5
+2026-04-23 20:19:08.103 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '从今以后你就叫小美了，你喜欢吃什么...' as identity
+2026-04-23 20:19:08.104 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: identity
+2026-04-23 20:19:09.451 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:19:09.587 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=59503d79-1cd2-458f-8370-4ae5011f9161, type=conversation, importance=0.5
+2026-04-23 20:19:42.713 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '我还喜欢吃苹果...' as preference
+2026-04-23 20:19:42.713 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: preference
+2026-04-23 20:19:43.961 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:19:44.115 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=4fe4ab81-f244-4155-ae90-648797184fae, type=conversation, importance=0.5
+2026-04-23 20:20:01.480 | INFO     | __main__:lifespan:223 - === vir-bot 关闭中 ===
+2026-04-23 20:25:20.449 | INFO     | __main__:run:337 - Web 控制台: http://0.0.0.0:7860
+2026-04-23 20:25:20.449 | INFO     | __main__:run:338 - API 文档: http://0.0.0.0:7860/docs
+2026-04-23 20:25:20.512 | INFO     | __main__:lifespan:197 - === vir-bot 0.1.0 启动 ===
+2026-04-23 20:25:21.804 | INFO     | __main__:_init_core:67 - ============================================================
+2026-04-23 20:25:21.804 | INFO     | __main__:_init_core:68 - 初始化核心组件...
+2026-04-23 20:25:21.804 | INFO     | __main__:_init_core:69 - ============================================================
+2026-04-23 20:25:22.026 | INFO     | __main__:_init_core:74 - AI Provider: openai/deepseek-chat (健康: True)
+2026-04-23 20:25:22.032 | INFO     | __main__:_init_core:77 - 角色卡已加载: 小雅
+2026-04-23 20:25:43.495 | INFO     | vir_bot.core.memory.long_term:__init__:116 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-23 20:25:43.495 | INFO     | vir_bot.core.memory.semantic_store:__init__:47 - SemanticMemoryStore initialized: path=data\memory\semantic_memory.json
+2026-04-23 20:25:43.498 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-23 20:25:43.498 | INFO     | vir_bot.core.memory.episodic_store:__init__:54 - EpisodicMemoryStore initialized: path=data\memory\episodic_memory.json
+2026-04-23 20:25:43.501 | INFO     | vir_bot.core.memory.question_memory:__init__:150 - QuestionMemoryStore initialized: path=data\memory\question_memory.json
+2026-04-23 20:25:43.506 | INFO     | vir_bot.core.memory.question_memory:__init__:78 - QuestionMemoryIndex initialized
+2026-04-23 20:25:43.507 | INFO     | vir_bot.core.memory.question_memory:clear:133 - QuestionMemoryIndex cleared
+2026-04-23 20:25:43.507 | INFO     | vir_bot.core.memory.memory_manager:_rebuild_question_index:83 - Question index rebuilt: 9 questions
+2026-04-23 20:25:43.507 | INFO     | vir_bot.core.memory.retrieval_router:__init__:190 - RetrievalRouter initialized with AI-powered intent classification
+2026-04-23 20:25:43.510 | INFO     | vir_bot.core.memory.memory_manager:__init__:73 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-23 20:25:43.522 | INFO     | vir_bot.core.wiki:load_character:207 - Character loaded: 小雅
+2026-04-23 20:25:43.522 | INFO     | vir_bot.core.memory.memory_manager:set_character:90 - Current character set to: 小雅
+2026-04-23 20:25:43.525 | INFO     | __main__:_init_core:108 - 记忆系统就绪
+2026-04-23 20:25:43.525 | INFO     | __main__:_init_core:109 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-23 20:25:43.527 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-23 20:25:43.527 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-23 20:25:43.527 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-23 20:25:43.528 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-23 20:25:43.528 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-23 20:25:43.528 | INFO     | __main__:_init_core:114 - MCP 工具: 4 个已注册
+2026-04-23 20:25:43.528 | INFO     | __main__:_init_core:123 - 消息管道就绪
+2026-04-23 20:25:43.725 | INFO     | __main__:lifespan:219 - === vir-bot 启动完成 ===
+2026-04-23 20:26:19.345 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '还记得我帮你取的新名字吗...' as identity
+2026-04-23 20:26:19.347 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: identity
+2026-04-23 20:26:20.525 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:26:20.735 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=af852dbe-8516-4105-92af-bff898abfc0b, type=conversation, importance=0.5
+2026-04-23 20:26:37.306 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '还记得我喜欢吃什么吗...' as preference
+2026-04-23 20:26:37.306 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: preference
+2026-04-23 20:26:39.000 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:26:39.159 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=ae8a483f-f830-4e60-b6a7-5932ea67c78c, type=conversation, importance=0.5
+2026-04-23 20:28:48.667 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '那我今天问过你几个问题...' as question
+2026-04-23 20:28:48.667 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: question
+2026-04-23 20:28:50.607 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:28:50.775 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=2bb5dff8-469b-4e55-9eb0-701dc338f9b7, type=conversation, importance=0.5
+2026-04-23 20:29:40.034 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '现在几点了...' as general
+2026-04-23 20:29:41.546 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=general, type=other
+2026-04-23 20:29:41.686 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=bece43ec-4f8d-4ab0-a250-71a4f71a1b4b, type=conversation, importance=0.5
+2026-04-23 20:30:05.100 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:238 - AI classified query '你看错时间了吧...' as episodic
+2026-04-23 20:30:05.100 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:287 - Query classified as: episodic
+2026-04-23 20:30:07.356 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:124 - Question classified: topic=时间管理, type=other
+2026-04-23 20:30:07.528 | DEBUG    | vir_bot.core.memory.long_term:add:183 - Memory added: id=f2945bed-d9a3-4df4-b131-a2cd62e8643c, type=conversation, importance=0.5
+2026-04-23 20:30:19.943 | INFO     | __main__:lifespan:223 - === vir-bot 关闭中 ===
