@@ -42,7 +42,14 @@
       "Bash(echo \"long_term:$?\")",
       "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/retrieval_router.py\")",
       "Bash(echo \"retrieval_router:$?\")",
-      "Bash(echo \"memory_manager:$?\")"
+      "Bash(echo \"memory_manager:$?\")",
+      "Bash(pip install *)",
+      "Bash(.venv/Scripts/python.exe -m pip install pytest pytest-asyncio -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/ -v)",
+      "Bash(.venv/Scripts/python.exe -m vir-bot.main)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'feat: Phase 1 - 测试框架 + 配置开关 *)",
+      "Bash(git tag *)"
     ]
   }
 }

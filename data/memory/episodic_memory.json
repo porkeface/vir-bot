@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": 1777110285.626276,
+  "updated_at": 1777130793.6993418,
   "records": [
     {
       "episode_id": "567c3a16-e0e7-4aa5-9e9a-f08226e977ba",
@@ -846,6 +846,86 @@
       "episode_type": "session",
       "created_at": 1777110285.626276,
       "updated_at": 1777110285.626276,
+      "is_active": true
+    },
+    {
+      "episode_id": "fb943e51-e116-4f5d-957d-59e1926c535f",
+      "user_id": "web_user",
+      "summary": "用户说：晚上好啊，小美",
+      "entities": [],
+      "start_at": 1777125823.9851258,
+      "end_at": 1777125823.9851258,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777125823.9851258,
+      "updated_at": 1777125823.9851258,
+      "is_active": true
+    },
+    {
+      "episode_id": "115296a8-01de-47ac-8289-a5f1c0ef656f",
+      "user_id": "web_user",
+      "summary": "用户说：想跟你聊聊天但是不知道说什么",
+      "entities": [],
+      "start_at": 1777125852.3493207,
+      "end_at": 1777125852.3493207,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777125852.3493207,
+      "updated_at": 1777125852.3493207,
+      "is_active": true
+    },
+    {
+      "episode_id": "35bfd9bc-799a-48ed-90f2-2e6b37f9a39b",
+      "user_id": "web_user",
+      "summary": "用户说：今天感觉还好，就是感觉很累，想找个人倾诉一下",
+      "entities": [],
+      "start_at": 1777125903.690738,
+      "end_at": 1777125903.690738,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777125903.690738,
+      "updated_at": 1777125903.690738,
+      "is_active": true
+    },
+    {
+      "episode_id": "4e73ad95-771c-4627-9e56-e93d5046ee07",
+      "user_id": "web_user",
+      "summary": "用户说：hello,你还好吗，现在很晚了吧",
+      "entities": [],
+      "start_at": 1777130735.1195476,
+      "end_at": 1777130735.1195476,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777130735.1195476,
+      "updated_at": 1777130735.1195476,
+      "is_active": true
+    },
+    {
+      "episode_id": "d4e7563a-8007-4686-9d9a-e310ee424f0e",
+      "user_id": "web_user",
+      "summary": "用户说：我发现你特别感人啊，为什么你明明没有感情，我却越来越对你上头了",
+      "entities": [],
+      "start_at": 1777130793.6993418,
+      "end_at": 1777130793.6993418,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777130793.6993418,
+      "updated_at": 1777130793.6993418,
       "is_active": true
     }
   ]

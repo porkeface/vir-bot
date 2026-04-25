@@ -624,3 +624,119 @@
 2026-04-25 17:36:34.514 | INFO     | __main__:lifespan:219 - === vir-bot 启动完成 ===
 2026-04-25 17:36:39.082 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '你好...' as general
 2026-04-25 17:36:39.082 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
+2026-04-25 17:36:42.385 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 你好 -> {'query_type': 'general', 'needs_memory_lookup': False, 'reason': '普通问候，不需要查记忆', '_timestamp': 1777109799.0824032}
+2026-04-25 17:36:42.390 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=general, type=general
+2026-04-25 17:36:42.603 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=eaa58e05-d244-4cd8-8a44-49c4fde0f9f9, type=conversation, importance=0.5
+2026-04-25 17:37:17.240 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '小美同学，今天是几号啊...' as time_query
+2026-04-25 17:37:19.146 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 小美同学，今天是几号啊 -> {'query_type': 'time_query', 'needs_memory_lookup': False, 'reason': '用户询问当前日期，属于时间查询，不需要查询记忆库', '_timestamp': 1777109837.2401612}
+2026-04-25 17:37:19.154 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=time_query, type=time_query
+2026-04-25 17:37:19.354 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=8d3484f5-07dd-4319-be9b-55882513e145, type=conversation, importance=0.5
+2026-04-25 17:37:50.269 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '今天我都跟你聊了些什么呢...' as conversation
+2026-04-25 17:37:50.271 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: conversation, needs_lookup: True
+2026-04-25 17:37:54.129 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 今天我都跟你聊了些什么呢 -> {'query_type': 'conversation', 'needs_memory_lookup': True, 'reason': '用户询问今天的对话内容', '_timestamp': 1777109870.2719314}
+2026-04-25 17:37:54.134 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=conversation, type=conversation
+2026-04-25 17:37:54.376 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=185d9f9b-68ac-47ea-88df-9b94dc0f41a7, type=conversation, importance=0.5
+2026-04-25 17:38:54.564 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '今天16:44以前我没有跟你讲过话吗...' as conversation
+2026-04-25 17:38:54.564 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: conversation, needs_lookup: True
+2026-04-25 17:38:58.808 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 今天16:44以前我没有跟你讲过话吗 -> {'query_type': 'conversation', 'needs_memory_lookup': True, 'reason': '用户询问在特定时间点之前是否有过对话，需要查询记忆库中的对话历史', '_timestamp': 1777109934.56439}
+2026-04-25 17:38:58.811 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=conversation, type=conversation
+2026-04-25 17:38:59.031 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=3a530f1e-834e-4b7d-b07c-186392c9871d, type=conversation, importance=0.5
+2026-04-25 17:40:54.863 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '昨天我有跟你说过什么吗...' as episodic
+2026-04-25 17:40:54.863 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: episodic, needs_lookup: True
+2026-04-25 17:40:56.738 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 昨天我有跟你说过什么吗 -> {'query_type': 'episodic', 'needs_memory_lookup': True, 'reason': '用户询问昨天发生的对话内容', '_timestamp': 1777110054.8630183}
+2026-04-25 17:40:56.745 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=episodic, type=episodic
+2026-04-25 17:40:56.856 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=ad79e1ba-9f00-4181-bde3-84d7ce6d0e3b, type=conversation, importance=0.5
+2026-04-25 17:41:12.749 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '没有吗...' as general
+2026-04-25 17:41:12.750 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
+2026-04-25 17:41:15.832 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 没有吗 -> {'query_type': 'general', 'needs_memory_lookup': False, 'reason': '用户问题过于简短且无明确记忆查询意图，属于普通对话回应', '_timestamp': 1777110072.7500927}
+2026-04-25 17:41:15.851 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=general, type=general
+2026-04-25 17:41:16.157 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=41f102c8-4338-4fc3-a751-aea9bafd566f, type=conversation, importance=0.5
+2026-04-25 17:42:35.975 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '记得我我为什么要叫你小美吗...' as preference
+2026-04-25 17:42:35.975 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: preference, needs_lookup: True
+2026-04-25 17:42:38.349 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 记得我我为什么要叫你小美吗 -> {'query_type': 'preference', 'needs_memory_lookup': True, 'reason': '用户询问称呼原因', '_timestamp': 1777110155.9752457}
+2026-04-25 17:42:38.355 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=preference, type=preference
+2026-04-25 17:42:38.474 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=85601f4a-d796-4759-b35f-756e61c22e60, type=conversation, importance=0.5
+2026-04-25 17:44:39.891 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '你觉得神没时间段是人们最感性的时候...' as general
+2026-04-25 17:44:39.891 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
+2026-04-25 17:44:44.098 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 你觉得神没时间段是人们最感性的时候 -> {'query_type': 'general', 'needs_memory_lookup': False, 'reason': '用户询问AI对感性时间段的看法，属于普通对话，无需查询记忆', '_timestamp': 1777110279.8911731}
+2026-04-25 17:44:44.104 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=general, type=general
+2026-04-25 17:44:44.355 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=1aeac633-c298-4749-b044-e851e126579f, type=conversation, importance=0.5
+2026-04-25 22:03:39.303 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '晚上好啊，小美...' as general
+2026-04-25 22:03:39.314 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
+2026-04-25 22:03:42.037 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 晚上好啊，小美 -> {'query_type': 'general', 'needs_memory_lookup': False, 'reason': '用户打招呼，不需要查询记忆', '_timestamp': 1777125819.3142092}
+2026-04-25 22:03:42.050 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=general, type=general
+2026-04-25 22:03:42.273 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=aa5da047-e199-4ce8-b3da-b5f65720fd9b, type=conversation, importance=0.5
+2026-04-25 22:04:07.327 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '想跟你聊聊天但是不知道说什么...' as general
+2026-04-25 22:04:07.327 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
+2026-04-25 22:04:10.473 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 想跟你聊聊天但是不知道说什么 -> {'query_type': 'general', 'needs_memory_lookup': False, 'reason': '用户只是表达想聊天，没有查询记忆的需求', '_timestamp': 1777125847.3270922}
+2026-04-25 22:04:10.482 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=general, type=general
+2026-04-25 22:04:10.713 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=4b1444a1-e806-4d7f-883b-174c9af595b1, type=conversation, importance=0.5
+2026-04-25 22:04:58.625 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query '今天感觉还好，就是感觉很累，想找个人倾诉一下...' as general
+2026-04-25 22:04:58.625 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
+2026-04-25 22:05:01.541 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:121 - AI classified query: 今天感觉还好，就是感觉很累，想找个人倾诉一下 -> {'query_type': 'general', 'needs_memory_lookup': False, 'reason': '用户表达情绪，不需要查询记忆', '_timestamp': 1777125898.6258986}
+2026-04-25 22:05:01.551 | DEBUG    | vir_bot.core.memory.memory_manager:add_interaction:140 - Question classified: topic=general, type=general
+2026-04-25 22:05:01.772 | DEBUG    | vir_bot.core.memory.long_term:add:192 - Memory added: id=d254591e-6246-4b8c-8aa8-e799f53d6638, type=conversation, importance=0.5
+2026-04-25 22:29:37.357 | INFO     | __main__:lifespan:223 - === vir-bot 关闭中 ===
+2026-04-25 22:43:05.397 | INFO     | __main__:run:337 - Web 控制台: http://0.0.0.0:7860
+2026-04-25 22:43:05.399 | INFO     | __main__:run:338 - API 文档: http://0.0.0.0:7860/docs
+2026-04-25 22:43:05.472 | INFO     | __main__:lifespan:197 - === vir-bot 0.1.0 启动 ===
+2026-04-25 22:43:06.527 | INFO     | __main__:_init_core:67 - ============================================================
+2026-04-25 22:43:06.527 | INFO     | __main__:_init_core:68 - 初始化核心组件...
+2026-04-25 22:43:06.527 | INFO     | __main__:_init_core:69 - ============================================================
+2026-04-25 22:43:06.770 | INFO     | __main__:_init_core:74 - AI Provider: openai/deepseek-v4-flash (健康: True)
+2026-04-25 22:43:06.777 | INFO     | __main__:_init_core:77 - 角色卡已加载: 小雅
+2026-04-25 22:43:22.827 | INFO     | vir_bot.core.memory.long_term:__init__:120 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-25 22:43:22.830 | INFO     | vir_bot.core.memory.semantic_store:__init__:47 - SemanticMemoryStore initialized: path=data\memory\semantic_memory.json
+2026-04-25 22:43:22.830 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-25 22:43:22.834 | INFO     | vir_bot.core.memory.episodic_store:__init__:54 - EpisodicMemoryStore initialized: path=data\memory\episodic_memory.json
+2026-04-25 22:43:22.834 | INFO     | vir_bot.core.memory.question_memory:__init__:156 - QuestionMemoryStore initialized: path=data\memory\question_memory.json
+2026-04-25 22:43:22.837 | INFO     | vir_bot.core.memory.question_memory:__init__:78 - QuestionMemoryIndex initialized
+2026-04-25 22:43:22.838 | INFO     | vir_bot.core.memory.question_memory:clear:139 - QuestionMemoryIndex cleared
+2026-04-25 22:43:22.838 | INFO     | vir_bot.core.memory.memory_manager:_rebuild_question_index:90 - Question index rebuilt: 40 questions
+2026-04-25 22:43:22.838 | INFO     | vir_bot.core.memory.retrieval_router:__init__:191 - RetrievalRouter initialized with AI-powered intent classification
+2026-04-25 22:43:22.841 | INFO     | vir_bot.core.memory.memory_manager:__init__:76 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-25 22:43:22.872 | INFO     | vir_bot.core.wiki:load_character:207 - Character loaded: 小雅
+2026-04-25 22:43:22.872 | INFO     | vir_bot.core.memory.memory_manager:set_character:97 - Current character set to: 小雅
+2026-04-25 22:43:22.872 | INFO     | __main__:_init_core:108 - 记忆系统就绪
+2026-04-25 22:43:22.872 | INFO     | __main__:_init_core:109 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-25 22:43:22.872 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-25 22:43:22.872 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-25 22:43:22.872 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-25 22:43:22.876 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-25 22:43:22.876 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-25 22:43:22.876 | INFO     | __main__:_init_core:114 - MCP 工具: 4 个已注册
+2026-04-25 22:43:22.878 | INFO     | __main__:_init_core:123 - 消息管道就绪
+2026-04-25 22:43:23.087 | INFO     | __main__:lifespan:219 - === vir-bot 启动完成 ===
+2026-04-25 22:53:02.862 | INFO     | __main__:lifespan:223 - === vir-bot 关闭中 ===
+2026-04-25 23:23:31.265 | INFO     | __main__:run:338 - Web 控制台: http://0.0.0.0:7860
+2026-04-25 23:23:31.267 | INFO     | __main__:run:339 - API 文档: http://0.0.0.0:7860/docs
+2026-04-25 23:23:31.314 | INFO     | __main__:lifespan:198 - === vir-bot 0.1.0 启动 ===
+2026-04-25 23:23:32.407 | INFO     | __main__:_init_core:67 - ============================================================
+2026-04-25 23:23:32.407 | INFO     | __main__:_init_core:68 - 初始化核心组件...
+2026-04-25 23:23:32.408 | INFO     | __main__:_init_core:69 - ============================================================
+2026-04-25 23:23:32.618 | INFO     | __main__:_init_core:74 - AI Provider: openai/deepseek-v4-flash (健康: True)
+2026-04-25 23:23:32.621 | INFO     | __main__:_init_core:77 - 角色卡已加载: 小雅
+2026-04-25 23:23:49.387 | INFO     | vir_bot.core.memory.long_term:__init__:120 - LongTermMemory initialized: collection=persona_memory, model=all-MiniLM-L6-v2, top_k=5
+2026-04-25 23:23:49.389 | INFO     | vir_bot.core.memory.semantic_store:__init__:47 - SemanticMemoryStore initialized: path=data\memory\semantic_memory.json
+2026-04-25 23:23:49.393 | INFO     | vir_bot.core.wiki:__init__:189 - WikiKnowledgeBase initialized: wiki_dir=./data/wiki
+2026-04-25 23:23:49.399 | INFO     | vir_bot.core.memory.episodic_store:__init__:54 - EpisodicMemoryStore initialized: path=data\memory\episodic_memory.json
+2026-04-25 23:23:49.401 | INFO     | vir_bot.core.memory.question_memory:__init__:156 - QuestionMemoryStore initialized: path=data\memory\question_memory.json
+2026-04-25 23:23:49.401 | INFO     | vir_bot.core.memory.question_memory:__init__:78 - QuestionMemoryIndex initialized
+2026-04-25 23:23:49.403 | INFO     | vir_bot.core.memory.question_memory:clear:139 - QuestionMemoryIndex cleared
+2026-04-25 23:23:49.404 | INFO     | vir_bot.core.memory.memory_manager:_rebuild_question_index:90 - Question index rebuilt: 40 questions
+2026-04-25 23:23:49.404 | INFO     | vir_bot.core.memory.retrieval_router:__init__:191 - RetrievalRouter initialized with AI-powered intent classification
+2026-04-25 23:23:49.405 | INFO     | vir_bot.core.memory.memory_manager:__init__:76 - MemoryManager initialized with Wiki + RAG hybrid system
+2026-04-25 23:23:49.416 | INFO     | vir_bot.core.wiki:load_character:207 - Character loaded: 小雅
+2026-04-25 23:23:49.418 | INFO     | vir_bot.core.memory.memory_manager:set_character:97 - Current character set to: 小雅
+2026-04-25 23:23:49.419 | INFO     | __main__:_init_core:109 - 记忆系统就绪
+2026-04-25 23:23:49.419 | INFO     | __main__:_init_core:110 - Wiki 系统已初始化，当前角色: 小雅
+2026-04-25 23:23:49.420 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: calculator
+2026-04-25 23:23:49.420 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_query
+2026-04-25 23:23:49.420 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: memory_forget
+2026-04-25 23:23:49.421 | DEBUG    | vir_bot.core.mcp:register:65 - 工具已注册: character_update
+2026-04-25 23:23:49.421 | INFO     | vir_bot.core.mcp:register_builtin_tools:291 - 内置工具注册完成: 4 个
+2026-04-25 23:23:49.422 | INFO     | __main__:_init_core:115 - MCP 工具: 4 个已注册
+2026-04-25 23:23:49.423 | INFO     | __main__:_init_core:124 - 消息管道就绪
+2026-04-25 23:23:49.775 | INFO     | __main__:lifespan:220 - === vir-bot 启动完成 ===
+2026-04-25 23:25:29.078 | DEBUG    | vir_bot.core.memory.retrieval_router:_classify_with_ai:239 - AI classified query 'hello,你还好吗，现在很晚了吧...' as general
+2026-04-25 23:25:29.079 | DEBUG    | vir_bot.core.memory.retrieval_router:retrieve:274 - Query classified as: general, needs_lookup: False
