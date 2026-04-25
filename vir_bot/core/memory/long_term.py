@@ -53,14 +53,18 @@ class MemoryRecord:
 
     def to_chroma_metadata(self) -> dict:
         """转换为 ChromaDB 的 metadata 格式"""
-        return {
+        meta = {
             "type": self.type,
             "importance": self.importance,
             "timestamp": self.timestamp,
             "entities": ",".join(self.entities) if self.entities else "",
             "sentiment": str(self.sentiment),
-            **self.metadata,
         }
+        # 确保 user_id 被存储
+        if "user_id" not in meta:
+            meta["user_id"] = self.metadata.get("user_id", "")
+        meta.update(self.metadata)
+        return meta
 
     @classmethod
     def from_chroma_metadata(cls, record_id: str, content: str, metadata: dict) -> "MemoryRecord":
@@ -141,6 +145,7 @@ class LongTermMemory:
         entities: list[str] | None = None,
         sentiment: dict | None = None,
         metadata: dict | None = None,
+        user_id: str | None = None,
     ) -> str:
         """添加一条增强的记忆，返回 ID
 
@@ -159,6 +164,10 @@ class LongTermMemory:
         meta = metadata or {}
         entities = entities or []
         sentiment = sentiment or {}
+
+        # 确保 user_id 被存储
+        if user_id:
+            meta["user_id"] = user_id
 
         # 生成 embedding
         emb = self._embedding_fn([content])
@@ -204,10 +213,26 @@ class LongTermMemory:
         k = top_k or self.top_k
         emb = self._embedding_fn([query])
 
-        # ChromaDB 的基础查询
+        # 构建 ChromaDB where 子句
+        where_clause = None
+        if filters:
+            conditions = []
+            if "user_id" in filters:
+                conditions.append({"user_id": filters["user_id"]})
+            if "type" in filters:
+                types = filters["type"]
+                if isinstance(types, str):
+                    types = [types]
+                conditions.append({"type": {"": types}})
+            if len(conditions) == 1:
+                where_clause = conditions[0]
+            elif len(conditions) > 1:
+                where_clause = {"": conditions}
+
         results = self._collection.query(
             query_embeddings=emb,
             n_results=k * 2,  # 先取 2 倍，后续再排序和过滤
+            where=where_clause,  # 传递过滤器
             include=["documents", "metadatas", "distances"],
         )
 

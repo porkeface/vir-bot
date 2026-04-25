@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": 1777097853.2796724,
+  "updated_at": 1777099204.532811,
   "records": [
     {
       "memory_id": "02b1776d-8750-49f6-9800-e00b7610a701",
@@ -70,6 +70,20 @@
       "source_message_id": "web_test",
       "created_at": 1777097853.2796724,
       "updated_at": 1777097853.2796724,
+      "is_active": true
+    },
+    {
+      "memory_id": "77cb56e7-2855-479b-9511-f3dd5085900d",
+      "user_id": "web_user",
+      "namespace": "profile.event",
+      "subject": "user",
+      "predicate": "mentioned_event",
+      "object": "今天早上去练车",
+      "confidence": 0.9,
+      "source_text": "小美，下午好啊，我今天早上去练车了",
+      "source_message_id": "web_test",
+      "created_at": 1777099204.532811,
+      "updated_at": 1777099204.532811,
       "is_active": true
     }
   ]

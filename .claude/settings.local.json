@@ -33,7 +33,16 @@
       "Bash(.\\\\.venv\\\\Scripts\\\\python.exe -m py_compile \"vir_bot/core/memory/memory_manager.py\")",
       "Bash(echo \"EXIT:$?\")",
       "Bash(.venv/Scripts/python.exe -c \"compile\\(open\\('vir_bot/core/memory/memory_manager.py', encoding='utf-8'\\).read\\(\\), 'memory_manager.py', 'exec'\\)\")",
-      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/memory_manager.py\")"
+      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/memory_manager.py\")",
+      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/semantic_store.py\")",
+      "Bash(echo \"semantic_store:$?\")",
+      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/question_memory.py\")",
+      "Bash(echo \"question_memory:$?\")",
+      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/long_term.py\")",
+      "Bash(echo \"long_term:$?\")",
+      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/retrieval_router.py\")",
+      "Bash(echo \"retrieval_router:$?\")",
+      "Bash(echo \"memory_manager:$?\")"
     ]
   }
 }

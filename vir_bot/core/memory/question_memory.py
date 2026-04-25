@@ -72,8 +72,8 @@ class QuestionMemoryIndex:
         # question_type -> set of question_ids
         self.type_index: dict[str, set[str]] = {}
 
-        # 所有问题ID，按时间排序（用于最近问题查询）
-        self.all_question_ids: list[str] = []
+        # 所有问题ID，按时间排序 (qid, timestamp)，用于最近问题查询
+        self.all_questions: list[tuple[str, float]] = []
 
         logger.info("QuestionMemoryIndex initialized")
 
@@ -81,9 +81,9 @@ class QuestionMemoryIndex:
         """添加问题到索引"""
         qid = question.id
 
-        # 添加到主列表
-        if qid not in self.all_question_ids:
-            self.all_question_ids.append(qid)
+        # 添加到主列表，按时间排序
+        self.all_questions.append((qid, question.timestamp))
+        self.all_questions.sort(key=lambda x: x[1], reverse=True)
 
         # 按主题索引
         if question.topic:
@@ -103,33 +103,39 @@ class QuestionMemoryIndex:
         self.type_index[question.question_type].add(qid)
 
     def find_by_topic(self, topic: str, limit: int = 10) -> list[str]:
-        """按主题查询相关问题"""
+        """按主题查询相关问题（返回最新的 N 条）"""
         if topic not in self.topic_index:
             return []
-        return list(self.topic_index[topic])[-limit:]
+        qids = self.topic_index[topic]
+        result = [qid for qid, _ in self.all_questions if qid in qids]
+        return result[:limit]
 
     def find_by_entity(self, entity: str, limit: int = 10) -> list[str]:
-        """按实体查询相关问题"""
+        """按实体查询相关问题（返回最新的 N 条）"""
         if entity not in self.entity_index:
             return []
-        return list(self.entity_index[entity])[-limit:]
+        qids = self.entity_index[entity]
+        result = [qid for qid, _ in self.all_questions if qid in qids]
+        return result[:limit]
 
     def find_by_type(self, qtype: str, limit: int = 10) -> list[str]:
-        """按问题类型查询"""
+        """按问题类型查询（返回最新的 N 条）"""
         if qtype not in self.type_index:
             return []
-        return list(self.type_index[qtype])[-limit:]
+        qids = self.type_index[qtype]
+        result = [qid for qid, _ in self.all_questions if qid in qids]
+        return result[:limit]
 
     def find_recent(self, limit: int = 10) -> list[str]:
         """获取最近问过的问题"""
-        return self.all_question_ids[-limit:]
+        return [qid for qid, _ in self.all_questions[:limit]]
 
     def clear(self) -> None:
         """清空索引"""
         self.topic_index.clear()
         self.entity_index.clear()
         self.type_index.clear()
-        self.all_question_ids.clear()
+        self.all_questions.clear()
         logger.info("QuestionMemoryIndex cleared")
 
     def rebuild(self, questions: list[QuestionMemory]) -> None:

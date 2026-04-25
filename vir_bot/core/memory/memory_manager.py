@@ -691,12 +691,12 @@ class MemoryManager:
     ) -> str | None:
         """
         根据当前查询主动检索相关记忆。
-        使用检索路由器进行智能路由（AI分类 + 规则回退）。
+        让 AI 模型自己决定是否需要检索，而不是靠硬编码规则。
         """
         context = await self.retrieval_router.retrieve_for_context(
             query=current_query,
             user_id=user_id,
-            force_lookup=False,
+            force_lookup=True,  # 主动检索：每次都尝试查记忆
         )
 
         return context

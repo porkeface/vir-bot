@@ -278,48 +278,55 @@ class SemanticMemoryStore:
         if removed:
             self._save()
         return removed
-    def _tokenize(self, text: str) -> list[str]:
-        """从查询中提取语义相关词项（删除了硬编码关键词依赖）。"""
-        normalized = text.lower().strip()
-        if not normalized:
-            return []
-
-        tokens: list[str] = []
-        # 分词：按标点分割
-        for ch in ["，", "。", "？", "！", "、"]:
-            normalized = normalized.replace(ch, " ")
-        segments = [s for s in normalized.split(" ") if s]
-        for seg in segments:
-            seg = seg.strip()
-            if not seg:
-                continue
-            tokens.append(seg)
-            # 2-gram 和 3-gram（中文bigram/trigram）
-            for size in [2, 3]:
-                for i in range(len(seg) - size + 1):
-                    tokens.append(seg[i:i+size])
-        # 查询完整文本也作为一项（用于全文匹配）
-        if len(normalized) <= 30:
-            tokens.append(normalized)
-        return list(dict.fromkeys(tokens))
-
-    def _infer_namespaces(self, query: str) -> set[str]:
-        """根据查询语义推断相关命名空间（删除硬编码关键词，改为宽泛触发）。
-        任何涉及个人相关的话题（我/你/什么/哪里等）→ 查所有 namespace，
-        让向量搜索决定哪些更相关，不再用关键词决定范围。"""
-        normalized = query.lower()
-        personal_signals = [
-            "我", "你", "他", "她", "它",
-            "什么", "哪些", "哪个", "谁", "怎", "哪", "为",
-            "喜欢", "讨厌", "爱好", "口味", "爱", "偏好",
-            "习惯", "经常", "每天", "平时", "通常", "一般",
-            "名字", "叫", "来自", "哪里", "人", "身份", "职业", "年龄",
-            "昨天", "今天", "明天", "最近", "前", "后", "时候",
-            "做", "去", "来", "会", "能", "要", "想", "觉得",
-        ]
-        if any(signal in normalized for signal in personal_signals):
-            return {"profile.preference", "profile.habit", "profile.identity", "profile.event"}
-        return {"profile.preference", "profile.habit", "profile.identity", "profile.event"}
+    def _tokenize(self, text: str) -> list[str]:
+
+        """从查询中提取语义相关词项（删除了硬编码关键词依赖）。"""
+
+        normalized = text.lower().strip()
+
+        if not normalized:
+
+            return []
+
+
+
+        tokens: list[str] = []
+
+        # 分词：按标点分割
+
+        for ch in ["，", "。", "？", "！", "、"]:
+
+            normalized = normalized.replace(ch, " ")
+
+        segments = [s for s in normalized.split(" ") if s]
+
+        for seg in segments:
+
+            seg = seg.strip()
+
+            if not seg:
+
+                continue
+
+            tokens.append(seg)
+
+            # 2-gram 和 3-gram（中文bigram/trigram）
+
+            for size in [2, 3]:
+
+                for i in range(len(seg) - size + 1):
+
+                    tokens.append(seg[i:i+size])
+
+        # 查询完整文本也作为一项（用于全文匹配）
+
+        if len(normalized) <= 30:
+
+            tokens.append(normalized)
+
+        return list(dict.fromkeys(tokens))
+
+
 
     def _infer_namespaces(self, query: str) -> set[str]:
         normalized = query.lower()

@@ -55,7 +55,7 @@
                                               v                              v
                                       +-------+------------------------------+------+
                                       | Retrieval Router (AI-Powered)               |
-                                      | 语义理解 + 智能路由 + 规则回退              |
+                                      | 并行多路检索 + 语义理解 + 规则回退        |
                                       +------------------+--------------------------+
                                                          |
                                                          v
@@ -184,7 +184,21 @@
 }
 ```
 
-### 5. Short-term Memory（短期记忆）
+### 5. Long-Term Memory（长期对话记忆）
+
+**用途：**
+- 存储对话片段的向量表示（ChromaDB）
+- 支持语义搜索历史对话
+- 跨会话的长期记忆
+
+**增强字段：**
+- `type`: 记忆类型（event/preference/personality/conversation/habit）
+- `importance`: 重要性权重 (0.0-1.0)
+- `entities`: 实体标签列表（知识图谱初级版）
+- `sentiment`: 情感维度（初级情感分析）
+- `timestamp`: 时间戳（用于时序推理）
+
+### 6. Short-term Memory（短期记忆）
 
 **用途：**
 - 当前线程的最近几轮上下文
@@ -221,29 +235,36 @@ class RetrievalRouter:
 
 ### AI 分类提示词
 
+实际使用的提示词（`retrieval_router.py` 中的 `CLASSIFY_PROMPT`）：
+
 ```
 你是一个意图分类器。分析用户问题，判断需要查询哪种记忆。
 
 用户问题：{query}
 
-请返回JSON格式：
+必须以纯JSON格式返回，不要有任何其他内容：
 {
-    "query_type": "preference|identity|habit|episodic|question|conversation|general",
-    "needs_memory_lookup": true/false,
-    "reason": "简短理由"
+    "query_type": "preference",
+    "needs_memory_lookup": true,
+    "reason": "用户询问偏好"
 }
 
-query_type 说明：
-- preference: 查询用户偏好（喜欢/讨厌什么）
-- identity: 查询用户身份（名字/来自哪里/职业）
-- habit: 查询用户习惯（经常做什么/作息）
-- episodic: 查询时间相关事件（昨天/今天/最近发生了什么）
-- question: 查询之前问过的问题
-- conversation: 查询之前的对话内容
-- general: 普通对话，不需要查记忆
+query_type 可选值（必须选一个）：
+- "time_query": 时间查询（现在几点、今天几号、现在什么日期等）
+- "preference": 查询用户偏好（喜欢/讨厌什么）
+- "identity": 查询用户身份（名字/来自哪里/职业）
+- "habit": 查询用户习惯（经常做什么/作息）
+- "episodic": 查询时间相关事件（昨天/今天/最近发生了什么）
+- "question": 查询之前问过的问题
+- "conversation": 查询之前的对话内容
+- "general": 普通对话，不需要查记忆
 
-needs_memory_lookup: 是否需要查询记忆库
+needs_memory_lookup: 布尔值，当用户的问题需要查询记忆库时为 true。
+
+输出要求：只输出一个合法的JSON对象，不要 markdown 代码块，不要解释。
 ```
+
+注意：分类结果中的 `query_type` 主要用于 `retrieve_for_context()` 决定跳过策略（如 `time_query` 直接返回 None）以及为检索结果添加上下文提示。`retrieve()` 方法始终并行检索所有记忆层，不按 `query_type` 路由。
 
 ### 分类流程
 
@@ -257,28 +278,34 @@ RetrievalRouter.classify_query_async()
 │  2. AI 分类（优先）              │
 │     - 调用大模型理解语义         │
 │     - 返回 query_type + needs   │
-│  3. 规则回退（失败时）           │
-│     - 关键词匹配                 │
+│  3. 规则回退（极简保守）         │
+│     - 不做关键词匹配             │
+│     - 仅处理空查询等边界情况     │
 └─────────────────────────────────┘
     ↓
 {"query_type": "preference", "needs_memory_lookup": true}
     ↓
-检索对应记忆层
+retrieve_for_context() 使用分类结果决定是否跳过检索
     ↓
-返回记忆上下文
+RetrievalRouter.retrieve() 并行检索所有记忆层
 ```
+
+注意：AI 分类失败时回退策略非常保守，不做关键词匹配，相信 AI 的语义理解能力。
 
 ### 查询类型与记忆层映射
 
-| query_type | 检索目标 | 示例问题 |
+> **注意：** 当前实现不再按类型路由到特定记忆层，而是**并行检索所有记忆层**（语义/事件/问题/长期对话），然后使用 `query_type` 为结果添加上下文提示（hint）。分类结果主要用于 `retrieve_for_context()` 决定是否跳过时间查询、是否强制检索等。
+
+| query_type | 上下文提示 | 示例问题 |
 |------------|----------|----------|
-| `preference` | SemanticMemory (profile.preference) | "我喜欢吃什么" |
-| `identity` | SemanticMemory (profile.identity) | "我叫什么名字" |
-| `habit` | SemanticMemory (profile.habit) | "我平时做什么" |
-| `episodic` | EpisodicMemory | "昨天我们聊了什么" |
-| `question` | QuestionMemory | "我今天问了什么" |
-| `conversation` | LongTermMemory | "我们之前聊过什么" |
-| `general` | 语义检索 + 向量搜索 | 普通对话 |
+| `time_query` | 时间查询，跳过记忆检索 | "现在几点"、"今天几号" |
+| `preference` | （这是用户偏好相关的记忆） | "我喜欢吃什么" |
+| `identity` | （这是用户身份相关的记忆） | "我叫什么名字" |
+| `habit` | （这是用户习惯相关的记忆） | "我平时做什么" |
+| `episodic` | （这是时间相关的事件记忆） | "昨天我们聊了什么" |
+| `question` | （这是之前问过的问题） | "我今天问了什么" |
+| `conversation` | （这是之前的对话记录） | "我们之前聊过什么" |
+| `general` | 无特定提示 | 普通对话 |
 
 ---
 
@@ -321,11 +348,11 @@ RetrievalRouter.classify_query_async()  ← AI 语义理解
 RetrievalRouter.retrieve()
     ↓
 ┌─────────────────────────────────┐
-│ 根据分类检索对应记忆层           │
-│ - preference → SemanticMemory   │
-│ - episodic → EpisodicMemory     │
-│ - question → QuestionMemory     │
-│ - general → 向量搜索            │
+│ 并行多路检索（不受分类限制）      │
+│ - 语义记忆 (SemanticMemory)      │
+│ - 问题记忆 (QuestionMemory)      │
+│ - 事件记忆 (EpisodicMemory)      │
+│ - 长期对话 (LongTermMemory)      │
 └─────────────────────────────────┘
     ↓
 RetrievalResult.to_context_string()
@@ -334,6 +361,8 @@ RetrievalResult.to_context_string()
     ↓
 LLM 生成回答
 ```
+
+注意：`retrieve()` 始终并行检索所有记忆层，分类结果（`query_type`）仅用于 `retrieve_for_context()` 决定是否跳过（如时间查询）以及为返回的上下文添加提示（hint）。
 
 ---
 
@@ -370,12 +399,14 @@ data/
 
 | 特性 | 旧架构 | 新架构 |
 |------|--------|--------|
-| 意图分类 | 硬编码关键词 | AI 语义理解 + 规则回退 |
+| 意图分类 | 硬编码关键词 | AI 语义理解 + 极简规则回退 |
 | 记忆触发 | 特定关键词触发 | 每轮主动检索 |
 | 问题记忆 | 仅内存存储 | JSON 持久化 |
 | 事件记忆 | 无 | EpisodicMemoryStore |
-| 检索路由 | 无 | RetrievalRouter |
+| 检索策略 | 无 | 并行多路检索（语义+事件+问题+长期对话） |
 | 重启恢复 | 部分丢失 | 完全恢复 |
+
+> **注：** 新架构中 `RetrievalRouter` 不再按分类结果路由到特定记忆层，而是对多个记忆层并行检索，分类结果仅用于上下文提示和跳过判断（如时间查询）。
 
 ---
 
