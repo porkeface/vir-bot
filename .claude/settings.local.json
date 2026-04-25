@@ -26,7 +26,14 @@
       "Bash(./.venv/Scripts/python -m py_compile vir_bot/core/memory/semantic_store.py)",
       "Bash(./.venv/Scripts/python -m py_compile vir_bot/core/memory/retrieval_router.py)",
       "Bash(./.venv/Scripts/python -m py_compile vir_bot/core/memory/memory_manager.py)",
-      "Bash(./.venv/Scripts/python -m vir_bot.main)"
+      "Bash(./.venv/Scripts/python -m vir_bot.main)",
+      "Bash(python -c \"import vir_bot.core.memory.memory_manager\")",
+      "Bash(python -c \"from vir_bot.core.memory.memory_manager import MemoryManager; print\\('Import OK'\\)\")",
+      "Bash(python -m py_compile \"vir_bot/core/memory/memory_manager.py\")",
+      "Bash(.\\\\.venv\\\\Scripts\\\\python.exe -m py_compile \"vir_bot/core/memory/memory_manager.py\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(.venv/Scripts/python.exe -c \"compile\\(open\\('vir_bot/core/memory/memory_manager.py', encoding='utf-8'\\).read\\(\\), 'memory_manager.py', 'exec'\\)\")",
+      "Bash(.venv/Scripts/python.exe -m py_compile \"vir_bot/core/memory/memory_manager.py\")"
     ]
   }
 }

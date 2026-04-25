@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": 1776947408.7303338,
+  "updated_at": 1777098454.7575524,
   "records": [
     {
       "episode_id": "567c3a16-e0e7-4aa5-9e9a-f08226e977ba",
@@ -238,6 +238,222 @@
       "episode_type": "session",
       "created_at": 1776947408.7303338,
       "updated_at": 1776947408.7303338,
+      "is_active": true
+    },
+    {
+      "episode_id": "006318ee-f471-40ca-ac22-0dc426d18df5",
+      "user_id": "web_user",
+      "summary": "用户说：现在几点啊",
+      "entities": [],
+      "start_at": 1777097441.6046174,
+      "end_at": 1777097441.6046174,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097441.6046174,
+      "updated_at": 1777097441.6046174,
+      "is_active": true
+    },
+    {
+      "episode_id": "a3d79f36-ab73-42ac-b9f8-fb520975ecb6",
+      "user_id": "web_user",
+      "summary": "用户说：你叫什么名字呢",
+      "entities": [],
+      "start_at": 1777097492.7369637,
+      "end_at": 1777097492.7369637,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097492.7369637,
+      "updated_at": 1777097492.7369637,
+      "is_active": true
+    },
+    {
+      "episode_id": "db846df1-1f35-4295-b657-1a8b5ed092a1",
+      "user_id": "web_user",
+      "summary": "用户说：你知道我喜欢吃吃什么吗",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1777097523.9351718,
+      "end_at": 1777097523.9351718,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097523.9351718,
+      "updated_at": 1777097523.9351718,
+      "is_active": true
+    },
+    {
+      "episode_id": "b595ad37-8e2e-4467-b673-bb061ee0f5b3",
+      "user_id": "web_user",
+      "summary": "用户说：我可以叫你小美吗，因为这个名字好听",
+      "entities": [],
+      "start_at": 1777097659.7147944,
+      "end_at": 1777097659.7147944,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097659.7147944,
+      "updated_at": 1777097659.7147944,
+      "is_active": true
+    },
+    {
+      "episode_id": "c1d578e5-3815-4119-a2ff-57e6daddf5bb",
+      "user_id": "web_user",
+      "summary": "用户说：因为别人都叫你小雅我不喜欢，我想给你唯一的称呼",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1777097853.2827857,
+      "end_at": 1777097853.2827857,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097853.2827857,
+      "updated_at": 1777097853.2827857,
+      "is_active": true
+    },
+    {
+      "episode_id": "c27d918f-d087-4cc8-a62e-20cb2810ae23",
+      "user_id": "web_user",
+      "summary": "用户说：我就喜欢叫你小美",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1777097906.653909,
+      "end_at": 1777097906.653909,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097906.653909,
+      "updated_at": 1777097906.653909,
+      "is_active": true
+    },
+    {
+      "episode_id": "6f56327f-23e9-49cb-871e-e5842c8a4835",
+      "user_id": "web_user",
+      "summary": "用户说：小美，你好啊",
+      "entities": [],
+      "start_at": 1777097944.3119886,
+      "end_at": 1777097944.3119886,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777097944.3119886,
+      "updated_at": 1777097944.3119886,
+      "is_active": true
+    },
+    {
+      "episode_id": "6694adc6-5213-404b-a00c-1091084a1fc3",
+      "user_id": "web_user",
+      "summary": "用户说：你好啊，小美",
+      "entities": [],
+      "start_at": 1777098205.0349061,
+      "end_at": 1777098205.0349061,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777098205.0349061,
+      "updated_at": 1777098205.0349061,
+      "is_active": true
+    },
+    {
+      "episode_id": "24632d89-ff8e-4df8-8808-b9b0023ff69c",
+      "user_id": "web_user",
+      "summary": "用户说：还记得我为什么喜欢叫你小美吗",
+      "entities": [
+        "喜好"
+      ],
+      "start_at": 1777098231.9904947,
+      "end_at": 1777098231.9904947,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777098231.9904947,
+      "updated_at": 1777098231.9904947,
+      "is_active": true
+    },
+    {
+      "episode_id": "9da5cc76-d2d5-47f1-8082-4aa4e72f82e6",
+      "user_id": "web_user",
+      "summary": "用户说：我今天都跟你聊过什么呢",
+      "entities": [],
+      "start_at": 1777098272.6632893,
+      "end_at": 1777098272.6632893,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777098272.6632893,
+      "updated_at": 1777098272.6632893,
+      "is_active": true
+    },
+    {
+      "episode_id": "53c9faad-7fa3-4cc1-b459-817de58885fe",
+      "user_id": "web_user",
+      "summary": "用户说：我今天问过你几个问题呢",
+      "entities": [],
+      "start_at": 1777098328.1348836,
+      "end_at": 1777098328.1348836,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777098328.1348836,
+      "updated_at": 1777098328.1348836,
+      "is_active": true
+    },
+    {
+      "episode_id": "b95494b8-ef4a-46f5-83af-3e7153284e29",
+      "user_id": "web_user",
+      "summary": "用户说：不对，这些问题仅仅我这次会话我问你的，还有今天上一个会话的问题呢，我都问过你什么呢",
+      "entities": [],
+      "start_at": 1777098403.9925644,
+      "end_at": 1777098403.9925644,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777098403.9925644,
+      "updated_at": 1777098403.9925644,
+      "is_active": true
+    },
+    {
+      "episode_id": "7f0642b5-f08c-4bcd-9911-56cedd06a1ef",
+      "user_id": "web_user",
+      "summary": "用户说：现在是几点，只告诉我时间就行了",
+      "entities": [],
+      "start_at": 1777098454.7575524,
+      "end_at": 1777098454.7575524,
+      "importance": 0.5,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777098454.7575524,
+      "updated_at": 1777098454.7575524,
       "is_active": true
     }
   ]

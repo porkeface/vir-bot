@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": 1776947331.464112,
+  "updated_at": 1777097853.2796724,
   "records": [
     {
       "memory_id": "02b1776d-8750-49f6-9800-e00b7610a701",
@@ -56,6 +56,20 @@
       "source_message_id": "web_test",
       "created_at": 1776947331.464112,
       "updated_at": 1776947331.464112,
+      "is_active": true
+    },
+    {
+      "memory_id": "a2578969-94e3-48a2-b58b-46e90a40f586",
+      "user_id": "web_user",
+      "namespace": "profile.preference",
+      "subject": "user",
+      "predicate": "dislikes",
+      "object": "别人都叫你小雅",
+      "confidence": 0.92,
+      "source_text": "因为别人都叫你小雅我不喜欢，我想给你唯一的称呼",
+      "source_message_id": "web_test",
+      "created_at": 1777097853.2796724,
+      "updated_at": 1777097853.2796724,
       "is_active": true
     }
   ]

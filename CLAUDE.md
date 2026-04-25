@@ -1,7 +1,7 @@
 # vir-bot
 
 ## 项目概述
-个性化AI机器人（数字分身）纯软件版 — 基于聊天记录蒸馏的AI人格 + 多平台接入 + RAG记忆 + MCP工具。
+个性化AI机器人（数字分身）纯软件版 — 基于聊天记录蒸馏的AI人格 + 多平台接入 + RAG记忆 + wiki+MCP工具。
 
 ## 技术栈
 - Python 3.11+ / FastAPI / asyncio
@@ -33,6 +33,3 @@ open http://localhost:7860
 - AI Provider 用策略模式，支持切换后端
 - 消息统一走 Pipeline 编排
 - 硬件模块（modules/）可插拔，后续接入
-
-## 状态
-Phase 1: 项目基础结构 & 核心抽象层实现中

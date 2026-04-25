@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from vir_bot.core.memory.episodic_store import EpisodicMemoryStore, EpisodeRecord
@@ -107,7 +108,22 @@ class MemoryManager:
         user_id = metadata.get("user_id", "")
 
         if memory_type == "conversation":
-            q_info = self._classify_question(user_msg)
+            # 优先使用AI分类，失败回退规则
+            q_info = None
+            if self.retrieval_router and self._ai_provider:
+                try:
+                    ai_result = await self.retrieval_router.classify_query_async(user_msg)
+                    q_info = {
+                        "question_type": ai_result.get("query_type", "other"),
+                        "topic": ai_result.get("query_type", "general"),
+                        "entities": [],  # AI分类暂不含entities，后续可扩展
+                    }
+                    logger.debug(f"AI classified query: {user_msg} -> {ai_result}")
+                except Exception as e:
+                    logger.warning(f"AI classification failed, fallback to rule: {e}")
+            if not q_info:
+                q_info = self._classify_question(user_msg)
+
             question_mem = QuestionMemory(
                 question_text=user_msg,
                 question_type=q_info["question_type"],
@@ -202,8 +218,9 @@ class MemoryManager:
             assistant_msg=assistant_msg,
             user_id=user_id,
         )
-        if not operations:
-            operations = self._fallback_fact_operations(user_msg)
+        # 移除正则回退：所有事实抽取依赖AI语义理解，避免规则驱动的错误
+        # if not operations:
+        #     operations = self._fallback_fact_operations(user_msg)
 
         if not operations:
             return
@@ -516,7 +533,22 @@ class MemoryManager:
         user_id: str | None = None,
     ) -> list[QuestionMemory]:
         """搜索相关问题（倒排索引 + 最近记录回退）。"""
-        q_info = self._classify_question(query)
+        # 优先AI分类，失败回退规则
+        q_info = None
+        if self.retrieval_router and self._ai_provider:
+            try:
+                ai_result = await self.retrieval_router.classify_query_async(query)
+                q_info = {
+                    "question_type": ai_result.get("query_type", "other"),
+                    "topic": ai_result.get("query_type", "general"),
+                    "entities": [],
+                }
+                logger.debug(f"AI search classification: {query} -> {ai_result}")
+            except Exception as e:
+                logger.warning(f"AI classification failed in search: {e}")
+        if not q_info:
+            q_info = self._classify_question(query)
+
         indexed_ids: set[str] = set()
 
         if q_info["topic"] != "general":
@@ -613,19 +645,31 @@ class MemoryManager:
 
         sections = []
 
-        # 基础系统提示词
+        # ===== 约束规则优先于角色描述，防止角色设定覆盖”不编造”约束 =====
+        current_time_str = datetime.now().strftime("%Y年%m月%d日 %H:%M:%S")
+        sections.append(
+            f'【绝对行为准则】（最高优先级，优先于任何人设描述）\n'
+            f'- 当前真实时间：{current_time_str}（回答时间问题时必须使用此时间，严禁编造）\n'
+            f'- 永远不要声称”我记得””我记得以前””我记得你说过”任何记忆中不存在的事实\n'
+            f'- 当用户问是否记得某事时：如果【记忆检索结果】中没有对应记录，明确说”没有这条记录/还没记住/不知道”\n'
+            f'- 绝不在记忆系统之外凭空编造用户信息（名字、喜好、经历、日期等）\n'
+            f'- 对话历史中出现的事实，必须本轮检索到才能使用，不能凭印象复述'
+        )
+
+        # 角色 Wiki（约束规则之后，避免角色”我会记住”描述覆盖约束）
         if include_wiki and self.current_character:
             sections.append(self.current_character.get_system_prompt_injection())
         sections.append(base_system_prompt)
 
-        # 核心指导：对用户事实先查证，查不到就坦诚回答不知道
-        sections.append(
-            "【本轮回答要求】\n"
-            "- 只把系统本轮检索到的用户记忆当作已知事实使用\n"
-            "- 当用户在问“你记不记得”“之前有没有发生过”“我以前说过什么”“我叫什么/喜欢什么”这类问题时，优先依据记忆检索结果回答\n"
-            "- 如果本轮没有检索到足够信息，直接明确回答不知道、还没记住或目前没有这条记录\n"
-            "- 重要：永远不要凭空编造、猜测或脑补用户信息"
-        )
+        # 对话历史：让 AI 知道刚才聊了什么（防止上下文断裂）
+        if user_id:
+            recent_msgs = self.get_context_messages(n=8)
+            if recent_msgs:
+                history_lines = ['【最近对话】（仅当与当前问题相关时使用）']
+                for msg in recent_msgs:
+                    role = "用户" if msg["role"] == "user" else "小雅"
+                    history_lines.append(f"- {role}: {msg['content'][:80]}")
+                sections.append("\n".join(history_lines))
 
         # 根据当前查询智能注入相关的记忆信息
         if user_id:
@@ -697,15 +741,15 @@ class MemoryManager:
     ) -> list[MemoryRecord]:
         if not self.long_term:
             return []
-        needs_lookup = force_lookup
-        if not needs_lookup and self._ai_provider:
-            try:
-                classification = await self.retrieval_router.classify_query_async(current_query)
-                needs_lookup = classification.get("needs_memory_lookup", False)
-            except Exception:
-                needs_lookup = True
-
-        if not needs_lookup:
+        needs_lookup = force_lookup
+        if not needs_lookup and self._ai_provider:
+            try:
+                classification = await self.retrieval_router.classify_query_async(current_query)
+                needs_lookup = classification.get("needs_memory_lookup", False)
+            except Exception:
+                needs_lookup = True
+
+        if not needs_lookup:
             return []
         return await self._gather_proactive_memories(
             current_query=current_query,

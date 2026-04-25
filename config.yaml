@@ -30,7 +30,7 @@ ai:
   openai:
     base_url: "https://api.deepseek.com/v1"
     api_key: "" # 从环境变量 VIRBOT_OPENAI_KEY 读取，勿在此硬编码
-    model: "deepseek-chat"
+    model: "deepseek-v4-flash"
     timeout: 60
     max_retries: 3
 
