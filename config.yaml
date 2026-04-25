@@ -67,6 +67,30 @@ memory:
     embedding_model: "all-MiniLM-L6-v2"
     auto_index: true
 
+  # 新功能特性开关（默认关闭，逐步启用）
+  features:
+    reranker:
+      enabled: false
+      model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+      top_k: 5
+    composer:
+      enabled: false
+      max_tokens: 2000
+    quality_gate:
+      enabled: false
+    verifier:
+      enabled: false
+    lifecycle:
+      enabled: false
+      short_term_ttl: 30
+      long_term_archive_after: 180
+    graph:
+      enabled: false
+      persist_path: "./data/memory/memory_graph.json"
+    versioning:
+      enabled: false
+      max_versions: 10
+
 # -----------------------------------------------------------------------------
 # 多平台接入配置
 # -----------------------------------------------------------------------------

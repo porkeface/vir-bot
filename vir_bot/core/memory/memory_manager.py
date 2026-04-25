@@ -46,6 +46,7 @@ class MemoryManager:
         episodic_store: EpisodicMemoryStore | None = None,
         question_store: QuestionMemoryStore | None = None,
         ai_provider: "AIProvider | None" = None,
+        features: dict | None = None,
     ):
         self.short_term = short_term
         self.long_term = long_term
@@ -56,6 +57,7 @@ class MemoryManager:
         self.wiki = WikiKnowledgeBase(wiki_dir=wiki_dir)
         self.current_character: Optional[CharacterProfile] = None
         self._ai_provider = ai_provider
+        self._features = features or {}
 
         self.episodic_store = episodic_store or EpisodicMemoryStore()
         self.question_store = question_store or QuestionMemoryStore()
@@ -72,6 +74,10 @@ class MemoryManager:
         )
 
         logger.info("MemoryManager initialized with Wiki + RAG hybrid system")
+
+    def _is_feature_enabled(self, feature_name: str) -> bool:
+        """检查特性开关是否启用。"""
+        return bool(self._features.get(feature_name, {}).get("enabled", False))
 
     def set_ai_provider(self, ai_provider: "AIProvider") -> None:
         self._ai_provider = ai_provider
