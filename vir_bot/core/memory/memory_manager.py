@@ -247,6 +247,26 @@ class MemoryManager:
             metadata=metadata,
         )
 
+        # 抽取实体关系并写入知识图谱（如果启用）
+        if self.graph_store and user_id:
+            try:
+                relations = await self.memory_writer.extract_relations(
+                    user_msg=user_msg,
+                    assistant_msg=assistant_msg,
+                    user_id=user_id,
+                )
+                for subject, predicate, object_val, confidence in relations:
+                    self.graph_store.add_relation(
+                        subject=subject,
+                        predicate=predicate,
+                        object=object_val,
+                        confidence=confidence,
+                    )
+                if relations:
+                    logger.debug(f"写入 {len(relations)} 条关系到知识图谱")
+            except Exception as e:
+                logger.warning(f"关系抽取或写入失败: {e}")
+
     async def _write_episodic_memory(
         self,
         *,

@@ -174,15 +174,29 @@ class ReRanker:
         return result
 
     def _simple_rerank(self, query: str, records: list[RecordScore]) -> None:
-        """基于关键词匹配的简单 reranking（回退方案）。"""
-        query_tokens = set(re.findall(r'[\w一-鿿]+', query.lower()))
+        """基于关键词匹配的简单 reranking（回退方案，支持中文）。"""
+        query_lower = query.lower()
+
         for rec in records:
-            text_tokens = set(re.findall(r'[\w一-鿿]+', rec.text_for_ranking.lower()))
-            if query_tokens and text_tokens:
-                overlap = len(query_tokens & text_tokens) / max(len(query_tokens), 1)
-                rec.rerank_score = rec.base_score + overlap * 0.5
+            text_lower = rec.text_for_ranking.lower()
+            # 基础分
+            score = rec.base_score
+
+            # 直接子串匹配（支持中文）
+            if query_lower in text_lower:
+                score += 3.0
             else:
-                rec.rerank_score = rec.base_score
+                # 分词匹配（简单空格/标点分割）
+                query_words = set(re.split(r'[\s,，。！？;；]+', query_lower))
+                text_words = set(re.split(r'[\s,，。！？;；]+', text_lower))
+                query_words = {w for w in query_words if len(w) > 1}
+                text_words = {w for w in text_words if len(w) > 1}
+
+                if query_words and text_words:
+                    overlap = len(query_words & text_words) / max(len(query_words), 1)
+                    score += overlap * 2.0
+
+            rec.rerank_score = score
 
     def _update_result(self, result: RetrievalResult, ranked: list[RecordScore]) -> None:
         """将重排序后的记录写回 RetrievalResult。"""

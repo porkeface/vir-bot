@@ -120,6 +120,15 @@ class MemoryWriter:
 - "我刚才说过..." / "之前我告诉你..." → 跳过，这是用户在测试或强调
 - "我叫你小美好不好" / "以后我管你叫..." → 这是给助手起名，不是用户姓名，返回 []
 
+【纠正意图识别】（关键：当用户纠正之前说过的事实时，用 UPDATE 而非 ADD）
+- 用户说 "不对，我..." / "不是，我..." / "我改了..." / "现在我是..." → 纠正之前的事实，生成 UPDATE 操作
+- 用户说 "我不叫X，我叫Y" → UPDATE name_is 为 Y
+- 用户说 "我搬家了，现在住X" → UPDATE from 为 X
+- 用户说 "我换工作了，现在是X" → UPDATE is 为 X
+- 用户说 "早就不喜欢X了，现在喜欢Y" → UPDATE likes 为 Y（替换旧偏好）
+- 纠正时，predicate 要与旧事实一致，object 是新值，op 必须是 UPDATE
+- 示例：用户之前说 "我叫张三"，现在说 "我不叫张三，我叫李四" → [{"op":"UPDATE","namespace":"profile.identity","subject":"user","predicate":"name_is","object":"李四","confidence":0.92}]
+
 【示例集】
 
 例1 - 清晰偏好：
@@ -153,6 +162,18 @@ class MemoryWriter:
 例8 - 多条事实：
 用户: 我叫张三，来自深圳，喜欢编程
 输出: [{"op":"ADD","namespace":"profile.identity","subject":"user","predicate":"name_is","object":"张三","confidence":0.95},{"op":"ADD","namespace":"profile.identity","subject":"user","predicate":"from","object":"深圳","confidence":0.92},{"op":"ADD","namespace":"profile.preference","subject":"user","predicate":"likes","object":"编程","confidence":0.88}]
+
+例9 - 纠正姓名：
+用户: 我不叫张三，我叫李四
+输出: [{"op":"UPDATE","namespace":"profile.identity","subject":"user","predicate":"name_is","object":"李四","confidence":0.92}]
+
+例10 - 纠正住址：
+用户: 我搬家了，现在住在北京
+输出: [{"op":"UPDATE","namespace":"profile.identity","subject":"user","predicate":"from","object":"北京","confidence":0.91}]
+
+例11 - 纠正偏好：
+用户: 早就不喜欢编程了，现在喜欢旅游
+输出: [{"op":"UPDATE","namespace":"profile.preference","subject":"user","predicate":"likes","object":"旅游","confidence":0.90}]
 """
         return (
             f"{schema}\n\n"
@@ -278,3 +299,81 @@ class MemoryWriter:
         compact = value.strip(" ，。！？；,.!?;:")
         compact = re.sub(r"\s+", "", compact)
         return compact
+
+    async def extract_relations(
+        self,
+        *,
+        user_msg: str,
+        assistant_msg: str,
+        user_id: str,
+    ) -> list[tuple[str, str, str, float]]:
+        """从对话中抽取实体关系三元组，用于知识图谱。"""
+        prompt = self._build_relation_prompt(
+            user_msg=user_msg, assistant_msg=assistant_msg, user_id=user_id
+        )
+        try:
+            response = await self.ai.chat(
+                messages=[{"role": "user", "content": prompt}],
+                system=(
+                    "你是一个关系抽取器。"
+                    "从对话中抽取实体关系三元组，只输出 JSON 数组。"
+                    "不要输出解释或 markdown 代码块。"
+                ),
+                temperature=0.1,
+            )
+        except Exception as exc:
+            logger.warning(f"MemoryWriter 关系抽取失败: {exc}")
+            return []
+
+        return self._parse_relations(response.content)
+
+    def _build_relation_prompt(self, *, user_msg: str, assistant_msg: str, user_id: str) -> str:
+        """构建关系抽取提示词。"""
+        return f"""从以下对话中抽取实体关系三元组（subject, predicate, object），用于构建知识图谱。
+
+规则：
+1. 只抽取用户明确陈述的关系，不抽取提问或猜测。
+2. subject 通常是用户（user:{user_id}）或其他实体。
+3. predicate 是关系类型，如 likes, from, is, lives_in, works_as 等。
+4. object 是目标实体。
+5. 返回 JSON 数组，每个元素格式：
+   {{"subject": "user:{user_id}", "predicate": "likes", "object": "火锅", "confidence": 0.9}}
+
+示例：
+用户: 我喜欢吃火锅，来自四川
+助手: 好的，我记住了。
+输出: [
+  {{"subject": "user:{user_id}", "predicate": "likes", "object": "火锅", "confidence": 0.95}},
+  {{"subject": "user:{user_id}", "predicate": "from", "object": "四川", "confidence": 0.95}}
+]
+
+示例2：
+用户: 我不叫张三，我叫李四
+助手: 好的，我记住了你叫李四。
+输出: [
+  {{"subject": "user:{user_id}", "predicate": "name_is", "object": "李四", "confidence": 0.92}}
+]
+
+当前用户ID: {user_id}
+用户消息: {user_msg}
+助手回复: {assistant_msg}
+请输出 JSON 数组："""
+
+    def _parse_relations(self, content: str) -> list[tuple[str, str, str, float]]:
+        """解析关系抽取结果。"""
+        data = self._extract_json(content)
+        if not isinstance(data, list):
+            return []
+
+        relations = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            subject = str(item.get("subject", "")).strip()
+            predicate = str(item.get("predicate", "")).strip()
+            object_val = str(item.get("object", "")).strip()
+            confidence = float(item.get("confidence", 0.0) or 0.0)
+            if not subject or not predicate or not object_val:
+                continue
+            relations.append((subject, predicate, object_val, max(0.0, min(1.0, confidence))))
+        return relations
