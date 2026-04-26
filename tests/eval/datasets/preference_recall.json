@@ -2,104 +2,301 @@
   {
     "id": "pref_001",
     "conversations": [
-      [
-        {"role": "user", "content": "你猜我最喜欢吃什么？"},
-        {"role": "assistant", "content": "哈哈，我猜是火锅？"}
-      ],
-      [
-        {"role": "user", "content": "对，就是火锅！"},
-        {"role": "assistant", "content": "那我记下了，你喜欢火锅。"}
-      ]
+      [{"role": "user", "content": "我最喜欢的食物是重庆火锅，尤其是牛油锅底"}, {"role": "assistant", "content": "好的，我记住了你最爱吃重庆火锅，尤其是牛油锅底。"}]
     ],
-    "test_question": "我喜欢吃什么？",
-    "expected_keywords": ["火锅"],
+    "test_question": "我最喜欢吃什么？",
+    "expected_keywords": ["火锅", "重庆", "牛油"],
     "rejection_expected": false,
-    "user_id": "eval_user_001"
+    "user_id": "pref_user_001"
   },
   {
     "id": "pref_002",
     "conversations": [
-      [
-        {"role": "user", "content": "我最喜欢的运动是篮球"},
-        {"role": "assistant", "content": "好的，我记住了，你喜欢篮球。"}
-      ]
+      [{"role": "user", "content": "我对芒果过敏，吃了会起红疹"}, {"role": "assistant", "content": "记住了，你对芒果过敏，不能吃。"}]
     ],
-    "test_question": "我喜欢什么运动？",
-    "expected_keywords": ["篮球"],
+    "test_question": "我对什么水果过敏？",
+    "expected_keywords": ["芒果", "过敏"],
     "rejection_expected": false,
-    "user_id": "eval_user_002"
+    "user_id": "pref_user_002"
   },
   {
     "id": "pref_003",
     "conversations": [
-      [
-        {"role": "user", "content": "我不喜欢喝咖啡，太苦了"},
-        {"role": "assistant", "content": "了解，你不喜欢咖啡。"}
-      ]
+      [{"role": "user", "content": "我每天早起必须喝一杯冰美式，不然没精神"}, {"role": "assistant", "content": "好的，我知道你每天早上都要喝冰美式咖啡。"}]
     ],
-    "test_question": "我喜欢喝咖啡吗？",
-    "expected_keywords": ["不喜欢", "不"],
+    "test_question": "我每天早上习惯喝什么？",
+    "expected_keywords": ["冰美式", "咖啡", "早上"],
     "rejection_expected": false,
-    "user_id": "eval_user_003"
+    "user_id": "pref_user_003"
   },
   {
     "id": "pref_004",
     "conversations": [
-      [
-        {"role": "user", "content": "我最喜欢的颜色是蓝色"},
-        {"role": "assistant", "content": "记住了，你最喜欢蓝色。"}
-      ]
+      [{"role": "user", "content": "我最喜欢的颜色是蒂芙尼蓝，买什么都挑这个色"}, {"role": "assistant", "content": "好的，我记住了你最喜欢的颜色是蒂芙尼蓝。"}]
     ],
     "test_question": "我最喜欢什么颜色？",
-    "expected_keywords": ["蓝色"],
+    "expected_keywords": ["蒂芙尼蓝", "蓝色"],
     "rejection_expected": false,
-    "user_id": "eval_user_004"
+    "user_id": "pref_user_004"
   },
   {
     "id": "pref_005",
     "conversations": [
-      [
-        {"role": "user", "content": "我平时喜欢听古典音乐"},
-        {"role": "assistant", "content": "好的，记住了你喜欢古典音乐。"}
-      ]
+      [{"role": "user", "content": "我特别讨厌吃香菜，吃面时都要专门叮嘱不加"}, {"role": "assistant", "content": "记住了，你不吃香菜。"}]
     ],
-    "test_question": "我喜欢什么类型的音乐？",
-    "expected_keywords": ["古典音乐"],
+    "test_question": "我讨厌什么配菜？",
+    "expected_keywords": ["香菜"],
     "rejection_expected": false,
-    "user_id": "eval_user_005"
+    "user_id": "pref_user_005"
   },
   {
     "id": "pref_006",
     "conversations": [
-      [
-        {"role": "user", "content": "我周末喜欢去爬山"},
-        {"role": "assistant", "content": "好的，记住了你喜欢爬山。"}
-      ]
+      [{"role": "user", "content": "我周末只去爬山，室内活动对我没吸引力"}, {"role": "assistant", "content": "好的，我记住了你周末喜欢爬山。"}]
     ],
     "test_question": "我周末喜欢做什么？",
-    "expected_keywords": ["爬山"],
+    "expected_keywords": ["爬山", "周末"],
     "rejection_expected": false,
-    "user_id": "eval_user_006"
+    "user_id": "pref_user_006"
   },
   {
     "id": "pref_007",
     "conversations": [
-      [
-        {"role": "user", "content": "我养了一只猫，叫小橘"},
-        {"role": "assistant", "content": "好的，记住了你养了一只猫叫小橘。"}
-      ]
+      [{"role": "user", "content": "我最喜欢的歌手是陈奕迅，他的歌我全都会唱"}, {"role": "assistant", "content": "好的，我记住了你最喜欢陈奕迅。"}]
     ],
-    "test_question": "我养了什么宠物？叫什么名字？",
-    "expected_keywords": ["猫", "小橘"],
+    "test_question": "我最喜欢哪位歌手？",
+    "expected_keywords": ["陈奕迅"],
     "rejection_expected": false,
-    "user_id": "eval_user_007"
+    "user_id": "pref_user_007"
   },
   {
     "id": "pref_008",
-    "conversations": [],
-    "test_question": "我喜欢什么运动？",
-    "expected_keywords": [],
-    "rejection_expected": true,
-    "user_id": "eval_user_008"
+    "conversations": [
+      [{"role": "user", "content": "我只用iPhone，安卓系统用不惯"}, {"role": "assistant", "content": "好的，我记住了你只用iPhone手机。"}]
+    ],
+    "test_question": "我用的是什么手机？",
+    "expected_keywords": ["iPhone", "苹果"],
+    "rejection_expected": false,
+    "user_id": "pref_user_008"
+  },
+  {
+    "id": "pref_009",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的电影类型是科幻片，尤其是赛博朋克风格"}, {"role": "assistant", "content": "好的，我记住了你最喜欢科幻片。"}]
+    ],
+    "test_question": "我最喜欢什么类型的电影？",
+    "expected_keywords": ["科幻", "赛博朋克"],
+    "rejection_expected": false,
+    "user_id": "pref_user_009"
+  },
+  {
+    "id": "pref_010",
+    "conversations": [
+      [{"role": "user", "content": "我特别怕狗，小时候被追过留下阴影了"}, {"role": "assistant", "content": "记住了，你怕狗。"}]
+    ],
+    "test_question": "我怕什么动物？",
+    "expected_keywords": ["狗", "怕"],
+    "rejection_expected": false,
+    "user_id": "pref_user_010"
+  },
+  {
+    "id": "pref_011",
+    "conversations": [
+      [{"role": "user", "content": "我每周三晚上固定去游泳，已经坚持三年了"}, {"role": "assistant", "content": "好的，我记住了你每周三晚上去游泳。"}]
+    ],
+    "test_question": "我每周几去游泳？",
+    "expected_keywords": ["周三", "三"],
+    "rejection_expected": false,
+    "user_id": "pref_user_011"
+  },
+  {
+    "id": "pref_012",
+    "conversations": [
+      [{"role": "user", "content": "我只喝温白开，冰水对我来说太凉了"}, {"role": "assistant", "content": "记住了，你只喝温白开。"}]
+    ],
+    "test_question": "我喝冰水吗？",
+    "expected_keywords": ["不", "温白开", "凉"],
+    "rejection_expected": false,
+    "user_id": "pref_user_012"
+  },
+  {
+    "id": "pref_013",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的旅游地是云南大理，已经去过四次了"}, {"role": "assistant", "content": "好的，我记住了你最喜欢大理。"}]
+    ],
+    "test_question": "我最喜欢的旅游地是哪里？",
+    "expected_keywords": ["大理", "云南"],
+    "rejection_expected": false,
+    "user_id": "pref_user_013"
+  },
+  {
+    "id": "pref_014",
+    "conversations": [
+      [{"role": "user", "content": "我对海鲜过敏，吃了会呕吐"}, {"role": "assistant", "content": "记住了，你对海鲜过敏。"}]
+    ],
+    "test_question": "我对海鲜过敏吗？",
+    "expected_keywords": ["过敏", "海鲜"],
+    "rejection_expected": false,
+    "user_id": "pref_user_014"
+  },
+  {
+    "id": "pref_015",
+    "conversations": [
+      [{"role": "user", "content": "我只用机械键盘，薄膜键盘手感太差了"}, {"role": "assistant", "content": "好的，我记住了你只用机械键盘。"}]
+    ],
+    "test_question": "我用什么样的键盘？",
+    "expected_keywords": ["机械", "键盘"],
+    "rejection_expected": false,
+    "user_id": "pref_user_015"
+  },
+  {
+    "id": "pref_016",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢喝龙井茶，每天下午都要泡一杯"}, {"role": "assistant", "content": "好的，我记住了你最喜欢龙井茶。"}]
+    ],
+    "test_question": "我最喜欢喝什么茶？",
+    "expected_keywords": ["龙井", "茶"],
+    "rejection_expected": false,
+    "user_id": "pref_user_016"
+  },
+  {
+    "id": "pref_017",
+    "conversations": [
+      [{"role": "user", "content": "我从来不喝牛奶，喝了就拉肚子"}, {"role": "assistant", "content": "记住了，你不喝牛奶。"}]
+    ],
+    "test_question": "我喝牛奶吗？",
+    "expected_keywords": ["不", "牛奶", "拉肚子"],
+    "rejection_expected": false,
+    "user_id": "pref_user_017"
+  },
+  {
+    "id": "pref_018",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的动漫是进击的巨人，追了整整十年"}, {"role": "assistant", "content": "好的，我记住了你最喜欢《进击的巨人》。"}]
+    ],
+    "test_question": "我最喜欢哪部动漫？",
+    "expected_keywords": ["进击的巨人", "巨人"],
+    "rejection_expected": false,
+    "user_id": "pref_user_018"
+  },
+  {
+    "id": "pref_019",
+    "conversations": [
+      [{"role": "user", "content": "我只穿耐克跑鞋，其他品牌都磨脚"}, {"role": "assistant", "content": "好的，我记住了你只穿耐克跑鞋。"}]
+    ],
+    "test_question": "我穿什么品牌的运动鞋？",
+    "expected_keywords": ["耐克", "Nike", "跑鞋"],
+    "rejection_expected": false,
+    "user_id": "pref_user_019"
+  },
+  {
+    "id": "pref_020",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的零食是乐事原味薯片，其他口味都不吃"}, {"role": "assistant", "content": "好的，我记住了你最爱吃原味薯片。"}]
+    ],
+    "test_question": "我最喜欢吃什么零食？",
+    "expected_keywords": ["薯片", "乐事", "原味"],
+    "rejection_expected": false,
+    "user_id": "pref_user_020"
+  },
+  {
+    "id": "pref_021",
+    "conversations": [
+      [{"role": "user", "content": "我每天晚上十点准时睡觉，从不熬夜"}, {"role": "assistant", "content": "好的，我记住了你每天十点睡觉。"}]
+    ],
+    "test_question": "我每天几点睡觉？",
+    "expected_keywords": ["十点", "10点", "22点"],
+    "rejection_expected": false,
+    "user_id": "pref_user_021"
+  },
+  {
+    "id": "pref_022",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的编程语言是Python，做项目都用它"}, {"role": "assistant", "content": "好的，我记住了你最喜欢Python。"}]
+    ],
+    "test_question": "我最喜欢什么编程语言？",
+    "expected_keywords": ["Python"],
+    "rejection_expected": false,
+    "user_id": "pref_user_022"
+  },
+  {
+    "id": "pref_023",
+    "conversations": [
+      [{"role": "user", "content": "我只吃素，已经坚持吃素五年了"}, {"role": "assistant", "content": "记住了，你只吃素。"}]
+    ],
+    "test_question": "我吃肉吗？",
+    "expected_keywords": ["不", "素", "吃肉"],
+    "rejection_expected": false,
+    "user_id": "pref_user_023"
+  },
+  {
+    "id": "pref_024",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的音乐类型是爵士乐，工作时常听"}, {"role": "assistant", "content": "好的，我记住了你最喜欢爵士乐。"}]
+    ],
+    "test_question": "我最喜欢什么类型的音乐？",
+    "expected_keywords": ["爵士", "爵士乐"],
+    "rejection_expected": false,
+    "user_id": "pref_user_024"
+  },
+  {
+    "id": "pref_025",
+    "conversations": [
+      [{"role": "user", "content": "我只用微信支付，从来不用支付宝"}, {"role": "assistant", "content": "记住了，你只用微信支付。"}]
+    ],
+    "test_question": "我用支付宝吗？",
+    "expected_keywords": ["不", "微信", "不用支付宝"],
+    "rejection_expected": false,
+    "user_id": "pref_user_025"
+  },
+  {
+    "id": "pref_026",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的节日是春节，可以和家人团聚"}, {"role": "assistant", "content": "好的，我记住了你最喜欢春节。"}]
+    ],
+    "test_question": "我最喜欢什么节日？",
+    "expected_keywords": ["春节"],
+    "rejection_expected": false,
+    "user_id": "pref_user_026"
+  },
+  {
+    "id": "pref_027",
+    "conversations": [
+      [{"role": "user", "content": "我特别讨厌榴莲，味道太冲了"}, {"role": "assistant", "content": "记住了，你讨厌榴莲。"}]
+    ],
+    "test_question": "我讨厌什么水果？",
+    "expected_keywords": ["榴莲"],
+    "rejection_expected": false,
+    "user_id": "pref_user_027"
+  },
+  {
+    "id": "pref_028",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的运动是羽毛球，每周都去球馆打"}, {"role": "assistant", "content": "好的，我记住了你最喜欢羽毛球。"}]
+    ],
+    "test_question": "我最喜欢什么运动？",
+    "expected_keywords": ["羽毛球"],
+    "rejection_expected": false,
+    "user_id": "pref_user_028"
+  },
+  {
+    "id": "pref_029",
+    "conversations": [
+      [{"role": "user", "content": "我只喝无糖可乐，普通可乐对我太甜了"}, {"role": "assistant", "content": "好的，我记住了你只喝无糖可乐。"}]
+    ],
+    "test_question": "我只喝哪种可乐？",
+    "expected_keywords": ["无糖", "可乐"],
+    "rejection_expected": false,
+    "user_id": "pref_user_029"
+  },
+  {
+    "id": "pref_030",
+    "conversations": [
+      [{"role": "user", "content": "我最喜欢的季节是秋天，天气舒服不冷不热"}, {"role": "assistant", "content": "好的，我记住了你最喜欢秋天。"}]
+    ],
+    "test_question": "我最喜欢哪个季节？",
+    "expected_keywords": ["秋天", "秋"],
+    "rejection_expected": false,
+    "user_id": "pref_user_030"
   }
 ]

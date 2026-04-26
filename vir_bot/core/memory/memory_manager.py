@@ -109,12 +109,19 @@ class MemoryManager:
 
         # 初始化图存储（如果启用）
         self.graph_store = None
+        self._graph_extractor = None
         if self._is_feature_enabled("graph"):
+            from .graph_extractor import GraphRelationExtractor
             from .graph_store import MemoryGraphStore
 
             config = self._features.get("graph", {})
             persist_path = config.get("persist_path", "./data/memory/memory_graph.json")
             self.graph_store = MemoryGraphStore(persist_path=persist_path)
+
+            # 初始化关系抽取器
+            if self._ai_provider:
+                self._graph_extractor = GraphRelationExtractor(ai_provider=self._ai_provider)
+                logger.info("GraphRelationExtractor initialized")
 
         # 更新 retrieval_router 以支持图查询
         if self.graph_store:
@@ -248,22 +255,34 @@ class MemoryManager:
         )
 
         # 抽取实体关系并写入知识图谱（如果启用）
-        if self.graph_store and user_id:
+        if self._graph_extractor and self.graph_store and user_id:
             try:
-                relations = await self.memory_writer.extract_relations(
+                triples = await self._graph_extractor.extract(
                     user_msg=user_msg,
                     assistant_msg=assistant_msg,
                     user_id=user_id,
                 )
-                for subject, predicate, object_val, confidence in relations:
-                    self.graph_store.add_relation(
-                        subject=subject,
-                        predicate=predicate,
-                        object=object_val,
-                        confidence=confidence,
+                for triple in triples:
+                    # 检测冲突
+                    existing_edges = self.graph_store.query(
+                        subject=triple["subject"],
+                        predicate=triple["predicate"],
                     )
-                if relations:
-                    logger.debug(f"写入 {len(relations)} 条关系到知识图谱")
+                    conflicts = self._graph_extractor.detect_conflicts(
+                        [triple], existing_edges,
+                    )
+                    if conflicts:
+                        logger.info(f"检测到关系冲突: {conflicts}")
+
+                    self.graph_store.add_relation(
+                        subject=triple["subject"],
+                        predicate=triple["predicate"],
+                        object=triple["object"],
+                        confidence=triple["confidence"],
+                        source=f"conversation:{user_id}",
+                    )
+                if triples:
+                    logger.debug(f"写入 {len(triples)} 条关系到知识图谱")
             except Exception as e:
                 logger.warning(f"关系抽取或写入失败: {e}")
 
