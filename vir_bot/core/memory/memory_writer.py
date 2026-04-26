@@ -29,8 +29,40 @@ class MemoryOperation:
 class MemoryWriter:
     """使用 LLM 从对话中提取可写入的用户事实。"""
 
-    def __init__(self, ai_provider: "AIProvider"):
+    def __init__(self, ai_provider: "AIProvider", quality_gate=None):
         self.ai = ai_provider
+        self.quality_gate = quality_gate
+
+    def _is_quality_gate_enabled(self) -> bool:
+        """检查质量门是否启用。"""
+        return self.quality_gate is not None
+
+    async def extract_with_quality_check(
+        self,
+        *,
+        user_msg: str,
+        assistant_msg: str,
+        user_id: str,
+    ) -> list[MemoryOperation]:
+        """提取记忆并通过质量门检查。"""
+        operations = await self.extract(
+            user_msg=user_msg,
+            assistant_msg=assistant_msg,
+            user_id=user_id,
+        )
+
+        if self._is_quality_gate_enabled():
+            filtered = []
+            for op in operations:
+                passed, reason, conf_adjust = self.quality_gate.check(op)
+                if passed:
+                    op.confidence *= conf_adjust
+                    filtered.append(op)
+                else:
+                    logger.info(f"Quality Gate blocked: {reason} (op: {op.op} {op.predicate}={op.object})")
+            operations = filtered
+
+        return operations
 
     async def extract(
         self,

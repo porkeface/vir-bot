@@ -5,15 +5,16 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import MISSING, asdict, dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from vir_bot.utils.logger import logger
 
 
 @dataclass
 class SemanticMemoryRecord:
-    """用户事实型长期记忆。"""
+    """用户事实型长期记忆，支持多版本。"""
 
     memory_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str = ""
@@ -28,9 +29,29 @@ class SemanticMemoryRecord:
     updated_at: float = field(default_factory=time.time)
     is_active: bool = True
 
+    # 版本字段
+    valid_from: float = field(default_factory=time.time)
+    valid_to: float | None = None
+    previous_version_id: str | None = None
+    version_number: int = 1
+    confidence_history: list[float] = field(default_factory=list)
+    is_deprecated: bool = False
+    deprecation_reason: str | None = None
+
     @classmethod
     def from_dict(cls, data: dict) -> "SemanticMemoryRecord":
-        return cls(**data)
+        # 处理新增的版本字段（向后兼容）
+        kwargs = {}
+        for field_info in cls.__dataclass_fields__.values():
+            if field_info.name in data:
+                kwargs[field_info.name] = data[field_info.name]
+            else:
+                # 使用字段的默认值
+                if field_info.default_factory is not MISSING:
+                    kwargs[field_info.name] = field_info.default_factory()
+                else:
+                    kwargs[field_info.name] = field_info.default
+        return cls(**kwargs)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -83,14 +104,18 @@ class SemanticMemoryStore:
         source_text: str,
         source_message_id: str | None = None,
         replace_predicate: bool = False,
+        enable_versioning: bool = False,
     ) -> SemanticMemoryRecord:
-        """按 user_id + namespace + predicate + object 执行幂等写入。"""
+        """按 user_id + namespace + predicate + object 执行幂等写入。
+        如果 enable_versioning=True，更新时会创建新版本而不是覆盖。
+        """
         normalized_object = object_value.strip()
         if not normalized_object:
             raise ValueError("object_value must not be empty")
         if self._is_invalid_object(normalized_object):
             raise ValueError(f"invalid semantic memory object: {normalized_object}")
 
+        # 查找是否有相同 object 的记录
         existing = self._find_existing(
             user_id=user_id,
             namespace=namespace,
@@ -99,12 +124,36 @@ class SemanticMemoryStore:
         )
 
         now = time.time()
+
+        # 版本模式：如果找到现有记录且值不同，创建新版本
+        if enable_versioning and existing is None:
+            # 查找同 predicate 的活跃记录（值不同）
+            existing_pred = self._find_by_predicate(user_id, namespace, predicate)
+            if existing_pred is not None and existing_pred.object != normalized_object:
+                # 创建新版本
+                new_record = self._create_new_version(
+                    existing_pred,
+                    normalized_object,
+                    confidence,
+                    source_text,
+                    source_message_id,
+                )
+                return new_record
+            elif existing_pred is not None:
+                # 值相同，更新现有记录
+                existing = existing_pred
+
         if existing is not None:
             existing.confidence = max(existing.confidence, confidence)
             existing.source_text = source_text
             existing.source_message_id = source_message_id
             existing.updated_at = now
             existing.is_active = True
+            # 记录置信度历史
+            if not existing.confidence_history:
+                existing.confidence_history = [existing.confidence]
+            if existing.confidence not in existing.confidence_history:
+                existing.confidence_history.append(existing.confidence)
             self._save()
             return existing
 
@@ -139,6 +188,114 @@ class SemanticMemoryStore:
         self._records[record.memory_id] = record
         self._save()
         return record
+
+    def _find_by_predicate(
+        self,
+        user_id: str,
+        namespace: str,
+        predicate: str,
+    ) -> SemanticMemoryRecord | None:
+        """查找指定 predicate 的活跃记录（用于版本管理）。"""
+        for record in self._records.values():
+            if (
+                record.is_active
+                and record.user_id == user_id
+                and record.namespace == namespace
+                and record.predicate == predicate
+            ):
+                return record
+        return None
+
+    def _create_new_version(
+        self,
+        old_record: SemanticMemoryRecord,
+        new_object: str,
+        confidence: float,
+        source_text: str,
+        source_message_id: str | None,
+    ) -> SemanticMemoryRecord:
+        """创建新版本的记忆记录。"""
+        now = time.time()
+
+        # 关闭旧版本
+        old_record.valid_to = now
+        old_record.is_active = False
+        old_record.updated_at = now
+
+        # 创建新版本
+        new_record = SemanticMemoryRecord(
+            user_id=old_record.user_id,
+            namespace=old_record.namespace,
+            subject=old_record.subject,
+            predicate=old_record.predicate,
+            object=new_object,
+            confidence=confidence,
+            source_text=source_text,
+            source_message_id=source_message_id,
+            created_at=now,
+            updated_at=now,
+            valid_from=now,
+            previous_version_id=old_record.memory_id,
+            version_number=old_record.version_number + 1,
+            confidence_history=[old_record.confidence, confidence],
+        )
+        self._records[new_record.memory_id] = new_record
+        self._save()
+        logger.info(
+            f"Created new version {new_record.version_number} for predicate {old_record.predicate}"
+        )
+        return new_record
+
+    def get_version_chain(self, memory_id: str) -> list[SemanticMemoryRecord]:
+        """获取记忆的版本链（从最新到最旧）。"""
+        chain = []
+        current_id = memory_id
+
+        while current_id:
+            if current_id in self._records:
+                record = self._records[current_id]
+                chain.append(record)
+                current_id = record.previous_version_id
+            else:
+                break
+
+        return chain
+
+    def get_valid_at(
+        self,
+        user_id: str,
+        predicate: str,
+        timestamp: float,
+    ) -> SemanticMemoryRecord | None:
+        """查询在某个时间点有效的记忆版本（返回版本号最新的）。"""
+        matching: list[SemanticMemoryRecord] = []
+        for record in self._records.values():
+            if (
+                record.user_id == user_id
+                and record.predicate == predicate
+                and record.valid_from <= timestamp
+                and (record.valid_to is None or record.valid_to >= timestamp)
+            ):
+                matching.append(record)
+
+        if not matching:
+            return None
+
+        # 返回版本号最新的记录
+        return max(matching, key=lambda r: r.version_number)
+
+    def deprecate(self, memory_id: str, reason: str) -> bool:
+        """标记记忆为废弃状态。"""
+        if memory_id not in self._records:
+            return False
+
+        record = self._records[memory_id]
+        record.is_deprecated = True
+        record.deprecation_reason = reason
+        record.updated_at = time.time()
+        self._save()
+        logger.info(f"Deprecated memory {memory_id}: {reason}")
+        return True
 
     def search(
         self,

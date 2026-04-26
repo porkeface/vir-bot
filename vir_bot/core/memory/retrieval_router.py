@@ -28,6 +28,7 @@ class RetrievalResult:
     episodic_records: list["EpisodeRecord"] = field(default_factory=list)
     question_records: list["QuestionMemory"] = field(default_factory=list)
     long_term_records: list["MemoryRecord"] = field(default_factory=list)
+    graph_edges: list["GraphEdge"] = field(default_factory=list)
 
     query_type: str = "general"
     retrieval_time_ms: float = 0.0
@@ -38,6 +39,7 @@ class RetrievalResult:
             or self.episodic_records
             or self.question_records
             or self.long_term_records
+            or self.graph_edges
         )
 
     def to_context_string(self) -> str:
@@ -55,10 +57,20 @@ class RetrievalResult:
         if self.long_term_records:
             sections.append(self._format_long_term())
 
+        if self.graph_edges:
+            sections.append(self._format_graph())
+
         if not sections:
             return ""
 
         return "\n\n".join(sections)
+
+    def _format_graph(self) -> str:
+        """格式化图关系结果。"""
+        lines = ["【关系记忆】"]
+        for edge in self.graph_edges:
+            lines.append(f"- {edge.subject} -[{edge.predicate}]-> {edge.object}")
+        return "\n".join(lines)
 
     def _format_semantic(self) -> str:
         lines = ["【用户事实记忆】"]
@@ -191,11 +203,27 @@ class RetrievalRouter:
         self._cache_ttl = 300
         self._reranker: "ReRanker | None" = None
         self._composer: "MemoryComposer | None" = None
+        self._graph_store: "MemoryGraphStore | None" = None
 
         self._init_reranker()
         self._init_composer()
+        self._init_graph_store()
 
         logger.info("RetrievalRouter initialized with AI-powered intent classification")
+
+    def _init_graph_store(self) -> None:
+        """初始化图存储（如果启用）。"""
+        if not self._features.get("graph", {}).get("enabled", False):
+            return
+        try:
+            from .graph_store import MemoryGraphStore
+
+            config = self._features.get("graph", {})
+            persist_path = config.get("persist_path", "./data/memory/memory_graph.json")
+            self._graph_store = MemoryGraphStore(persist_path=persist_path)
+            logger.info("MemoryGraphStore initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize MemoryGraphStore: {e}")
 
     def _init_reranker(self) -> None:
         """初始化 Re-Ranker（如果启用）。"""
@@ -347,6 +375,11 @@ class RetrievalRouter:
                 result.episodic_records = res
             elif name == "long_term":
                 result.long_term_records = res
+
+        # 图查询（如果启用）
+        if self._graph_store:
+            graph_results = self._graph_store.query(subject=f"user:{user_id}")
+            result.graph_edges = graph_results
 
         # Re-Ranker：对检索结果重排序
         if self._reranker:

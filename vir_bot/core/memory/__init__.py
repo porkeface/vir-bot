@@ -33,7 +33,12 @@ __all__ = [
     "MemoryRecord",
     "MemoryMonitor",
     "MemoryDebugTools",
+    "FeedbackHandler",
+    "QualityGate",
+    "WriteVerifier",
+    "MemoryGraphStore",
 ]
 
+from vir_bot.core.memory.feedback_handler import FeedbackHandler
 from vir_bot.core.memory.monitoring import MemoryMonitor
 from vir_bot.core.memory.debug_tools import MemoryDebugTools

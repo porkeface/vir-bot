@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from vir_bot.core.memory.episodic_store import EpisodicMemoryStore, EpisodeRecord
+from vir_bot.core.memory.feedback_handler import FeedbackHandler
 from vir_bot.core.memory.long_term import LongTermMemory, MemoryRecord
 from vir_bot.core.memory.memory_updater import MemoryUpdater
 from vir_bot.core.memory.memory_writer import MemoryWriter
@@ -52,12 +53,40 @@ class MemoryManager:
         self.long_term = long_term
         self.semantic_store = semantic_store
         self.memory_writer = memory_writer
-        self.memory_updater = memory_updater
         self.window_size = window_size
         self.wiki = WikiKnowledgeBase(wiki_dir=wiki_dir)
         self.current_character: Optional[CharacterProfile] = None
         self._ai_provider = ai_provider
         self._features = features or {}
+
+        # 初始化 quality_gate（如果启用）
+        quality_gate = None
+        if self._is_feature_enabled("quality_gate"):
+            from .quality_gate import QualityGate
+
+            quality_gate = QualityGate(config=self._features.get("quality_gate"))
+
+        # 初始化 verifier（如果启用）
+        verifier = None
+        if self._is_feature_enabled("verifier"):
+            from .verifier import WriteVerifier
+
+            verifier = WriteVerifier(
+                semantic_store=semantic_store,
+                episodic_store=self.episodic_store,
+            )
+
+        # 初始化 memory_writer（支持质量门）
+        if quality_gate:
+            memory_writer._quality_gate = quality_gate
+
+        # 初始化 memory_updater（支持版本管理和验证器）
+        enable_versioning = self._is_feature_enabled("versioning")
+        self.memory_updater = MemoryUpdater(
+            semantic_store=semantic_store,
+            enable_versioning=enable_versioning,
+            verifier=verifier,
+        )
 
         self.episodic_store = episodic_store or EpisodicMemoryStore()
         self.question_store = question_store or QuestionMemoryStore()
@@ -73,6 +102,41 @@ class MemoryManager:
             ai_provider=ai_provider,
             features=self._features,
         )
+
+        # 初始化反馈处理器
+        self.feedback_handler = FeedbackHandler(semantic_store=self.semantic_store)
+
+        # 初始化图存储（如果启用）
+        self.graph_store = None
+        if self._is_feature_enabled("graph"):
+            from .graph_store import MemoryGraphStore
+
+            config = self._features.get("graph", {})
+            persist_path = config.get("persist_path", "./data/memory/memory_graph.json")
+            self.graph_store = MemoryGraphStore(persist_path=persist_path)
+
+        # 更新 retrieval_router 以支持图查询
+        if self.graph_store:
+            self.retrieval_router._graph_store = self.graph_store
+
+        # 初始化生命周期管理器（如果启用）
+        self.janitor = None
+        if self._is_feature_enabled("lifecycle"):
+            from .lifecycle.decay import DecayConfig, MemoryDecay
+            from .lifecycle.merge import MemoryMerger
+            from .lifecycle.janitor import MemoryJanitor
+
+            decay_config = DecayConfig()
+            decay = MemoryDecay(config=decay_config)
+            merger = MemoryMerger(semantic_store=semantic_store)
+
+            self.janitor = MemoryJanitor(
+                config=self._features.get("lifecycle", {}),
+                semantic_store=semantic_store,
+                episodic_store=self.episodic_store,
+                decay=decay,
+                merger=merger,
+            )
 
         logger.info("MemoryManager initialized with Wiki + RAG hybrid system")
 
@@ -240,11 +304,20 @@ class MemoryManager:
         if not user_id:
             return
 
-        operations = await self.memory_writer.extract(
-            user_msg=user_msg,
-            assistant_msg=assistant_msg,
-            user_id=user_id,
-        )
+        # 如果启用了质量门，使用质量检查提取
+        if hasattr(self.memory_writer, '_is_quality_gate_enabled') and self.memory_writer._is_quality_gate_enabled():
+            operations = await self.memory_writer.extract_with_quality_check(
+                user_msg=user_msg,
+                assistant_msg=assistant_msg,
+                user_id=user_id,
+            )
+        else:
+            operations = await self.memory_writer.extract(
+                user_msg=user_msg,
+                assistant_msg=assistant_msg,
+                user_id=user_id,
+            )
+
         # 移除正则回退：所有事实抽取依赖AI语义理解，避免规则驱动的错误
         # if not operations:
         #     operations = self._fallback_fact_operations(user_msg)
@@ -252,7 +325,7 @@ class MemoryManager:
         if not operations:
             return
 
-        self.memory_updater.apply(
+        await self.memory_updater.apply(
             user_id=user_id,
             operations=operations,
             source_message_id=metadata.get("msg_id"),
@@ -1057,3 +1130,23 @@ class MemoryManager:
             backup["long_term"] = await self.long_term.export_to_dict()
 
         return backup
+
+    async def handle_user_correction(
+        self,
+        user_id: str,
+        predicate: str,
+        new_value: str | None,
+        reason: str,
+    ) -> str:
+        """
+        处理用户纠正（如"我不是叫张三"、"早就不喜欢火锅了"）。
+        返回处理结果：'confidence_reduced' | 'updated' | 'noop'
+        """
+        result = self.feedback_handler.handle_correction(
+            user_id=user_id,
+            predicate=predicate,
+            new_value=new_value,
+            reason=reason,
+        )
+        logger.info(f"User correction handled: {predicate} -> {new_value}, result: {result}")
+        return result
