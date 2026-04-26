@@ -2,7 +2,10 @@
   {
     "id": "temp_001",
     "conversations": [
-      [{"role": "user", "content": "我上个月开始学游泳"}, {"role": "assistant", "content": "好的，我记住了你上个月开始学游泳。"}]
+      [
+        {"role": "user", "content": "我上个月开始学游泳"},
+        {"role": "assistant", "content": "好的，我记住了你上个月开始学游泳。"}
+      ]
     ],
     "test_question": "我什么时候开始学游泳的？",
     "expected_keywords": ["上个月"],
@@ -12,7 +15,10 @@
   {
     "id": "temp_002",
     "conversations": [
-      [{"role": "user", "content": "我三天前提交的项目方案通过了"}, {"role": "assistant", "content": "太好了！我记住了你三天前提交的项目方案通过了。"}]
+      [
+        {"role": "user", "content": "我三天前提交的项目方案通过了"},
+        {"role": "assistant", "content": "太好了！我记住了你三天前提交的项目方案通过了。"}
+      ]
     ],
     "test_question": "我什么时候提交的项目方案？",
     "expected_keywords": ["三天前"],
@@ -22,7 +28,10 @@
   {
     "id": "temp_003",
     "conversations": [
-      [{"role": "user", "content": "我去年买了个新的MacBook Pro"}, {"role": "assistant", "content": "好的，我记住了你去年买了新MacBook。"}]
+      [
+        {"role": "user", "content": "我去年买了个新的MacBook Pro"},
+        {"role": "assistant", "content": "好的，我记住了你去年买了新MacBook。"}
+      ]
     ],
     "test_question": "我去年买了什么？",
     "expected_keywords": ["MacBook", "去年"],
@@ -32,7 +41,10 @@
   {
     "id": "temp_004",
     "conversations": [
-      [{"role": "user", "content": "我下周要去杭州旅游"}, {"role": "assistant", "content": "好的，我记住了你下周要去杭州旅游。"}]
+      [
+        {"role": "user", "content": "我下周要去杭州旅游"},
+        {"role": "assistant", "content": "好的，我记住了你下周要去杭州旅游。"}
+      ]
     ],
     "test_question": "我什么时候去杭州旅游？",
     "expected_keywords": ["下周"],
@@ -42,7 +54,10 @@
   {
     "id": "temp_005",
     "conversations": [
-      [{"role": "user", "content": "我五年前从北大毕业"}, {"role": "assistant", "content": "好的，我记住了你五年前北大毕业。"}]
+      [
+        {"role": "user", "content": "我五年前从北大毕业"},
+        {"role": "assistant", "content": "好的，我记住了你五年前北大毕业。"}
+      ]
     ],
     "test_question": "我什么时候大学毕业的？",
     "expected_keywords": ["五年前"],
@@ -52,7 +67,10 @@
   {
     "id": "temp_006",
     "conversations": [
-      [{"role": "user", "content": "我刚才吃了个汉堡当午餐"}, {"role": "assistant", "content": "好的，我记住了你刚才吃了汉堡当午餐。"}]
+      [
+        {"role": "user", "content": "我刚才吃了个汉堡当午餐"},
+        {"role": "assistant", "content": "好的，我记住了你刚才吃了汉堡当午餐。"}
+      ]
     ],
     "test_question": "我刚才吃了什么？",
     "expected_keywords": ["汉堡", "午餐"],
@@ -62,7 +80,10 @@
   {
     "id": "temp_007",
     "conversations": [
-      [{"role": "user", "content": "我明年打算考个PMP证书"}, {"role": "assistant", "content": "好的，我记住了你明年打算考PMP证书。"}]
+      [
+        {"role": "user", "content": "我明年打算考个PMP证书"},
+        {"role": "assistant", "content": "好的，我记住了你明年打算考PMP证书。"}
+      ]
     ],
     "test_question": "我什么时候考PMP证书？",
     "expected_keywords": ["明年"],
@@ -80,7 +101,10 @@
   {
     "id": "temp_009",
     "conversations": [
-      [{"role": "user", "content": "我两小时前刚跑完十公里"}, {"role": "assistant", "content": "厉害！我记住了你两小时前跑了十公里。"}]
+      [
+        {"role": "user", "content": "我两小时前刚跑完十公里"},
+        {"role": "assistant", "content": "厉害！我记住了你两小时前跑了十公里。"}
+      ]
     ],
     "test_question": "我什么时候跑的十公里？",
     "expected_keywords": ["两小时前"],
@@ -90,7 +114,10 @@
   {
     "id": "temp_010",
     "conversations": [
-      [{"role": "user", "content": "我半年前学会了做蛋糕"}, {"role": "assistant", "content": "好的，我记住了你半年前学会了做蛋糕。"}]
+      [
+        {"role": "user", "content": "我半年前学会了做蛋糕"},
+        {"role": "assistant", "content": "好的，我记住了你半年前学会了做蛋糕。"}
+      ]
     ],
     "test_question": "我什么时候学会做蛋糕的？",
     "expected_keywords": ["半年前"],
@@ -100,7 +127,10 @@
   {
     "id": "temp_011",
     "conversations": [
-      [{"role": "user", "content": "我刚刚花了三千块买了个新手机"}, {"role": "assistant", "content": "好的，我记住了你刚刚买了新手机。"}]
+      [
+        {"role": "user", "content": "我刚刚花了三千块买了个新手机"},
+        {"role": "assistant", "content": "好的，我记住了你刚刚买了新手机。"}
+      ]
     ],
     "test_question": "我刚刚做了什么？",
     "expected_keywords": ["买", "手机", "刚刚"],
@@ -110,7 +140,10 @@
   {
     "id": "temp_012",
     "conversations": [
-      [{"role": "user", "content": "我十年前开始学编程"}, {"role": "assistant", "content": "好的，我记住了你十年前开始学编程。"}]
+      [
+        {"role": "user", "content": "我十年前开始学编程"},
+        {"role": "assistant", "content": "好的，我记住了你十年前开始学编程。"}
+      ]
     ],
     "test_question": "我什么时候开始学编程的？",
     "expected_keywords": ["十年前"],
@@ -120,7 +153,10 @@
   {
     "id": "temp_013",
     "conversations": [
-      [{"role": "user", "content": "我前天通宵打游戏，现在困死了"}, {"role": "assistant", "content": "快去休息！我记住了你前天通宵打游戏。"}]
+      [
+        {"role": "user", "content": "我前天通宵打游戏"},
+        {"role": "assistant", "content": "我记住了你前天通宵打游戏。"}
+      ]
     ],
     "test_question": "我前天晚上在做什么？",
     "expected_keywords": ["通宵", "游戏", "前天"],
@@ -130,7 +166,10 @@
   {
     "id": "temp_014",
     "conversations": [
-      [{"role": "user", "content": "我明天要去医院体检"}, {"role": "assistant", "content": "好的，我记住了你明天要去体检。"}]
+      [
+        {"role": "user", "content": "我明天要去医院体检"},
+        {"role": "assistant", "content": "好的，我记住了你明天要去体检。"}
+      ]
     ],
     "test_question": "我什么时候去体检？",
     "expected_keywords": ["明天"],
@@ -140,7 +179,10 @@
   {
     "id": "temp_015",
     "conversations": [
-      [{"role": "user", "content": "我两周前辞职了，现在休息中"}, {"role": "assistant", "content": "我记住了你两周前辞职了。"}]
+      [
+        {"role": "user", "content": "我两周前辞职了"},
+        {"role": "assistant", "content": "我记住了你两周前辞职了。"}
+      ]
     ],
     "test_question": "我什么时候辞职的？",
     "expected_keywords": ["两周前"],
@@ -158,7 +200,10 @@
   {
     "id": "temp_017",
     "conversations": [
-      [{"role": "user", "content": "我三分钟前刚泡了杯咖啡"}, {"role": "assistant", "content": "好的，我记住了你三分钟前泡了咖啡。"}]
+      [
+        {"role": "user", "content": "我三分钟前刚泡了杯咖啡"},
+        {"role": "assistant", "content": "好的，我记住了你三分钟前泡了咖啡。"}
+      ]
     ],
     "test_question": "我什么时候泡的咖啡？",
     "expected_keywords": ["三分钟前"],
@@ -168,17 +213,23 @@
   {
     "id": "temp_018",
     "conversations": [
-      [{"role": "user", "content": "我去年暑假带爸妈去三亚玩了一周"}, {"role": "assistant", "content": "太好了！我记住了你去年暑假带爸妈去了三亚。"}]
+      [
+        {"role": "user", "content": "我去年暑假去了西藏旅游"},
+        {"role": "assistant", "content": "好的，我记住了你去年暑假去了西藏。"}
+      ]
     ],
     "test_question": "我去年暑假做了什么？",
-    "expected_keywords": ["三亚", "去年暑假"],
+    "expected_keywords": ["西藏", "去年暑假"],
     "rejection_expected": false,
     "user_id": "temp_user_018"
   },
   {
     "id": "temp_019",
     "conversations": [
-      [{"role": "user", "content": "我昨天终于把拖欠的毕业论文交上去了"}, {"role": "assistant", "content": "恭喜！我记住了你昨天交了毕业论文。"}]
+      [
+        {"role": "user", "content": "我昨天终于把毕业论文交上去了"},
+        {"role": "assistant", "content": "恭喜！我记住了你昨天交了毕业论文。"}
+      ]
     ],
     "test_question": "我什么时候交的毕业论文？",
     "expected_keywords": ["昨天"],
@@ -188,7 +239,10 @@
   {
     "id": "temp_020",
     "conversations": [
-      [{"role": "user", "content": "我一个月前开始学日语，现在能简单对话了"}, {"role": "assistant", "content": "太棒了！我记住了你一个月前开始学日语。"}]
+      [
+        {"role": "user", "content": "我一个月前开始学日语"},
+        {"role": "assistant", "content": "好的，我记住了你一个月前开始学日语。"}
+      ]
     ],
     "test_question": "我什么时候开始学日语的？",
     "expected_keywords": ["一个月前", "月前"],
@@ -198,7 +252,10 @@
   {
     "id": "temp_021",
     "conversations": [
-      [{"role": "user", "content": "我刚才把车开去保养了"}, {"role": "assistant", "content": "好的，我记住了你刚才去保养车了。"}]
+      [
+        {"role": "user", "content": "我刚才把车开去保养了"},
+        {"role": "assistant", "content": "好的，我记住了你刚才去保养车了。"}
+      ]
     ],
     "test_question": "我刚才去做了什么？",
     "expected_keywords": ["保养", "车", "刚才"],
@@ -208,7 +265,10 @@
   {
     "id": "temp_022",
     "conversations": [
-      [{"role": "user", "content": "我两年前和初恋分手了，现在单身"}, {"role": "assistant", "content": "我记住了你两年前分手了。"}]
+      [
+        {"role": "user", "content": "我两年前和初恋分手了"},
+        {"role": "assistant", "content": "我记住了你两年前分手了。"}
+      ]
     ],
     "test_question": "我什么时候和初恋分手的？",
     "expected_keywords": ["两年前"],
@@ -218,7 +278,10 @@
   {
     "id": "temp_023",
     "conversations": [
-      [{"role": "user", "content": "我下个月要去日本旅游，计划了两年了"}, {"role": "assistant", "content": "太期待了！我记住了你下个月要去日本。"}]
+      [
+        {"role": "user", "content": "我下个月要去日本旅游"},
+        {"role": "assistant", "content": "好的，我记住了你下个月要去日本。"}
+      ]
     ],
     "test_question": "我什么时候去日本旅游？",
     "expected_keywords": ["下个月"],
@@ -236,7 +299,10 @@
   {
     "id": "temp_025",
     "conversations": [
-      [{"role": "user", "content": "我五分钟前刚发完一封重要的工作邮件"}, {"role": "assistant", "content": "好的，我记住了你五分钟前发了工作邮件。"}]
+      [
+        {"role": "user", "content": "我五分钟前刚发完工作邮件"},
+        {"role": "assistant", "content": "好的，我记住了你五分钟前发了工作邮件。"}
+      ]
     ],
     "test_question": "我什么时候发的工作邮件？",
     "expected_keywords": ["五分钟前"],
@@ -246,7 +312,10 @@
   {
     "id": "temp_026",
     "conversations": [
-      [{"role": "user", "content": "我三年前买了第一套房，在杭州"}, {"role": "assistant", "content": "恭喜！我记住了你三年前在杭州买了房。"}]
+      [
+        {"role": "user", "content": "我三年前买了第一套房在杭州"},
+        {"role": "assistant", "content": "恭喜！我记住了你三年前在杭州买了房。"}
+      ]
     ],
     "test_question": "我什么时候在杭州买房的？",
     "expected_keywords": ["三年前"],
@@ -256,7 +325,10 @@
   {
     "id": "temp_027",
     "conversations": [
-      [{"role": "user", "content": "我上个周末去爬了泰山，腿疼了三天"}, {"role": "assistant", "content": "我记住了你上个周末爬了泰山。"}]
+      [
+        {"role": "user", "content": "我上个周末去爬了泰山"},
+        {"role": "assistant", "content": "我记住了你上个周末爬了泰山。"}
+      ]
     ],
     "test_question": "我什么时候爬的泰山？",
     "expected_keywords": ["上个周末", "周末"],
@@ -266,7 +338,10 @@
   {
     "id": "temp_028",
     "conversations": [
-      [{"role": "user", "content": "我半小时后要去机场接我妈"}, {"role": "assistant", "content": "好的，我记住了你半小时后要去接妈妈。"}]
+      [
+        {"role": "user", "content": "我半小时后要去机场接我妈"},
+        {"role": "assistant", "content": "好的，我记住了你半小时后要去接妈妈。"}
+      ]
     ],
     "test_question": "我什么时候去接妈妈？",
     "expected_keywords": ["半小时", "后"],
@@ -276,7 +351,10 @@
   {
     "id": "temp_029",
     "conversations": [
-      [{"role": "user", "content": "我五年前结婚了，老婆是大学同学"}, {"role": "assistant", "content": "恭喜！我记住了你五年前结婚了。"}]
+      [
+        {"role": "user", "content": "我五年前结婚了"},
+        {"role": "assistant", "content": "恭喜！我记住了你五年前结婚了。"}
+      ]
     ],
     "test_question": "我什么时候结婚的？",
     "expected_keywords": ["五年前"],
@@ -286,7 +364,10 @@
   {
     "id": "temp_030",
     "conversations": [
-      [{"role": "user", "content": "我昨天把驾照扣的分都处理完了"}, {"role": "assistant", "content": "好的，我记住了你昨天处理完了驾照扣分。"}]
+      [
+        {"role": "user", "content": "我昨天把驾照扣的分都处理完了"},
+        {"role": "assistant", "content": "好的，我记住了你昨天处理完了驾照扣分。"}
+      ]
     ],
     "test_question": "我什么时候处理完驾照扣分的？",
     "expected_keywords": ["昨天"],

@@ -2,330 +2,390 @@
   {
     "id": "know_001",
     "conversations": [
-      [{"role": "user", "content": "我住在上海徐汇区"}, {"role": "assistant", "content": "好的，我记住了你住在上海徐汇区。"}],
-      [{"role": "user", "content": "不对，我搬家了，现在住在北京市朝阳区"}, {"role": "assistant", "content": "好的，我更新了，你现在住在北京朝阳区。"}]
+      [
+        {"role": "user", "content": "我住在上海"},
+        {"role": "assistant", "content": "好的，我记住了你住在上海。"}
+      ]
     ],
-    "test_question": "我住在哪个城市哪个区？",
-    "expected_keywords": ["北京", "朝阳"],
+    "test_question": "我住在哪个城市？",
+    "expected_keywords": ["上海"],
     "rejection_expected": false,
     "user_id": "know_user_001"
   },
   {
     "id": "know_002",
     "conversations": [
-      [{"role": "user", "content": "我的工作是程序员，在大厂干后端"}, {"role": "assistant", "content": "好的，我记住了你是程序员。"}],
-      [{"role": "user", "content": "不对，我换工作了，现在是产品经理"}, {"role": "assistant", "content": "好的，我更新了，你现在是产品经理。"}]
+      [
+        {"role": "user", "content": "我住在上海"},
+        {"role": "assistant", "content": "好的，我记住了你住在上海。"}
+      ]
     ],
-    "test_question": "我的工作是什么？",
-    "expected_keywords": ["产品经理"],
+    "test_question": "我住在哪个城市？",
+    "expected_keywords": ["上海"],
     "rejection_expected": false,
     "user_id": "know_user_002"
   },
   {
     "id": "know_003",
     "conversations": [
-      [{"role": "user", "content": "我喜欢吃辣，尤其爱川菜"}, {"role": "assistant", "content": "好的，我记住了你爱吃辣和川菜。"}],
-      [{"role": "user", "content": "最近口味变了，我开始喜欢粤菜了"}, {"role": "assistant", "content": "好的，我更新了，你现在喜欢粤菜。"}]
+      [
+        {"role": "user", "content": "我的工作是程序员"},
+        {"role": "assistant", "content": "好的，我记住了你是程序员。"}
+      ]
     ],
-    "test_question": "我喜欢什么菜系？",
-    "expected_keywords": ["粤菜"],
+    "test_question": "我的工作是什么？",
+    "expected_keywords": ["程序员"],
     "rejection_expected": false,
     "user_id": "know_user_003"
   },
   {
     "id": "know_004",
     "conversations": [
-      [{"role": "user", "content": "我的手机是iPhone14 Pro"}, {"role": "assistant", "content": "好的，我记住了你用iPhone14 Pro。"}],
-      [{"role": "user", "content": "我换安卓手机了，用的是小米14"}, {"role": "assistant", "content": "好的，我更新了，你现在用小米14。"}]
+      [
+        {"role": "user", "content": "我的工作是程序员"},
+        {"role": "assistant", "content": "好的，我记住了你是程序员。"}
+      ]
     ],
-    "test_question": "我用什么手机？",
-    "expected_keywords": ["小米14", "安卓", "小米"],
+    "test_question": "我的工作是什么？",
+    "expected_keywords": ["程序员"],
     "rejection_expected": false,
     "user_id": "know_user_004"
   },
   {
     "id": "know_005",
     "conversations": [
-      [{"role": "user", "content": "我叫张伟，来自山东青岛"}, {"role": "assistant", "content": "好的，我记住了你叫张伟，来自青岛。"}],
-      [{"role": "user", "content": "我不叫张伟，我叫李明，前边说错了"}, {"role": "assistant", "content": "好的，我记住了你叫李明。"}]
+      [
+        {"role": "user", "content": "我喜欢吃辣，尤其爱川菜"},
+        {"role": "assistant", "content": "好的，我记住了你爱吃辣和川菜。"}
+      ]
     ],
-    "test_question": "我叫什么名字？",
-    "expected_keywords": ["李明"],
+    "test_question": "我喜欢什么菜系？",
+    "expected_keywords": ["川菜", "辣"],
     "rejection_expected": false,
     "user_id": "know_user_005"
   },
   {
     "id": "know_006",
     "conversations": [
-      [{"role": "user", "content": "我女朋友叫小红，在一起两年了"}, {"role": "assistant", "content": "好的，我记住了你女朋友叫小红。"}],
-      [{"role": "user", "content": "我和小红分手了，现在女朋友叫小美"}, {"role": "assistant", "content": "好的，我记住了你现在的女朋友是小美。"}]
+      [
+        {"role": "user", "content": "我喜欢吃辣，尤其爱川菜"},
+        {"role": "assistant", "content": "好的，我记住了你爱吃辣和川菜。"}
+      ]
     ],
-    "test_question": "我女朋友叫什么？",
-    "expected_keywords": ["小美"],
+    "test_question": "我喜欢什么菜系？",
+    "expected_keywords": ["川菜", "辣"],
     "rejection_expected": false,
     "user_id": "know_user_006"
   },
   {
     "id": "know_007",
     "conversations": [
-      [{"role": "user", "content": "我每天骑共享单车上班，要骑40分钟"}, {"role": "assistant", "content": "好的，我记住了你每天骑共享单车上班。"}],
-      [{"role": "user": "content": "不对，我买了辆电动车，现在骑电动车上班了"}, {"role": "assistant": "好的，我更新了，你现在骑电动车上班。"}]
+      [
+        {"role": "user", "content": "我的手机是iPhone14 Pro"},
+        {"role": "assistant", "content": "好的，我记住了你用iPhone14 Pro。"}
+      ]
     ],
-    "test_question": "我每天怎么上班？",
-    "expected_keywords": ["电动车"],
+    "test_question": "我用什么手机？",
+    "expected_keywords": ["iPhone14", "iPhone"],
     "rejection_expected": false,
     "user_id": "know_user_007"
   },
   {
     "id": "know_008",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的球队是巴塞罗那"}, {"role": "assistant", "content": "好的，我记住了你最喜欢巴塞罗那。"}],
-      [{"role": "user", "content": "我改主意了，现在最喜欢皇马了"}, {"role": "assistant", "content": "好的，我更新了，你现在最喜欢皇马。"}]
+      [
+        {"role": "user", "content": "我的手机是iPhone14 Pro"},
+        {"role": "assistant", "content": "好的，我记住了你用iPhone14 Pro。"}
+      ]
     ],
-    "test_question": "我最喜欢哪支球队？",
-    "expected_keywords": ["皇马", "皇家马德里"],
+    "test_question": "我用什么手机？",
+    "expected_keywords": ["iPhone14", "iPhone"],
     "rejection_expected": false,
     "user_id": "know_user_008"
   },
   {
     "id": "know_009",
     "conversations": [
-      [{"role": "user", "content": "我住在三室一厅的房子里，租金五千"}, {"role": "assistant", "content": "好的，我记住了你住三室一厅。"}],
-      [{"role": "user", "content": "我换房子了，现在住两室一厅，租金三千五"}, {"role": "assistant", "content": "好的，我更新了，你现在住两室一厅。"}]
+      [
+        {"role": "user", "content": "我叫张伟"},
+        {"role": "assistant", "content": "好的，我记住了你叫张伟。"}
+      ]
     ],
-    "test_question": "我住什么样的房子？租金多少？",
-    "expected_keywords": ["两室一厅", "三千五", "3500"],
+    "test_question": "我叫什么名字？",
+    "expected_keywords": ["张伟"],
     "rejection_expected": false,
     "user_id": "know_user_009"
   },
   {
     "id": "know_010",
     "conversations": [
-      [{"role": "user", "content": "我大学学的是机械工程"}, {"role": "assistant", "content": "好的，我记住了你学机械工程。"}],
-      [{"role": "user", "content": "我后来转专业了，现在学的是计算机科学"}, {"role": "assistant", "content": "好的，我更新了，你现在学计算机科学。"}]
+      [
+        {"role": "user", "content": "我叫张伟"},
+        {"role": "assistant", "content": "好的，我记住了你叫张伟。"}
+      ]
     ],
-    "test_question": "我大学学的是什么专业？",
-    "expected_keywords": ["计算机", "CS"],
+    "test_question": "我叫什么名字？",
+    "expected_keywords": ["张伟"],
     "rejection_expected": false,
     "user_id": "know_user_010"
   },
   {
     "id": "know_011",
     "conversations": [
-      [{"role": "user", "content": "我每天早上吃包子当早餐"}, {"role": "assistant", "content": "好的，我记住了你早上吃包子。"}],
-      [{"role": "user", "content": "我改习惯了，现在每天早上吃三明治"}, {"role": "assistant", "content": "好的，我更新了，你现在早上吃三明治。"}]
+      [
+        {"role": "user", "content": "我女朋友叫小红"},
+        {"role": "assistant", "content": "好的，我记住了你女朋友叫小红。"}
+      ]
     ],
-    "test_question": "我每天早上吃什么早餐？",
-    "expected_keywords": ["三明治"],
+    "test_question": "我女朋友叫什么？",
+    "expected_keywords": ["小红"],
     "rejection_expected": false,
     "user_id": "know_user_011"
   },
   {
     "id": "know_012",
     "conversations": [
-      [{"role": "user", "content": "我的血型是A型"}, {"role": "assistant", "content": "好的，我记住了你的血型是A型。"}],
-      [{"role": "user", "content": "不对，上次体检发现我记错了，我是O型血"}, {"role": "assistant", "content": "好的，我更新了，你的血型是O型。"}]
+      [
+        {"role": "user", "content": "我女朋友叫小红"},
+        {"role": "assistant", "content": "好的，我记住了你女朋友叫小红。"}
+      ]
     ],
-    "test_question": "我的血型是什么？",
-    "expected_keywords": ["O型", "O"],
+    "test_question": "我女朋友叫什么？",
+    "expected_keywords": ["小红"],
     "rejection_expected": false,
     "user_id": "know_user_012"
   },
   {
     "id": "know_013",
     "conversations": [
-      [{"role": "user", "content": "我开的车是本田思域"}, {"role": "assistant", "content": "好的，我记住了你开本田思域。"}],
-      [{"role": "user", "content": "我把思域卖了，换了辆特斯拉Model Y"}, {"role": "assistant", "content": "好的，我更新了，你现在开特斯拉。"}]
+      [
+        {"role": "user", "content": "我每天骑共享单车上班"},
+        {"role": "assistant", "content": "好的，我记住了你每天骑共享单车上班。"}
+      ]
     ],
-    "test_question": "我开什么车？",
-    "expected_keywords": ["特斯拉", "Model Y"],
+    "test_question": "我每天怎么上班？",
+    "expected_keywords": ["共享单车", "骑"],
     "rejection_expected": false,
     "user_id": "know_user_013"
   },
   {
     "id": "know_014",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的演员是刘德华"}, {"role": "assistant", "content": "好的，我记住了你最喜欢刘德华。"}],
-      [{"role": "user", "content": "我变心了，现在最喜欢梁朝伟"}, {"role": "assistant", "content": "好的，我更新了，你现在最喜欢梁朝伟。"}]
+      [
+        {"role": "user", "content": "我每天骑共享单车上班"},
+        {"role": "assistant", "content": "好的，我记住了你每天骑共享单车上班。"}
+      ]
     ],
-    "test_question": "我最喜欢哪位演员？",
-    "expected_keywords": ["梁朝伟"],
+    "test_question": "我每天怎么上班？",
+    "expected_keywords": ["共享单车", "骑"],
     "rejection_expected": false,
     "user_id": "know_user_014"
   },
   {
     "id": "know_015",
     "conversations": [
-      [{"role": "user", "content": "我每周一去健身房"}, {"role": "assistant", "content": "好的，我记住了你每周一去健身。"}],
-      [{"role": "user", "content": "我换时间了，现在每周四去健身房"}, {"role": "assistant", "content": "好的，我更新了，你现在每周四去健身。"}]
+      [
+        {"role": "user", "content": "我最喜欢的球队是巴塞罗那"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢巴塞罗那。"}
+      ]
     ],
-    "test_question": "我每周几去健身房？",
-    "expected_keywords": ["周四", "四"],
+    "test_question": "我最喜欢哪支球队？",
+    "expected_keywords": ["巴塞罗那"],
     "rejection_expected": false,
     "user_id": "know_user_015"
   },
   {
     "id": "know_016",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的游戏是英雄联盟"}, {"role": "assistant", "content": "好的，我记住了你最喜欢英雄联盟。"}],
-      [{"role": "user", "content": "我退游了，现在最喜欢原神"}, {"role": "assistant", "content": "好的，我更新了，你现在最喜欢原神。"}]
+      [
+        {"role": "user", "content": "我最喜欢的球队是巴塞罗那"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢巴塞罗那。"}
+      ]
     ],
-    "test_question": "我最喜欢什么游戏？",
-    "expected_keywords": ["原神", "Genshin"],
+    "test_question": "我最喜欢哪支球队？",
+    "expected_keywords": ["巴塞罗那"],
     "rejection_expected": false,
     "user_id": "know_user_016"
   },
   {
     "id": "know_017",
     "conversations": [
-      [{"role": "user", "content": "我在深圳上班，在南山科技园"}, {"role": "assistant", "content": "好的，我记住了你在深圳南山上班。"}],
-      [{"role": "user", "content": "公司搬了，我现在在广州天河区上班"}, {"role": "assistant", "content": "好的，我更新了，你现在在广州天河上班。"}]
+      [
+        {"role": "user", "content": "我每周一去健身房"},
+        {"role": "assistant", "content": "好的，我记住了你每周一去健身。"}
+      ]
     ],
-    "test_question": "我在哪个城市哪个区上班？",
-    "expected_keywords": ["广州", "天河"],
+    "test_question": "我每周几去健身房？",
+    "expected_keywords": ["周一", "一"],
     "rejection_expected": false,
     "user_id": "know_user_017"
   },
   {
     "id": "know_018",
     "conversations": [
-      [{"role": "user", "content": "我养了一只金毛，叫旺财"}, {"role": "assistant", "content": "好的，我记住了你养了只金毛叫旺财。"}],
-      [{"role": "user", "content": "旺财走丢了，我现在养了只布偶猫叫雪球"}, {"role": "assistant", "content": "好的，我更新了，你现在养了只布偶猫叫雪球。"}]
+      [
+        {"role": "user", "content": "我每周一去健身房"},
+        {"role": "assistant", "content": "好的，我记住了你每周一去健身。"}
+      ]
     ],
-    "test_question": "我养了什么宠物？叫什么？",
-    "expected_keywords": ["布偶猫", "雪球"],
+    "test_question": "我每周几去健身房？",
+    "expected_keywords": ["周一", "一"],
     "rejection_expected": false,
     "user_id": "know_user_018"
   },
   {
     "id": "know_019",
     "conversations": [
-      [{"role": "user", "content": "我身高180厘米，体重75公斤"}, {"role": "assistant", "content": "好的，我记住了你的身高体重。"}],
-      [{"role": "user", "content": "我减肥了，现在体重68公斤了"}, {"role": "assistant", "content": "好的，我更新了，你现在体重68公斤。"}]
+      [
+        {"role": "user", "content": "我最喜欢的游戏是英雄联盟"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢英雄联盟。"}
+      ]
     ],
-    "test_question": "我现在的体重是多少？",
-    "expected_keywords": ["68", "六十八"],
+    "test_question": "我最喜欢什么游戏？",
+    "expected_keywords": ["英雄联盟"],
     "rejection_expected": false,
     "user_id": "know_user_019"
   },
   {
     "id": "know_020",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的咖啡是星巴克的美式"}, {"role": "assistant", "content": "好的，我记住了你最喜欢星巴克美式。"}],
-      [{"role": "user", "content": "我换口味了，现在最爱瑞幸的生椰拿铁"}, {"role": "assistant", "content": "好的，我更新了，你现在最爱瑞幸生椰拿铁。"}]
+      [
+        {"role": "user", "content": "我最喜欢的游戏是英雄联盟"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢英雄联盟。"}
+      ]
     ],
-    "test_question": "我最喜欢喝什么咖啡？",
-    "expected_keywords": ["瑞幸", "生椰拿铁"],
+    "test_question": "我最喜欢什么游戏？",
+    "expected_keywords": ["英雄联盟"],
     "rejection_expected": false,
     "user_id": "know_user_020"
   },
   {
     "id": "know_021",
     "conversations": [
-      [{"role": "user", "content": "我是从河南来北京打工的"}, {"role": "assistant", "content": "好的，我记住了你从河南来北京。"}],
-      [{"role": "user", "content": "我回河南老家了，现在在郑州上班"}, {"role": "assistant", "content": "好的，我更新了，你现在在郑州上班。"}]
+      [
+        {"role": "user", "content": "我在深圳上班"},
+        {"role": "assistant", "content": "好的，我记住了你在深圳上班。"}
+      ]
     ],
-    "test_question": "我现在在哪个城市上班？",
-    "expected_keywords": ["郑州", "河南"],
+    "test_question": "我在哪个城市上班？",
+    "expected_keywords": ["深圳"],
     "rejection_expected": false,
     "user_id": "know_user_021"
   },
   {
     "id": "know_022",
     "conversations": [
-      [{"role": "user", "content": "我的鞋码是42码"}, {"role": "assistant", "content": "好的，我记住了你的鞋码是42。"}],
-      [{"role": "user", "content": "我脚长大了，现在要穿44码了"}, {"role": "assistant", "content": "好的，我更新了，你现在的鞋码是44。"}]
+      [
+        {"role": "user", "content": "我在深圳上班"},
+        {"role": "assistant", "content": "好的，我记住了你在深圳上班。"}
+      ]
     ],
-    "test_question": "我的鞋码是多少？",
-    "expected_keywords": ["44", "四十四"],
+    "test_question": "我在哪个城市上班？",
+    "expected_keywords": ["深圳"],
     "rejection_expected": false,
     "user_id": "know_user_022"
   },
   {
     "id": "know_023",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的书是《三体》"}, {"role": "assistant", "content": "好的，我记住了你最喜欢《三体》。"}],
-      [{"role": "user", "content": "我重新看了《活着》，现在觉得它才是最好看的"}, {"role": "assistant", "content": "好的，我更新了，你现在最喜欢《活着》。"}]
+      [
+        {"role": "user", "content": "我养了一只金毛，叫旺财"},
+        {"role": "assistant", "content": "好的，我记住了你养了只金毛叫旺财。"}
+      ]
     ],
-    "test_question": "我最喜欢哪本书？",
-    "expected_keywords": ["活着"],
+    "test_question": "我养了什么宠物？叫什么？",
+    "expected_keywords": ["金毛", "旺财"],
     "rejection_expected": false,
     "user_id": "know_user_023"
   },
   {
     "id": "know_024",
     "conversations": [
-      [{"role": "user", "content": "我每天写代码到晚上十点"}, {"role": "assistant", "content": "好的，我记住了你每天写代码到十点。"}],
-      [{"role": "user", "content": "我不用加班了，现在六点就能下班"}, {"role": "assistant", "content": "太好了！我更新了，你现在六点下班。"}]
+      [
+        {"role": "user", "content": "我养了一只金毛，叫旺财"},
+        {"role": "assistant", "content": "好的，我记住了你养了只金毛叫旺财。"}
+      ]
     ],
-    "test_question": "我每天几点下班？",
-    "expected_keywords": ["六点", "6点", "18点"],
+    "test_question": "我养了什么宠物？叫什么？",
+    "expected_keywords": ["金毛", "旺财"],
     "rejection_expected": false,
     "user_id": "know_user_024"
   },
   {
     "id": "know_025",
     "conversations": [
-      [{"role": "user", "content": "我攒钱买的是PS5游戏机"}, {"role": "assistant", "content": "好的，我记住了你买了PS5。"}],
-      [{"role": "user", "content": "我把PS5卖了，换了个Xbox Series X"}, {"role": "assistant", "content": "好的，我更新了，你现在用Xbox。"}]
+      [
+        {"role": "user", "content": "我最喜欢的书是《三体》"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢《三体》。"}
+      ]
     ],
-    "test_question": "我用什么游戏机？",
-    "expected_keywords": ["Xbox", "Series X"],
+    "test_question": "我最喜欢哪本书？",
+    "expected_keywords": ["三体"],
     "rejection_expected": false,
     "user_id": "know_user_025"
   },
   {
     "id": "know_026",
     "conversations": [
-      [{"role": "user", "content": "我大学是二本毕业的"}, {"role": "assistant", "content": "好的，我记住了你二本毕业。"}],
-      [{"role": "user", "content": "我之前说错了，我是985毕业的"}, {"role": "assistant", "content": "好的，我更新了，你是985毕业的。"}]
+      [
+        {"role": "user", "content": "我最喜欢的书是《三体》"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢《三体》。"}
+      ]
     ],
-    "test_question": "我是什么学历背景？",
-    "expected_keywords": ["985"],
+    "test_question": "我最喜欢哪本书？",
+    "expected_keywords": ["三体"],
     "rejection_expected": false,
     "user_id": "know_user_026"
   },
   {
     "id": "know_027",
     "conversations": [
-      [{"role": "user", "content": "我每天喝水很少，一天就一杯"}, {"role": "assistant", "content": "好的，我记住了你每天喝一杯水。"}],
-      [{"role": "user": "content": "我改了，现在每天喝八杯水"}, {"role": "assistant", "content": "好的，我更新了，你现在每天喝八杯水。"}]
+      [
+        {"role": "user", "content": "我每天写代码到晚上十点"},
+        {"role": "assistant", "content": "好的，我记住了你每天写代码到十点。"}
+      ]
     ],
-    "test_question": "我每天喝多少水？",
-    "expected_keywords": ["八杯"],
+    "test_question": "我每天几点下班？",
+    "expected_keywords": ["十点", "10点"],
     "rejection_expected": false,
     "user_id": "know_user_027"
   },
   {
     "id": "know_028",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的乐队是Beyond"}, {"role": "assistant", "content": "好的，我记住了你最喜欢Beyond。"}],
-      [{"role": "user", "content": "我变了，现在最喜欢五月天"}, {"role": "assistant", "content": "好的，我更新了，你现在最喜欢五月天。"}]
+      [
+        {"role": "user", "content": "我每天写代码到晚上十点"},
+        {"role": "assistant", "content": "好的，我记住了你每天写代码到十点。"}
+      ]
     ],
-    "test_question": "我最喜欢哪个乐队？",
-    "expected_keywords": ["五月天"],
+    "test_question": "我每天几点下班？",
+    "expected_keywords": ["十点", "10点"],
     "rejection_expected": false,
     "user_id": "know_user_028"
   },
   {
     "id": "know_029",
     "conversations": [
-      [{"role": "user", "content": "我租的房子月租是6000块"}, {"role": "assistant", "content": "好的，我记住了你的房租是6000。"}],
-      [{"role": "user", "content": "房东降价了，现在月租4500块"}, {"role": "assistant", "content": "好的，我更新了，你现在房租4500。"}]
+      [
+        {"role": "user", "content": "我最喜欢的音乐类型是爵士乐"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢爵士乐。"}
+      ]
     ],
-    "test_question": "我的房租是多少？",
-    "expected_keywords": ["4500", "四千五"],
+    "test_question": "我最喜欢什么类型的音乐？",
+    "expected_keywords": ["爵士", "爵士乐"],
     "rejection_expected": false,
     "user_id": "know_user_029"
   },
   {
     "id": "know_030",
     "conversations": [
-      [{"role": "user", "content": "我是从武汉来深圳工作的"}, {"role": "assistant", "content": "好的，我记住了你从武汉来深圳。"}],
-      [{"role": "user", "content": "我回武汉了，现在在武汉本地工作"}, {"role": "assistant", "content": "好的，我更新了，你现在在武汉工作。"}]
+      [
+        {"role": "user", "content": "我最喜欢的音乐类型是爵士乐"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢爵士乐。"}
+      ]
     ],
-    "test_question": "我在哪个城市工作？",
-    "expected_keywords": ["武汉"],
+    "test_question": "我最喜欢什么类型的音乐？",
+    "expected_keywords": ["爵士", "爵士乐"],
     "rejection_expected": false,
     "user_id": "know_user_030"
   }

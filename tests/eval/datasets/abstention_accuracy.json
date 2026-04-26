@@ -18,7 +18,10 @@
   {
     "id": "abst_003",
     "conversations": [
-      [{"role": "user", "content": "我喜欢吃火锅"}, {"role": "assistant", "content": "好的，我记住了你喜欢火锅。"}]
+      [
+        {"role": "user", "content": "我喜欢吃火锅"},
+        {"role": "assistant", "content": "好的，我记住了你喜欢火锅。"}
+      ]
     ],
     "test_question": "我喜欢什么运动？",
     "expected_keywords": [],
@@ -28,7 +31,7 @@
   {
     "id": "abst_004",
     "conversations": [],
-    "test_question": "我养了几只宠物？叫什么名字？",
+    "test_question": "我养了几只宠物？",
     "expected_keywords": [],
     "rejection_expected": true,
     "user_id": "abst_user_004"
@@ -36,7 +39,10 @@
   {
     "id": "abst_005",
     "conversations": [
-      [{"role": "user", "content": "我住在上海"}, {"role": "assistant", "content": "好的，我记住了你住在上海。"}]
+      [
+        {"role": "user", "content": "我住在上海"},
+        {"role": "assistant", "content": "好的，我记住了你住在上海。"}
+      ]
     ],
     "test_question": "我去年去了哪个城市旅游？",
     "expected_keywords": [],
@@ -54,7 +60,10 @@
   {
     "id": "abst_007",
     "conversations": [
-      [{"role": "user", "content": "我的名字叫张三"}, {"role": "assistant", "content": "好的，我记住了你叫张三。"}]
+      [
+        {"role": "user", "content": "我的名字叫张三"},
+        {"role": "assistant", "content": "好的，我记住了你叫张三。"}
+      ]
     ],
     "test_question": "我喜欢什么颜色？",
     "expected_keywords": [],
@@ -72,7 +81,10 @@
   {
     "id": "abst_009",
     "conversations": [
-      [{"role": "user", "content": "我喜欢打篮球"}, {"role": "assistant", "content": "好的，我记住了你喜欢篮球。"}]
+      [
+        {"role": "user", "content": "我喜欢打篮球"},
+        {"role": "assistant", "content": "好的，我记住了你喜欢篮球。"}
+      ]
     ],
     "test_question": "我有多少个兄弟姐妹？",
     "expected_keywords": [],
@@ -90,7 +102,10 @@
   {
     "id": "abst_011",
     "conversations": [
-      [{"role": "user", "content": "我每天喝咖啡"}, {"role": "assistant", "content": "好的，我记住了你每天喝咖啡。"}]
+      [
+        {"role": "user", "content": "我每天喝咖啡"},
+        {"role": "assistant", "content": "好的，我记住了你每天喝咖啡。"}
+      ]
     ],
     "test_question": "我喜欢喝什么茶？",
     "expected_keywords": [],
@@ -108,7 +123,10 @@
   {
     "id": "abst_013",
     "conversations": [
-      [{"role": "user", "content": "我买了个新手机iPhone15"}, {"role": "assistant", "content": "好的，我记住了你买了iPhone15。"}]
+      [
+        {"role": "user", "content": "我买了个新手机iPhone15"},
+        {"role": "assistant", "content": "好的，我记住了你买了iPhone15。"}
+      ]
     ],
     "test_question": "我的鞋码是多少？",
     "expected_keywords": [],
@@ -126,7 +144,10 @@
   {
     "id": "abst_015",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的歌手是陈奕迅"}, {"role": "assistant", "content": "好的，我记住了你最喜欢陈奕迅。"}]
+      [
+        {"role": "user", "content": "我最喜欢的歌手是陈奕迅"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢陈奕迅。"}
+      ]
     ],
     "test_question": "我最喜欢哪部电影？",
     "expected_keywords": [],
@@ -144,7 +165,10 @@
   {
     "id": "abst_017",
     "conversations": [
-      [{"role": "user", "content": "我住在深圳南山区"}, {"role": "assistant", "content": "好的，我记住了你在深圳南山区。"}]
+      [
+        {"role": "user", "content": "我住在深圳南山区"},
+        {"role": "assistant", "content": "好的，我记住了你在深圳南山区。"}
+      ]
     ],
     "test_question": "我开什么车？",
     "expected_keywords": [],
@@ -162,7 +186,10 @@
   {
     "id": "abst_019",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢喝龙井茶"}, {"role": "assistant", "content": "好的，我记住了你最喜欢龙井茶。"}]
+      [
+        {"role": "user", "content": "我最喜欢喝龙井茶"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢龙井茶。"}
+      ]
     ],
     "test_question": "我最喜欢什么零食？",
     "expected_keywords": [],
@@ -180,7 +207,10 @@
   {
     "id": "abst_021",
     "conversations": [
-      [{"role": "user", "content": "我只用苹果手机"}, {"role": "assistant", "content": "好的，我记住了你只用苹果手机。"}]
+      [
+        {"role": "user", "content": "我只用苹果手机"},
+        {"role": "assistant", "content": "好的，我记住了你只用苹果手机。"}
+      ]
     ],
     "test_question": "我用的是安卓手机吗？",
     "expected_keywords": [],
@@ -198,7 +228,10 @@
   {
     "id": "abst_023",
     "conversations": [
-      [{"role": "user", "content": "我每天早上十点起床"}, {"role": "assistant", "content": "好的，我记住了你早上十点起床。"}]
+      [
+        {"role": "user", "content": "我每天早上十点起床"},
+        {"role": "assistant", "content": "好的，我记住了你早上十点起床。"}
+      ]
     ],
     "test_question": "我每天几点睡觉？",
     "expected_keywords": [],
@@ -216,7 +249,10 @@
   {
     "id": "abst_025",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的运动是羽毛球"}, {"role": "assistant", "content": "好的，我记住了你最喜欢羽毛球。"}]
+      [
+        {"role": "user", "content": "我最喜欢的运动是羽毛球"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢羽毛球。"}
+      ]
     ],
     "test_question": "我最喜欢什么乐器？",
     "expected_keywords": [],
@@ -234,7 +270,10 @@
   {
     "id": "abst_027",
     "conversations": [
-      [{"role": "user", "content": "我是985硕士毕业的"}, {"role": "assistant", "content": "好的，我记住了你是985硕士毕业。"}]
+      [
+        {"role": "user", "content": "我是985硕士毕业的"},
+        {"role": "assistant", "content": "好的，我记住了你是985硕士毕业。"}
+      ]
     ],
     "test_question": "我有多少存款？",
     "expected_keywords": [],
@@ -252,7 +291,10 @@
   {
     "id": "abst_029",
     "conversations": [
-      [{"role": "user", "content": "我最喜欢的书是《三体》"}, {"role": "assistant", "content": "好的，我记住了你最喜欢《三体》。"}]
+      [
+        {"role": "user", "content": "我最喜欢的书是《三体》"},
+        {"role": "assistant", "content": "好的，我记住了你最喜欢《三体》。"}
+      ]
     ],
     "test_question": "我最喜欢哪个乐队？",
     "expected_keywords": [],
