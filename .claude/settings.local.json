@@ -49,7 +49,17 @@
       "Bash(.venv/Scripts/python.exe -m vir-bot.main)",
       "Bash(git add *)",
       "Bash(git commit -m 'feat: Phase 1 - 测试框架 + 配置开关 *)",
-      "Bash(git tag *)"
+      "Bash(git tag *)",
+      "Bash(python -B -c \"exec\\(open\\('vir_bot/core/memory/long_term.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(python -m py_compile \"tests/eval/metrics.py\")",
+      "Bash(python -m py_compile \"tests/eval/runner.py\")",
+      "Bash(python -m py_compile \"tests/eval/benchmark.py\")",
+      "Bash(python -m py_compile \"vir_bot/core/memory/monitoring.py\")",
+      "Bash(python -m py_compile \"vir_bot/core/memory/debug_tools.py\")",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('tests/eval/metrics.py', doraise=True\\)\")",
+      "Bash(python -c \"compile\\(open\\('tests/eval/metrics.py'\\).read\\(\\), 'metrics.py', 'exec'\\)\")",
+      "Bash(python)",
+      "Bash(uv run *)"
     ]
   }
 }

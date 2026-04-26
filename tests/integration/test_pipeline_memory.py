@@ -1,77 +1,79 @@
 """Integration tests for Pipeline + Memory system."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, MagicMock, patch
 
 
 @pytest.fixture
 def pipeline_with_memory():
     """Create a Pipeline with MemoryManager for integration testing."""
-    with patch("vir_bot.core.pipeline.MessagePipeline._init_ai") as mock_init_ai:
-        from vir_bot.core.pipeline import MessagePipeline, PipelineConfig
-        from vir_bot.core.ai_provider import AIProvider
-        from vir_bot.core.memory.memory_manager import MemoryManager
-        from vir_bot.core.memory.short_term import ShortTermMemory
-        from vir_bot.core.memory.long_term import LongTermMemory
-        from vir_bot.core.memory.semantic_store import SemanticMemoryStore
-        from vir_bot.core.memory.memory_writer import MemoryWriter
-        from vir_bot.core.memory.memory_updater import MemoryUpdater
-        from vir_bot.core.memory.episodic_store import EpisodicMemoryStore
-        from vir_bot.core.memory.question_memory import QuestionMemoryStore
+    from vir_bot.core.pipeline import MessagePipeline
+    from vir_bot.config import PipelineConfig
+    from vir_bot.core.ai_provider import AIProvider
+    from vir_bot.core.memory.memory_manager import MemoryManager
+    from vir_bot.core.memory.short_term import ShortTermMemory
+    from vir_bot.core.memory.long_term import LongTermMemory
+    from vir_bot.core.memory.semantic_store import SemanticMemoryStore
+    from vir_bot.core.memory.memory_writer import MemoryWriter
+    from vir_bot.core.memory.memory_updater import MemoryUpdater
+    from vir_bot.core.memory.episodic_store import EpisodicMemoryStore
+    from vir_bot.core.memory.question_memory import QuestionMemoryStore
 
-        # Create mock AI provider
-        ai = Mock(spec=AIProvider)
-        ai.chat = AsyncMock()
-        ai.chat.return_value = Mock(
-            content="你好！我是助手。",
-            tool_calls=None,
-        )
+    # Create mock AI provider
+    ai = Mock(spec=AIProvider)
+    ai.chat = AsyncMock()
+    ai.chat.return_value = Mock(
+        content="你好！我是助手。",
+        tool_calls=None,
+    )
 
-        # Create memory components
-        short_term = ShortTermMemory(max_turns=20, window_size=10)
-        long_term = MagicMock(spec=LongTermMemory)
+    # Create memory components
+    short_term = ShortTermMemory(max_turns=20)
+    long_term = MagicMock(spec=LongTermMemory)
 
-        semantic_store = SemanticMemoryStore(
-            persist_path="tests/data/test_semantic.json"
-        )
-        episodic_store = EpisodicMemoryStore()
-        question_store = QuestionMemoryStore(
-            persist_path="tests/data/test_questions.json"
-        )
+    semantic_store = SemanticMemoryStore(
+        persist_path="tests/data/test_semantic.json"
+    )
+    episodic_store = EpisodicMemoryStore()
+    question_store = QuestionMemoryStore(
+        persist_path="tests/data/test_questions.json"
+    )
 
-        writer = MemoryWriter(ai_provider=ai)
-        updater = MemoryUpdater(semantic_store=semantic_store)
+    writer = MemoryWriter(ai_provider=ai)
+    updater = MemoryUpdater(semantic_store=semantic_store)
 
-        memory_manager = MemoryManager(
-            short_term=short_term,
-            long_term=long_term,
-            semantic_store=semantic_store,
-            memory_writer=writer,
-            memory_updater=updater,
-            window_size=10,
-            episodic_store=episodic_store,
-            question_store=question_store,
-            ai_provider=ai,
-        )
+    memory_manager = MemoryManager(
+        short_term=short_term,
+        long_term=long_term,
+        semantic_store=semantic_store,
+        episodic_store=episodic_store,
+        question_store=question_store,
+        memory_writer=writer,
+        memory_updater=updater,
+        window_size=10,
+        ai_provider=ai,
+    )
 
-        # Create pipeline
-        config = PipelineConfig()
-        pipeline = MessagePipeline(
-            ai_provider=ai,
-            memory_manager=memory_manager,
-            character_card=MagicMock(),
-            mcp_registry=MagicMock(),
-            config=config,
-        )
+    # Create pipeline - no need to patch, __init__ just assigns parameters
+    config = PipelineConfig()
+    mcp_registry = MagicMock()
+    mcp_registry.execute_all = AsyncMock(return_value=[])
+    pipeline = MessagePipeline(
+        ai_provider=ai,
+        memory_manager=memory_manager,
+        character_card=MagicMock(),
+        mcp_registry=mcp_registry,
+        config=config,
+    )
 
-        yield pipeline
+    yield pipeline
 
-        # Cleanup
-        import os
+    # Cleanup
+    import os
 
-        for f in ["tests/data/test_semantic.json", "tests/data/test_questions.json"]:
-            if os.path.exists(f):
-                os.remove(f)
+    for f in ["tests/data/test_semantic.json", "tests/data/test_questions.json"]:
+        if os.path.exists(f):
+            os.remove(f)
 
 
 class TestPipelineWithMemory:
@@ -117,9 +119,9 @@ class TestPipelineWithMemory:
             from vir_bot.core.pipeline import PlatformMessage, Platform
 
             msg = PlatformMessage(
-                platform=Platform.WEB,
+                platform=Platform.API,
                 user_id="test_user",
-                content="我喜欢吃什么？",
+                content="你喜欢吃什么？",
                 msg_id="test_123",
             )
 
@@ -144,7 +146,7 @@ class TestPipelineWithMemory:
             namespace="profile.preference",
             subject="user",
             predicate="likes",
-            object="火锅",
+            object_value="火锅",
             confidence=0.9,
             source_text="我喜欢火锅",
         )
@@ -179,7 +181,7 @@ class TestSemanticMemoryRecall:
             namespace="profile.preference",
             subject="user",
             predicate="likes",
-            object="火锅",
+            object_value="火锅",
             confidence=0.9,
             source_text="我最喜欢吃火锅",
         )
@@ -205,7 +207,7 @@ class TestSemanticMemoryRecall:
             namespace="profile.identity",
             subject="user",
             predicate="name_is",
-            object="张三",
+            object_value="张三",
             confidence=1.0,
             source_text="我叫张三",
         )

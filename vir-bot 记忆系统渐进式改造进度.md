@@ -111,4 +111,16 @@ Tag: `phase1-complete`
   - 真实 AI 评测后记录基线分数到 tests/eval/baseline.md
   - Phase 3（Re-Ranker）实现前先跑分，改造后再跑分对比
 ```
+● Mock 模式（快速验证）
+  uv run python -m tests.eval.benchmark --mock
+  - 用假 AI 返回固定字符串，不调用真实模型
+  - 目的：验证评测代码本身能不能跑通（流程对不对）
+  - 分数必然是 0%（因为假 AI 不会返回正确关键词）
+  - 速度很快，不需要网络和 API Key
 
+  真实评测（建立基线）
+  uv run python -m tests.eval.benchmark --report tests/eval/baseline.json
+  - 调用 config.yaml 里配置的真实 AI（OpenAI/Ollama 等）
+  - 目的：测出当前系统的真实能力分数，作为后续改造的对比基准
+  - 分数反映记忆系统实际表现
+  - 需要网络和有效 API 配置

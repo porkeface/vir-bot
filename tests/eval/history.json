@@ -20,5 +20,49 @@
       "abstention_accuracy": 0.0
     },
     "overall": 0.0
+  },
+  {
+    "timestamp": 1777186810.2791023,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777187361.3391657,
+    "scores": {
+      "preference_recall": 0.875,
+      "episodic_recall": 1.0,
+      "knowledge_update": 0.875,
+      "temporal_reasoning": 0.75,
+      "abstention_accuracy": 0.75
+    },
+    "overall": 0.85625
+  },
+  {
+    "timestamp": 1777192067.3500793,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777192415.549385,
+    "scores": {
+      "preference_recall": 1.0,
+      "episodic_recall": 1.0,
+      "knowledge_update": 0.75,
+      "temporal_reasoning": 0.75,
+      "abstention_accuracy": 0.875
+    },
+    "overall": 0.8812500000000001
   }
 ]
