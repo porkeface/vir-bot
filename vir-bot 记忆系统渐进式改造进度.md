@@ -124,3 +124,96 @@ Tag: `phase1-complete`
   - 目的：测出当前系统的真实能力分数，作为后续改造的对比基准
   - 分数反映记忆系统实际表现
   - 需要网络和有效 API 配置
+
+  Phase 3 - Re-Ranker
+
+  ┌──────────────────────────────────────────────┬───────────────────────────┐
+  │                     文件                     │           状态            │
+  ├──────────────────────────────────────────────┼───────────────────────────┤
+  │ vir_bot/core/memory/enhancements/__init__.py │ ✅ 新建                   │
+  ├──────────────────────────────────────────────┼───────────────────────────┤
+  │ vir_bot/core/memory/enhancements/reranker.py │ ✅ 新建                   │
+  ├──────────────────────────────────────────────┼───────────────────────────┤
+  │ vir_bot/core/memory/retrieval_router.py      │ ✅ 修改（集成 Re-Ranker） │
+  └──────────────────────────────────────────────┴───────────────────────────┘
+
+  Re-Ranker 特性：
+  - 懒加载 Cross-Encoder 模型（首次使用时加载）
+  - 模型加载失败自动回退到关键词匹配
+  - 统一四种记录格式为 (query, document) 对
+  - 通过 config.yaml 的 memory.features.reranker 控制
+
+  Phase 4 - Memory Composer
+
+  ┌──────────────────────────────────────────────┬──────────────────────────┐
+  │                     文件                     │           状态           │
+  ├──────────────────────────────────────────────┼──────────────────────────┤
+  │ vir_bot/core/memory/enhancements/composer.py │ ✅ 新建                  │
+  ├──────────────────────────────────────────────┼──────────────────────────┤
+  │ vir_bot/core/memory/retrieval_router.py      │ ✅ 修改（集成 Composer） │
+  └──────────────────────────────────────────────┴──────────────────────────┘
+
+  Composer 特性：
+  - 去重：精确匹配（Semantic）+ token 重叠率（其他类型）
+  - 冲突消解：相同 (namespace, predicate) 保留最新记录
+  - Token Budget：用 tiktoken 或简单估算截断
+  - 通过 config.yaml 的 memory.features.composer 控制
+
+  其他修改
+
+  ┌───────────────────────────────────────┬─────────────────────────────────────────┐
+  │                 文件                  │                  状态                   │
+  ├───────────────────────────────────────┼─────────────────────────────────────────┤
+  │ vir_bot/core/memory/memory_manager.py │ ✅ 修改（传递 features 给               │
+  │                                       │ RetrievalRouter）                       │
+  └───────────────────────────────────────┴─────────────────────────────────────────┘
+
+  测试
+
+  ┌─────────────────────────────┬────────┬─────────────┐
+  │            文件             │ 测试数 │    状态     │
+  ├─────────────────────────────┼────────┼─────────────┤
+  │ tests/unit/test_reranker.py │ 16     │ ✅ 全部通过 │
+  ├─────────────────────────────┼────────┼─────────────┤
+  │ tests/unit/test_composer.py │ 15     │ ✅ 全部通过 │
+  ├─────────────────────────────┼────────┼─────────────┤
+  │ 全部测试                    │ 74     │ ✅ 全部通过 │
+  └─────────────────────────────┴────────┴─────────────┘
+
+  使用方式
+
+  在 config.yaml 中启用：
+  memory:
+    features:
+      reranker:
+        enabled: true
+        model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        top_k: 5
+      composer:
+        enabled: true
+        max_tokens: 2000
+
+  Re-Ranker 是干嘛的
+  当前：检索 → 拿到10条 → 直接给 LLM
+  开启后：检索 → 拿到10条 → Re-Ranker 逐条打分 → 取最相关的5条 → 给 LLM
+  就是让更相关的记忆排在前面，减少无关内容占用 LLM 上下文。
+
+  现在要开吗？
+
+  建议不开。 原因：
+  1. 需要额外装包：uv add sentence-transformers torch（约 200MB+）
+  2. 没基线分数，开了也不知道有没有效果
+  3. 代码已写好，随时 enabled: true 就能开
+
+  什么时候开？
+  # 1. 先跑真实评测建立基线
+  uv run python -m tests.eval.benchmark --report tests/eval/baseline_real.json
+
+  # 2. 装包
+  uv add sentence-transformers torch
+
+  # 3. 开 reranker
+  # config.yaml 设 enabled: true
+
+  # 4. 再跑一次对比分数，看有没有提升
+  uv run python -m tests.eval.benchmark --report tests/eval/after_reranker.json

@@ -70,7 +70,7 @@ memory:
   # 新功能特性开关（默认关闭，逐步启用）
   features:
     reranker:
-      enabled: false
+      enabled: true
       model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
       top_k: 5
     composer:
