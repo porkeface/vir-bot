@@ -71,6 +71,7 @@ class MemoryManager:
             question_store=self.question_store,
             long_term=self.long_term,
             ai_provider=ai_provider,
+            features=self._features,
         )
 
         logger.info("MemoryManager initialized with Wiki + RAG hybrid system")
@@ -135,8 +136,8 @@ class MemoryManager:
                 question_type=q_info["question_type"],
                 topic=q_info["topic"],
                 entities=q_info["entities"],
-                answer_text=assistant_msg,
-                answer_summary=assistant_msg[:150],
+                answer_text="",
+                answer_summary="",
                 key_points=[],
                 importance=importance,
                 user_id=user_id,
@@ -189,24 +190,44 @@ class MemoryManager:
         user_id: str,
         metadata: dict,
     ) -> None:
-        """写入事件记忆。"""
+        """写入事件记忆。用 AI 生成事件摘要，而非存原始对话碎片。"""
         if not user_id:
             return
 
-        summary = f"用户说：{user_msg[:80]}"
-        if len(user_msg) > 80:
-            summary += "..."
+        # 用 AI 自己总结发生了什么，而不是硬编码"用户说：XXX"
+        summary = await self._generate_episode_summary(user_msg, assistant_msg)
+        if not summary:
+            return
 
-        entities = self._extract_entities(user_msg)
+        entities = self._extract_entities(user_msg + " " + assistant_msg)
 
         self.episodic_store.add(
             user_id=user_id,
             summary=summary,
             entities=entities,
-            importance=0.5,
+            importance=0.6,
             source_message_ids=[metadata.get("msg_id", "")],
             episode_type="session",
         )
+
+    async def _generate_episode_summary(self, user_msg: str, assistant_msg: str) -> str:
+        """让 AI 自己总结这次交互的事件摘要。"""
+        if not self._ai_provider:
+            return ""
+        try:
+            response = await self._ai_provider.chat(
+                messages=[{"role": "user", "content": (
+                    "用一句话总结用户和助手这次交互的核心事件（20字以内），"
+                    "只输出摘要本身，不要解释。"
+                    f"\n用户：{user_msg}"
+                    f"\n助手：{assistant_msg[:100]}"
+                )}],
+                temperature=0.3,
+            )
+            return response.content.strip()
+        except Exception as e:
+            logger.warning(f"生成事件摘要失败: {e}")
+            return ""
 
     async def _write_semantic_memory(
         self,

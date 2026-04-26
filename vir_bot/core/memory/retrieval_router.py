@@ -178,17 +178,46 @@ class RetrievalRouter:
         question_store: "QuestionMemoryStore",
         long_term: "LongTermMemory | None" = None,
         ai_provider: "AIProvider | None" = None,
+        features: dict | None = None,
     ):
         self.semantic_store = semantic_store
         self.episodic_store = episodic_store
         self.question_store = question_store
         self.long_term = long_term
         self.ai_provider = ai_provider
+        self._features = features or {}
 
         self._intent_cache: dict[str, dict] = {}
         self._cache_ttl = 300
+        self._reranker: "ReRanker | None" = None
+        self._composer: "MemoryComposer | None" = None
+
+        self._init_reranker()
+        self._init_composer()
 
         logger.info("RetrievalRouter initialized with AI-powered intent classification")
+
+    def _init_reranker(self) -> None:
+        """初始化 Re-Ranker（如果启用）。"""
+        if not self._features.get("reranker", {}).get("enabled", False):
+            return
+        try:
+            from vir_bot.core.memory.enhancements.reranker import ReRanker
+            self._reranker = ReRanker(self._features["reranker"])
+            logger.info("ReRanker initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize ReRanker: {e}")
+
+    def _init_composer(self) -> None:
+        """初始化 Memory Composer（如果启用）。"""
+        if not self._features.get("composer", {}).get("enabled", False):
+            return
+        try:
+            from vir_bot.core.memory.enhancements.composer import MemoryComposer
+            self._composer = MemoryComposer(self._features["composer"])
+            logger.info("MemoryComposer initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize MemoryComposer: {e}")
 
     def set_ai_provider(self, ai_provider: "AIProvider") -> None:
         self.ai_provider = ai_provider
@@ -319,6 +348,10 @@ class RetrievalRouter:
             elif name == "long_term":
                 result.long_term_records = res
 
+        # Re-Ranker：对检索结果重排序
+        if self._reranker:
+            result = await self._reranker.rerank(query, result)
+
         result.retrieval_time_ms = (time.time() - start_time) * 1000
         return result
 
@@ -388,7 +421,12 @@ class RetrievalRouter:
                 )
             return None
 
-        context = result.to_context_string()
+        # 使用 Composer 或默认格式化
+        if self._composer:
+            context = self._composer.compose(result)
+        else:
+            context = result.to_context_string()
+
         if context:
             type_hints = {
                 "preference": "（这是用户偏好相关的记忆）",
