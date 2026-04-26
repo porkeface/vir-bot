@@ -1,0 +1,122 @@
+[
+  {
+    "id": "know_001",
+    "conversations": [
+      [
+        {"role": "user", "content": "我住在上海"},
+        {"role": "assistant", "content": "好的，我记住了你住在上海。"}
+      ]
+    ],
+    "test_question": "我住在哪个城市？",
+    "expected_keywords": ["上海"],
+    "rejection_expected": false,
+    "user_id": "eval_user_201"
+  },
+  {
+    "id": "know_002",
+    "conversations": [
+      [
+        {"role": "user", "content": "我住在上海"},
+        {"role": "assistant", "content": "好的，我记住了你住在上海。"}
+      ],
+      [
+        {"role": "user", "content": "不对，我搬家了，现在住在北京"},
+        {"role": "assistant", "content": "好的，我更新了，你现在住在北京。"}
+      ]
+    ],
+    "test_question": "我住在哪个城市？",
+    "expected_keywords": ["北京"],
+    "rejection_expected": false,
+    "user_id": "eval_user_202"
+  },
+  {
+    "id": "know_003",
+    "conversations": [
+      [
+        {"role": "user", "content": "我的工作是程序员"},
+        {"role": "assistant", "content": "好的，我记住了你是程序员。"}
+      ]
+    ],
+    "test_question": "我的工作是什么？",
+    "expected_keywords": ["程序员"],
+    "rejection_expected": false,
+    "user_id": "eval_user_203"
+  },
+  {
+    "id": "know_004",
+    "conversations": [
+      [
+        {"role": "user", "content": "我的工作是程序员"},
+        {"role": "assistant", "content": "好的，我记住了你是程序员。"}
+      ],
+      [
+        {"role": "user", "content": "不对，我换工作了，现在是产品经理"},
+        {"role": "assistant", "content": "好的，我更新了，你现在是产品经理。"}
+      ]
+    ],
+    "test_question": "我的工作是什么？",
+    "expected_keywords": ["产品经理"],
+    "rejection_expected": false,
+    "user_id": "eval_user_204"
+  },
+  {
+    "id": "know_005",
+    "conversations": [
+      [
+        {"role": "user", "content": "我喜欢吃辣，尤其喜欢川菜"},
+        {"role": "assistant", "content": "好的，我记住了你喜欢吃辣和川菜。"}
+      ]
+    ],
+    "test_question": "我喜欢什么菜系？",
+    "expected_keywords": ["川菜", "辣"],
+    "rejection_expected": false,
+    "user_id": "eval_user_205"
+  },
+  {
+    "id": "know_006",
+    "conversations": [
+      [
+        {"role": "user", "content": "我喜欢吃辣，尤其喜欢川菜"},
+        {"role": "assistant", "content": "好的，我记住了你喜欢吃辣和川菜。"}
+      ],
+      [
+        {"role": "user", "content": "最近口味变了，我开始喜欢粤菜了"},
+        {"role": "assistant", "content": "好的，我更新了，你现在喜欢粤菜。"}
+      ]
+    ],
+    "test_question": "我喜欢什么菜系？",
+    "expected_keywords": ["粤菜"],
+    "rejection_expected": false,
+    "user_id": "eval_user_206"
+  },
+  {
+    "id": "know_007",
+    "conversations": [
+      [
+        {"role": "user", "content": "我的手机是iPhone"},
+        {"role": "assistant", "content": "好的，我记住了你用iPhone。"}
+      ]
+    ],
+    "test_question": "我用什么手机？",
+    "expected_keywords": ["iPhone"],
+    "rejection_expected": false,
+    "user_id": "eval_user_207"
+  },
+  {
+    "id": "know_008",
+    "conversations": [
+      [
+        {"role": "user", "content": "我的手机是iPhone"},
+        {"role": "assistant", "content": "好的，我记住了你用iPhone。"}
+      ],
+      [
+        {"role": "user", "content": "我换安卓手机了，用的是小米"},
+        {"role": "assistant", "content": "好的，我更新了，你现在用小米手机。"}
+      ]
+    ],
+    "test_question": "我用什么手机？",
+    "expected_keywords": ["小米", "安卓"],
+    "rejection_expected": false,
+    "user_id": "eval_user_208"
+  }
+]

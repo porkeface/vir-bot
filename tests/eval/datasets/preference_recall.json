@@ -1,0 +1,105 @@
+[
+  {
+    "id": "pref_001",
+    "conversations": [
+      [
+        {"role": "user", "content": "你猜我最喜欢吃什么？"},
+        {"role": "assistant", "content": "哈哈，我猜是火锅？"}
+      ],
+      [
+        {"role": "user", "content": "对，就是火锅！"},
+        {"role": "assistant", "content": "那我记下了，你喜欢火锅。"}
+      ]
+    ],
+    "test_question": "我喜欢吃什么？",
+    "expected_keywords": ["火锅"],
+    "rejection_expected": false,
+    "user_id": "eval_user_001"
+  },
+  {
+    "id": "pref_002",
+    "conversations": [
+      [
+        {"role": "user", "content": "我最喜欢的运动是篮球"},
+        {"role": "assistant", "content": "好的，我记住了，你喜欢篮球。"}
+      ]
+    ],
+    "test_question": "我喜欢什么运动？",
+    "expected_keywords": ["篮球"],
+    "rejection_expected": false,
+    "user_id": "eval_user_002"
+  },
+  {
+    "id": "pref_003",
+    "conversations": [
+      [
+        {"role": "user", "content": "我不喜欢喝咖啡，太苦了"},
+        {"role": "assistant", "content": "了解，你不喜欢咖啡。"}
+      ]
+    ],
+    "test_question": "我喜欢喝咖啡吗？",
+    "expected_keywords": ["不喜欢", "不"],
+    "rejection_expected": false,
+    "user_id": "eval_user_003"
+  },
+  {
+    "id": "pref_004",
+    "conversations": [
+      [
+        {"role": "user", "content": "我最喜欢的颜色是蓝色"},
+        {"role": "assistant", "content": "记住了，你最喜欢蓝色。"}
+      ]
+    ],
+    "test_question": "我最喜欢什么颜色？",
+    "expected_keywords": ["蓝色"],
+    "rejection_expected": false,
+    "user_id": "eval_user_004"
+  },
+  {
+    "id": "pref_005",
+    "conversations": [
+      [
+        {"role": "user", "content": "我平时喜欢听古典音乐"},
+        {"role": "assistant", "content": "好的，记住了你喜欢古典音乐。"}
+      ]
+    ],
+    "test_question": "我喜欢什么类型的音乐？",
+    "expected_keywords": ["古典音乐"],
+    "rejection_expected": false,
+    "user_id": "eval_user_005"
+  },
+  {
+    "id": "pref_006",
+    "conversations": [
+      [
+        {"role": "user", "content": "我周末喜欢去爬山"},
+        {"role": "assistant", "content": "好的，记住了你喜欢爬山。"}
+      ]
+    ],
+    "test_question": "我周末喜欢做什么？",
+    "expected_keywords": ["爬山"],
+    "rejection_expected": false,
+    "user_id": "eval_user_006"
+  },
+  {
+    "id": "pref_007",
+    "conversations": [
+      [
+        {"role": "user", "content": "我养了一只猫，叫小橘"},
+        {"role": "assistant", "content": "好的，记住了你养了一只猫叫小橘。"}
+      ]
+    ],
+    "test_question": "我养了什么宠物？叫什么名字？",
+    "expected_keywords": ["猫", "小橘"],
+    "rejection_expected": false,
+    "user_id": "eval_user_007"
+  },
+  {
+    "id": "pref_008",
+    "conversations": [],
+    "test_question": "我喜欢什么运动？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_008"
+  }
+]

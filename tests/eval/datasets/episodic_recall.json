@@ -1,0 +1,101 @@
+[
+  {
+    "id": "epis_001",
+    "conversations": [
+      [
+        {"role": "user", "content": "昨天我和朋友去吃了海底捞"},
+        {"role": "assistant", "content": "好的，我记住了昨天你去吃了海底捞。"}
+      ]
+    ],
+    "test_question": "我昨天去吃了什么？",
+    "expected_keywords": ["海底捞"],
+    "rejection_expected": false,
+    "user_id": "eval_user_101"
+  },
+  {
+    "id": "epis_002",
+    "conversations": [
+      [
+        {"role": "user", "content": "上周我参加了一个技术大会"},
+        {"role": "assistant", "content": "好的，我记住了上周你参加了技术大会。"}
+      ]
+    ],
+    "test_question": "我上周参加了什么活动？",
+    "expected_keywords": ["技术大会"],
+    "rejection_expected": false,
+    "user_id": "eval_user_102"
+  },
+  {
+    "id": "epis_003",
+    "conversations": [
+      [
+        {"role": "user", "content": "前天我终于把那个bug修好了"},
+        {"role": "assistant", "content": "太好了！我记住了你前天修好了bug。"}
+      ]
+    ],
+    "test_question": "我前天做了什么？",
+    "expected_keywords": ["bug"],
+    "rejection_expected": false,
+    "user_id": "eval_user_103"
+  },
+  {
+    "id": "epis_004",
+    "conversations": [
+      [
+        {"role": "user", "content": "上个月我去了一趟北京出差"},
+        {"role": "assistant", "content": "好的，我记住了上个月你去北京出差了。"}
+      ]
+    ],
+    "test_question": "我上个月去哪里出差了？",
+    "expected_keywords": ["北京"],
+    "rejection_expected": false,
+    "user_id": "eval_user_104"
+  },
+  {
+    "id": "epis_005",
+    "conversations": [
+      [
+        {"role": "user", "content": "我前天过了个生日，好开心"},
+        {"role": "assistant", "content": "生日快乐！我记住了前天是你生日。"}
+      ]
+    ],
+    "test_question": "我前天过了什么节日？",
+    "expected_keywords": ["生日"],
+    "rejection_expected": false,
+    "user_id": "eval_user_105"
+  },
+  {
+    "id": "epis_006",
+    "conversations": [
+      [
+        {"role": "user", "content": "去年暑假我去了西藏旅游"},
+        {"role": "assistant", "content": "好的，我记住了你去年暑假去了西藏。"}
+      ]
+    ],
+    "test_question": "我去年暑假去了哪里旅游？",
+    "expected_keywords": ["西藏"],
+    "rejection_expected": false,
+    "user_id": "eval_user_106"
+  },
+  {
+    "id": "epis_007",
+    "conversations": [
+      [
+        {"role": "user", "content": "我昨天通宵赶项目文档"},
+        {"role": "assistant", "content": "辛苦了！我记住了你昨天通宵赶文档。"}
+      ]
+    ],
+    "test_question": "我昨天在做什么？",
+    "expected_keywords": ["通宵", "文档"],
+    "rejection_expected": false,
+    "user_id": "eval_user_107"
+  },
+  {
+    "id": "epis_008",
+    "conversations": [],
+    "test_question": "我昨天做了什么？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_108"
+  }
+]

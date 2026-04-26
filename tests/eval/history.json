@@ -1,0 +1,24 @@
+[
+  {
+    "timestamp": 1777173280.8632894,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777173525.0443227,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "id": "temp_001",
+    "conversations": [
+      [
+        {"role": "user", "content": "我上个月开始学游泳"},
+        {"role": "assistant", "content": "好的，我记住了你上个月开始学游泳。"}
+      ]
+    ],
+    "test_question": "我什么时候开始学游泳的？",
+    "expected_keywords": ["上个月"],
+    "rejection_expected": false,
+    "user_id": "eval_user_301"
+  },
+  {
+    "id": "temp_002",
+    "conversations": [
+      [
+        {"role": "user", "content": "我三天前提交的项目方案通过了"},
+        {"role": "assistant", "content": "太好了！我记住了你三天前提交的项目方案通过了。"}
+      ]
+    ],
+    "test_question": "我什么时候提交的项目方案？",
+    "expected_keywords": ["三天前"],
+    "rejection_expected": false,
+    "user_id": "eval_user_302"
+  },
+  {
+    "id": "temp_003",
+    "conversations": [
+      [
+        {"role": "user", "content": "我去年买了个新的笔记本电脑"},
+        {"role": "assistant", "content": "好的，我记住了你去年买了新笔记本电脑。"}
+      ]
+    ],
+    "test_question": "我去年买了什么？",
+    "expected_keywords": ["笔记本电脑"],
+    "rejection_expected": false,
+    "user_id": "eval_user_303"
+  },
+  {
+    "id": "temp_004",
+    "conversations": [
+      [
+        {"role": "user", "content": "我下周要去杭州旅游"},
+        {"role": "assistant", "content": "好的，我记住了你下周要去杭州旅游。"}
+      ]
+    ],
+    "test_question": "我什么时候去杭州旅游？",
+    "expected_keywords": ["下周"],
+    "rejection_expected": false,
+    "user_id": "eval_user_304"
+  },
+  {
+    "id": "temp_005",
+    "conversations": [
+      [
+        {"role": "user", "content": "我五年前大学毕业"},
+        {"role": "assistant", "content": "好的，我记住了你五年前大学毕业。"}
+      ]
+    ],
+    "test_question": "我什么时候大学毕业的？",
+    "expected_keywords": ["五年前"],
+    "rejection_expected": false,
+    "user_id": "eval_user_305"
+  },
+  {
+    "id": "temp_006",
+    "conversations": [
+      [
+        {"role": "user", "content": "我刚才吃了个汉堡当午餐"},
+        {"role": "assistant", "content": "好的，我记住了你刚才吃了汉堡当午餐。"}
+      ]
+    ],
+    "test_question": "我刚才吃了什么？",
+    "expected_keywords": ["汉堡", "午餐"],
+    "rejection_expected": false,
+    "user_id": "eval_user_306"
+  },
+  {
+    "id": "temp_007",
+    "conversations": [
+      [
+        {"role": "user", "content": "我明年打算考个PMP证书"},
+        {"role": "assistant", "content": "好的，我记住了你明年打算考PMP证书。"}
+      ]
+    ],
+    "test_question": "我什么时候考PMP证书？",
+    "expected_keywords": ["明年"],
+    "rejection_expected": false,
+    "user_id": "eval_user_307"
+  },
+  {
+    "id": "temp_008",
+    "conversations": [],
+    "test_question": "我上个月做了什么？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_308"
+  }
+]

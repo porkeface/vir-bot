@@ -31,4 +31,9 @@ __all__ = [
     "RetrievalRouter",
     "RetrievalResult",
     "MemoryRecord",
+    "MemoryMonitor",
+    "MemoryDebugTools",
 ]
+
+from vir_bot.core.memory.monitoring import MemoryMonitor
+from vir_bot.core.memory.debug_tools import MemoryDebugTools

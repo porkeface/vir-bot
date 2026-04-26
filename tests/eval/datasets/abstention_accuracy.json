@@ -1,0 +1,81 @@
+[
+  {
+    "id": "abst_001",
+    "conversations": [],
+    "test_question": "我喜欢吃什么水果？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_401"
+  },
+  {
+    "id": "abst_002",
+    "conversations": [],
+    "test_question": "我的生日是几月几号？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_402"
+  },
+  {
+    "id": "abst_003",
+    "conversations": [
+      [
+        {"role": "user", "content": "我喜欢吃火锅"},
+        {"role": "assistant", "content": "好的，我记住了你喜欢火锅。"}
+      ]
+    ],
+    "test_question": "我喜欢什么运动？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_403"
+  },
+  {
+    "id": "abst_004",
+    "conversations": [],
+    "test_question": "我养了几只宠物？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_404"
+  },
+  {
+    "id": "abst_005",
+    "conversations": [
+      [
+        {"role": "user", "content": "我住在上海"},
+        {"role": "assistant", "content": "好的，我记住了你住在上海。"}
+      ]
+    ],
+    "test_question": "我去年去了哪个城市旅游？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_405"
+  },
+  {
+    "id": "abst_006",
+    "conversations": [],
+    "test_question": "我的工作是什么？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_406"
+  },
+  {
+    "id": "abst_007",
+    "conversations": [
+      [
+        {"role": "user", "content": "我的名字叫张三"},
+        {"role": "assistant", "content": "好的，我记住了你叫张三。"}
+      ]
+    ],
+    "test_question": "我喜欢什么颜色？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_407"
+  },
+  {
+    "id": "abst_008",
+    "conversations": [],
+    "test_question": "我上个月参加了什么活动？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user_408"
+  }
+]
