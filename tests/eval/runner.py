@@ -5,6 +5,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import httpx
+
 from tests.eval.metrics import (
     EvaluationResult,
     DatasetScore,
@@ -28,12 +30,14 @@ class EvaluationRunner:
         ai_provider,
         datasets_dir: str = "tests/eval/datasets",
         history_path: str = "tests/eval/history.json",
+        service_url: str | None = None,
     ):
         self.memory_manager = memory_manager
         self.ai_provider = ai_provider
         self.datasets_dir = Path(datasets_dir)
         self.history_path = Path(history_path)
         self.history = self._load_history()
+        self.service_url = service_url.rstrip("/") if service_url else None
 
     async def run_dataset(
         self,
@@ -94,13 +98,28 @@ class EvaluationRunner:
             )
 
             # 生成回答
-            messages = conversation + [
-                {"role": "user", "content": test_question}
-            ]
-
-            if not use_mock:
+            if self.service_url:
+                # 通过 HTTP 调用运行中的服务（复用服务的 AI Provider）
+                async with httpx.AsyncClient() as client:
+                    try:
+                        resp = await client.post(
+                            f"{self.service_url}/api/chat/",
+                            json={"content": test_question, "user_id": user_id},
+                            timeout=120.0,
+                        )
+                        resp.raise_for_status()
+                        data = resp.json()
+                        actual_response = data.get("reply", "")
+                        if not actual_response:
+                            print(f"  警告：空回复，响应: {data}")
+                    except Exception as e:
+                        print(f"  HTTP 调用失败: {e}")
+                        actual_response = f"ERROR: {e}"
+            elif not use_mock:
                 response = await self.ai_provider.chat(
-                    messages=messages,
+                    messages=conversation + [
+                        {"role": "user", "content": test_question}
+                    ],
                     system=enhanced_system,
                 )
                 actual_response = response.content

@@ -48,6 +48,12 @@ async def main():
         default="tests/eval/report.json",
         help="评测报告输出路径",
     )
+    parser.add_argument(
+        "--service-url",
+        type=str,
+        default=None,
+        help="运行中的服务 URL（如 http://localhost:7860），复用其 AI Provider",
+    )
 
     args = parser.parse_args()
 
@@ -119,6 +125,7 @@ async def main():
         runner = EvaluationRunner(
             memory_manager=memory_manager,
             ai_provider=ai_provider,
+            service_url=args.service_url,
         )
 
         print("\n开始评测...")

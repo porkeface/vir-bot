@@ -59,6 +59,10 @@ class MemoryManager:
         self._ai_provider = ai_provider
         self._features = features or {}
 
+        # 先初始化存储属性，供后续组件使用
+        self.episodic_store = episodic_store or EpisodicMemoryStore()
+        self.question_store = question_store or QuestionMemoryStore()
+
         # 初始化 quality_gate（如果启用）
         quality_gate = None
         if self._is_feature_enabled("quality_gate"):
@@ -87,9 +91,6 @@ class MemoryManager:
             enable_versioning=enable_versioning,
             verifier=verifier,
         )
-
-        self.episodic_store = episodic_store or EpisodicMemoryStore()
-        self.question_store = question_store or QuestionMemoryStore()
         self.question_index = QuestionMemoryIndex()
 
         self._rebuild_question_index()
