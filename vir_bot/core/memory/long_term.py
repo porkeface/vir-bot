@@ -123,15 +123,54 @@ class LongTermMemory:
         )
 
     def _load_embedding_fn(self):
-        """懒加载 sentence-transformers"""
+        """懒加载嵌入函数，支持多种回退方案"""
+        # 方案1：尝试 SentenceTransformer（如果模型已缓存则离线可用）
         try:
             from sentence_transformers import SentenceTransformer
-
-            model = SentenceTransformer(self.embedding_model)
+            # 尝试离线模式
+            import os
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+            model = SentenceTransformer(self.embedding_model, local_files_only=True)
+            logger.info(f"Loaded embedding model (offline): {self.embedding_model}")
             return model.encode
-        except ImportError:
-            logger.warning("sentence-transformers not installed, using dummy embeddings")
-            return lambda texts: [[0.0] * 384 for _ in texts]
+        except Exception as e:
+            logger.warning(f"SentenceTransformer load failed: {e}")
+
+        # 方案2：尝试 Ollama 嵌入 API
+        try:
+            import requests
+            # 从配置读取 Ollama 地址（假设和 AI 配置共享）
+            ollama_url = "http://localhost:11434/api/embeddings"
+            # 测试连通性
+            resp = requests.post(ollama_url, json={"model": "qwen2.5:7b", "prompt": "test"}, timeout=2)
+            if resp.status_code == 200:
+                def ollama_embed(texts):
+                    results = []
+                    for text in texts:
+                        r = requests.post(ollama_url, json={"model": "qwen2.5:7b", "prompt": text})
+                        results.append(r.json()["embedding"])
+                    return results
+                logger.info("Using Ollama embeddings as fallback")
+                return ollama_embed
+        except Exception as e:
+            logger.warning(f"Ollama embedding not available: {e}")
+
+        # 方案3：简单哈希向量化（回退方案，不依赖网络）
+        logger.warning("Using simple hash-based embeddings (low quality, offline)")
+        import hashlib
+        def simple_embed(texts):
+            results = []
+            for text in texts:
+                vec = []
+                for i in range(0, 384, 4):
+                    data = text + str(i)
+                    data_bytes = data.encode('utf-8')
+                    h = hashlib.md5(data_bytes).digest()
+                    for b in h[:4]:
+                        vec.append((b - 128) / 128.0)
+                results.append(vec[:384])
+            return results
+        return simple_embed
 
     # =================
     # 基础操作

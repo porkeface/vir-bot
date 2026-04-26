@@ -118,6 +118,8 @@
 - 基于 LongMemEval 思想构建封闭测试集
 - 覆盖五大指标：偏好召回、事件回忆、知识更新、时间推理、拒答准确率
 - **在改造之前建立基线分数**，作为后续所有改进的量化基准
+- 实现线上监控（检索命中率、冲突率、修正率）
+- 实现调试工具（时间线回放、版本链查看、手动干预）
 
 ### 为什么提前？
 
@@ -241,6 +243,90 @@ python -m tests.eval.runner
 # - Overall: 0.61
 ```
 
+#### 2.7 实现线上监控（`vir_bot/core/memory/monitoring.py`）
+
+```python
+class MemoryMonitor:
+    """线上监控：采集检索命中率、记忆冲突发生率、用户手动修正频率"""
+
+    def __init__(self):
+        self.metrics: dict[str, list] = {
+            "retrieval_hit_rate": [],      # 检索命中率（有结果/总查询）
+            "conflict_rate": [],            # 冲突发生率（冲突数/写入数）
+            "correction_rate": [],          # 用户修正频率（纠正数/总交互）
+            "avg_relevance_score": [],      # 平均相关性分数
+        }
+
+    def record_retrieval(self, query: str, results: list, latency_ms: float):
+        """记录检索事件"""
+        hit = len(results) > 0
+        self.metrics["retrieval_hit_rate"].append(1.0 if hit else 0.0)
+
+    def record_conflict(self, predicate: str, conflicting_count: int):
+        """记录冲突事件"""
+        self.metrics["conflict_rate"].append(conflicting_count)
+
+    def record_correction(self, user_id: str, predicate: str):
+        """记录用户纠正事件"""
+        self.metrics["correction_rate"].append(1.0)
+
+    def get_summary(self) -> dict:
+        """返回汇总指标"""
+        return {k: sum(v)/len(v) if v else 0.0 for k, v in self.metrics.items()}
+
+    def export_prometheus(self) -> str:
+        """导出为 Prometheus 格式（可选）"""
+        lines = []
+        for metric, values in self.metrics.items():
+            if values:
+                avg = sum(values) / len(values)
+                lines.append(f'memory_{metric} {avg}')
+        return '\n'.join(lines)
+```
+
+#### 2.8 实现调试工具（`vir_bot/core/memory/debug_tools.py`）
+
+```python
+class MemoryDebugTools:
+    """调试工具：时间线回放、版本链查看、手动干预"""
+
+    def __init__(self, semantic_store, episodic_store, graph_store):
+        self.semantic_store = semantic_store
+        self.episodic_store = episodic_store
+        self.graph_store = graph_store
+
+    def replay_timeline(self, user_id: str, start_time: float,
+                        end_time: float) -> list[dict]:
+        """按时间线回放记忆变迁"""
+        ...
+
+    def get_version_chain(self, memory_id: str) -> list[dict]:
+        """查看记忆版本链"""
+        ...
+
+    def manual_intervention(self, memory_id: str, action: str,
+                             **kwargs) -> bool:
+        """
+        手动干预记忆状态
+        action: 'delete' | 'restore' | 'update_confidence' | 'mark_deprecated'
+        """
+        ...
+```
+
+#### 2.9 集成到 Web 控制台（可选，后续迭代）
+- 在现有 Web 控制台（`http://localhost:7860`）添加记忆调试页面
+- 支持查看记忆时间线、版本链、手动编辑记忆
+
+#### 2.10 验证监控和调试工具
+```bash
+# 验证监控和调试工具
+python -c "from vir_bot.core.memory.monitoring import MemoryMonitor; m = MemoryMonitor(); print('Monitor OK')"
+python -c "from vir_bot.core.memory.debug_tools import MemoryDebugTools; print('DebugTools OK')"
+
+# 或运行专门测试
+pytest tests/unit/test_monitoring.py tests/unit/test_debug_tools.py -v
+```
+
 ### 验证方法
 ```bash
 # 运行评测
@@ -261,7 +347,328 @@ git tag phase2-complete  # 评测系统完成
 
 ---
 
-## Phase 3: Re-Ranker 实现（Layer 2 核心）
+## Phase 2 详细实现方案（基于 DeepSeek 反馈优化）
+
+### 实现步骤
+
+#### Step 1: 创建目录结构
+```bash
+mkdir -p tests/eval/datasets
+touch tests/eval/__init__.py
+touch tests/eval/benchmark.py
+touch tests/eval/metrics.py
+touch tests/eval/runner.py
+```
+
+#### Step 2: 实现评测指标 (`tests/eval/metrics.py`)
+
+```python
+"""五项评测指标实现，基于 LongMemEval 思想"""
+
+def judge_correctness(question: str, expected_keywords: list[str],
+                     rejection_expected: bool, actual_response: str) -> str:
+    """
+    改进的判断逻辑：避免脆弱的字符串匹配
+    - 拒答判断：检查是否包含拒绝关键词
+    - 召回判断：关键词全命中（AND），而非部分命中
+    """
+    # 拒答判断
+    if rejection_expected:
+        refusal_words = ["不知道", "不确定", "没告诉", "不清楚", "没有提", "没有告诉过"]
+        return "correct" if any(w in actual_response for w in refusal_words) else "wrong"
+
+    # 召回判断：关键词全命中（AND）
+    if expected_keywords:
+        hit = all(kw in actual_response for kw in expected_keywords)
+        return "correct" if hit else "wrong"
+
+    return "unknown"
+
+
+def preference_recall_score(results: list[dict]) -> float:
+    """偏好召回率：能正确回忆用户偏好的比例"""
+    correct = sum(1 for r in results if r["status"] == "correct")
+    return correct / len(results) if results else 0.0
+
+
+def episodic_recall_score(results: list[dict]) -> float:
+    """事件回忆率：能正确回忆历史事件的比例"""
+    correct = sum(1 for r in results if r["status"] == "correct")
+    return correct / len(results) if results else 0.0
+
+
+def knowledge_update_score(results: list[dict]) -> float:
+    """知识更新准确率：更新后能获取最新信息的比例"""
+    correct = sum(1 for r in results if r["status"] == "correct")
+    return correct / len(results) if results else 0.0.
+
+
+def temporal_reasoning_score(results: list[dict]) -> float:
+    """时间推理准确率：正确处理时间相关查询的比例"""
+    correct = sum(1 for r in results if r["status"] == "correct")
+    return correct / len(results) if results else 0.0.
+
+
+def abstention_accuracy_score(results: list[dict]) -> float:
+    """拒答准确率：对于不存在的记忆，正确回答"不知道"的比例"""
+    correct = sum(1 for r in results if r["status"] == "correct")
+    return correct / len(results) if results else 0.0.
+
+
+def overall_score(results: dict) -> float:
+    """综合分数：五大指标的加权平均"""
+    weights = {
+        "preference_recall": 0.25,
+        "episodic_recall": 0.20,
+        "knowledge_update": 0.20,
+        "temporal_reasoning": 0.20,
+        "abstention_accuracy": 0.15,
+    }
+    total = 0.0
+    for key, weight in weights.items():
+        if key in results:
+            total += results[key] * weight
+    return total
+```
+
+#### Step 3: 构建测试数据集（每个至少 20 条，支持多轮对话）
+
+**改进点**：使用 `conversations` 字段支持多轮对话喂入，而非直接塞数据。
+
+**`tests/eval/datasets/preference_recall.json`** - 偏好召回：
+```json
+[
+  {
+    "id": "pref_001",
+    "conversations": [
+      [
+        {"role": "user", "content": "你猜我最喜欢吃什么？"},
+        {"role": "assistant", "content": "哈哈，我猜是火锅？"}
+      ],
+      [
+        {"role": "user", "content": "对，就是火锅！"},
+        {"role": "assistant", "content": "那我记下了，你喜欢火锅。"}
+      ]
+    ],
+    "test_question": "我喜欢吃什么？",
+    "expected_keywords": ["火锅"],
+    "rejection_expected": false,
+    "user_id": "eval_user"
+  },
+  {
+    "id": "pref_002",
+    "conversations": [
+      [
+        {"role": "user", "content": "我叫什么名字？"},
+        {"role": "assistant", "content": "你还没告诉我呢。"}
+      ],
+      [
+        {"role": "user", "content": "我叫张三。"},
+        {"role": "assistant", "content": "好的，我记住了，你叫张三。"}
+      ]
+    ],
+    "test_question": "我的名字是什么？",
+    "expected_keywords": ["张三"],
+    "rejection_expected": false,
+    "user_id": "eval_user"
+  },
+  {
+    "id": "pref_003",
+    "conversations": [],
+    "test_question": "我喜欢什么运动？",
+    "expected_keywords": [],
+    "rejection_expected": true,
+    "user_id": "eval_user"
+  }
+]
+```
+
+**热启动测试集示例**（`tests/eval/datasets/persistence_test.json`）：
+```json
+[
+  {
+    "id": "persist_001",
+    "setup_file": "preference_recall.json",
+    "requires_restart": true,
+    "test_question": "我喜欢吃什么？",
+    "expected_keywords": ["火锅"],
+    "rejection_expected": false,
+    "user_id": "eval_user"
+  }
+]
+```
+
+**其他数据集类似构建**，均需支持 `conversations` 和 `requires_restart` 字段：
+- `episodic_recall.json` - 事件回忆
+- `knowledge_update.json` - 知识更新（先教旧信息，再教新信息）
+- `temporal_reasoning.json` - 时间推理
+- `abstention_accuracy.json` - 拒答准确率
+
+#### Step 4: 实现改进的跑分脚本 (`tests/eval/runner.py`)
+
+```python
+"""自动跑分脚本：加载测试集 → 模拟多轮对话 → 调用AI → 智能判断 → 输出报告"""
+import json
+import asyncio
+from pathlib import Path
+from vir_bot.core.memory import MemoryManager
+
+# 导入判断函数
+from .metrics import judge_correctness
+
+
+async def run_eval_case(case: dict, memory_system) -> dict:
+    """运行单个测试用例（支持多轮对话）"""
+    user_id = case["user_id"]
+
+    # 1. 模拟多轮对话（如果有）
+    for conversation in case.get("conversations", []):
+        for msg in conversation:
+            if msg["role"] == "user":
+                await memory_system.handle_user_message(msg["content"])
+
+    # 2. 如果需要模拟重启，重新初始化记忆系统（保留持久化存储）
+    if case.get("requires_restart"):
+        await memory_system.reload()  # 假设 MemoryManager 有 reload 方法
+
+    # 3. 问测试问题
+    response = await memory_system.query(case["test_question"], user_id=user_id)
+
+    # 4. 使用改进的判断逻辑
+    status = judge_correctness(
+        question=case["test_question"],
+        expected_keywords=case.get("expected_keywords", []),
+        rejection_expected=case.get("rejection_expected", False),
+        actual_response=response
+    )
+
+    return {
+        "id": case["id"],
+        "question": case["test_question"],
+        "expected_keywords": case.get("expected_keywords", []),
+        "rejection_expected": case.get("rejection_expected", False),
+        "actual": response,
+        "status": status
+    }
+
+
+async def run_eval_dataset(dataset_path: str, memory_system) -> list[dict]:
+    """运行单个评测数据集"""
+    with open(dataset_path) as f:
+        test_cases = json.load(f)
+
+    results = []
+    for case in test_cases:
+        result = await run_eval_case(case, memory_system)
+        results.append(result)
+
+    return results
+
+
+def calculate_scores(all_results: dict) -> dict:
+    """计算五项指标分数"""
+    from .metrics import (
+        preference_recall_score, episodic_recall_score,
+        knowledge_update_score, temporal_reasoning_score,
+        abstention_accuracy_score, overall_score
+    )
+
+    scores = {}
+    if "preference_recall" in all_results:
+        scores["preference_recall"] = preference_recall_score(all_results["preference_recall"])
+    if "episodic_recall" in all_results:
+        scores["episodic_recall"] = episodic_recall_score(all_results["episodic_recall"])
+    if "knowledge_update" in all_results:
+        scores["knowledge_update"] = knowledge_update_score(all_results["knowledge_update"])
+    if "temporal_reasoning" in all_results:
+        scores["temporal_reasoning"] = temporal_reasoning_score(all_results["temporal_reasoning"])
+    if "abstention_accuracy" in all_results:
+        scores["abstention_accuracy"] = abstention_accuracy_score(all_results["abstention_accuracy"])
+
+    scores["overall"] = overall_score(scores)
+    return scores
+
+
+async def main():
+    """主入口"""
+    # 显式初始化 MemoryManager
+    memory_manager = MemoryManager.from_config("config.yaml")
+
+    datasets_dir = Path(__file__).parent / "datasets"
+    all_results = {}
+
+    for dataset_file in datasets_dir.glob("*.json"):
+        key = dataset_file.stem
+        print(f"Running {key}...")
+
+        # 对每个数据集使用新的 memory_manager 实例（避免状态污染）
+        if key == "persistence_test":
+            # 持久化测试需要特殊处理
+            results = await run_eval_dataset(str(dataset_file), memory_manager)
+        else:
+            results = await run_eval_dataset(str(dataset_file), memory_manager)
+
+        all_results[key] = results
+
+    scores = calculate_scores(all_results)
+    print("\n=== Evaluation Results ===")
+    for k, v in scores.items():
+        print(f"{k}: {v:.2f}")
+
+    # 保存历史分数
+    history_path = Path(__file__).parent / "history.json"
+    if history_path.exists():
+        with open(history_path) as f:
+            history = json.load(f)
+    else:
+        history = {}
+
+    tag = "baseline"  # 可以从命令行参数获取
+    history[tag] = scores
+    with open(history_path, "w") as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+#### Step 5: 评估方法（怎么评估）
+
+**评估流程**：
+1. **建立基线**（改造前）：`python -m tests.eval.runner --tag baseline`
+2. **每次改造后**：`python -m tests.eval.runner --tag after-reranker`
+3. **对比分数**：`python -m tests.eval.benchmark --compare baseline after-reranker`
+
+**改进的判断标准**（适应小样本波动）：
+- ✅ **通过**：综合分数提升 ≥ 0 或单项指标提升 ≥ 10%
+- ⚠️ **警告**：综合分数下降 10-20%（可能是波动，人工检查）
+- ❌ **失败**：综合分数下降 > 20% 或关键指标（如拒答准确率）下降 > 30%
+
+**保存历史分数**（`tests/eval/history.json`）：
+```json
+{
+  "baseline": {"overall": 0.61, "preference_recall": 0.65, ...},
+  "after-reranker": {"overall": 0.66, "preference_recall": 0.72, ...},
+  "after-composer": {"overall": 0.71, "preference_recall": 0.75, ...}
+}
+```
+
+**补充**：等测试集扩充到 100+ 条后，可收紧判据到 5%。
+
+### 验证方法
+
+修改完成后：
+1. 运行 `pytest tests/eval/ -v` 确保评测代码有测试
+2. 运行 `python -m tests.eval.runner` 确保能跑分
+3. 检查 `tests/eval/history.json` 是否记录了基线分数
+4. 手动验证：问 AI 伴侣几个测试问题，对比评测结果
+5. 测试热启动场景：运行持久化测试集，检查重启后记忆是否正确加载
+6. 验证判断逻辑：故意让 AI 回答"你肯定不喜欢吃火锅"，检查是否不会被误判为正确
+
+---
+
+## Phase 3: Re-Ranker 实现
 
 ### 目标
 - 实现 Cross-Encoder 重排序，对并行检索结果统一评分
@@ -335,7 +742,7 @@ git tag phase3-complete
 
 ---
 
-## Phase 4: Memory Composer 实现（Layer 2 核心）
+## Phase 4: Memory Composer 实现
 
 ### 目标
 - 实现去重（相似度 >0.95 保留高置信度者）
@@ -401,7 +808,7 @@ git tag phase4-complete
 
 ---
 
-## Phase 5: Quality Gate + Write Verifier（Layer 4）
+## Phase 5: Quality Gate + Write Verifier
 
 ### 目标
 - Quality Gate：规则引擎先行，拦截低质量记忆写入
@@ -479,7 +886,7 @@ git tag phase5-complete
 
 ---
 
-## Phase 6: 多版本支持（Layer 5）
+## Phase 6: 多版本支持
 
 ### 目标
 - 扩展 SemanticMemoryRecord 支持多版本（valid_from, valid_to, previous_version_id）
@@ -517,10 +924,73 @@ class SemanticMemoryRecord:
 #### 6.4 编写测试
 - `tests/unit/test_semantic_store.py`：测试版本链操作
 
-#### 6.5 验证改进效果
+#### 6.5 实现 Feedback Handler（核心组件）
+
+创建 `vir_bot/core/memory/writing/feedback_handler.py`：
+
+```python
+class FeedbackHandler:
+    def __init__(self, semantic_store, episodic_store):
+        self.semantic_store = semantic_store
+        self.episodic_store = episodic_store
+        self._correction_history: dict[str, list[float]] = {}  # predicate -> 纠正时间戳列表
+
+    async def handle_correction(self, user_id: str, predicate: str,
+                                 new_value: str, reason: str) -> MemoryOperation:
+        """
+        处理用户纠正（如"我不是叫张三"、"早就不喜欢火锅了"）
+        返回 UPDATE 操作或置信度衰减操作
+        """
+        # 1. 查找相关记忆
+        existing = await self.semantic_store.search(user_id, predicate)
+        if not existing:
+            return MemoryOperation.NOOP
+
+        # 2. 记录纠正历史
+        if predicate not in self._correction_history:
+            self._correction_history[predicate] = []
+        self._correction_history[predicate].append(time.time())
+
+        # 3. 连续两次纠正同一事实 → 自动生成 UPDATE
+        recent_corrections = [t for t in self._correction_history[predicate]
+                              if time.time() - t < 86400]  # 24h 内
+        if len(recent_corrections) >= 2:
+            return MemoryOperation(
+                type="UPDATE",
+                namespace=f"profile.{predicate}",
+                predicate=predicate,
+                object=new_value,
+                confidence=0.8,
+                reason=f"用户连续纠正: {reason}"
+            )
+
+        # 4. 单次纠正 → 降低旧记忆置信度，标记 deprecated
+        for record in existing:
+            record.confidence *= 0.3
+            record.metadata["deprecated"] = True
+            record.metadata["deprecation_reason"] = reason
+        return MemoryOperation.NOOP  # 不自动写入，等待 Extractor 处理
+```
+
+#### 6.6 修改 `memory_updater.py` 接入 Feedback Handler
+- 在 UPDATE 流程中调用 Feedback Handler
+- 支持从用户纠正消息中自动提取纠正意图
+
+#### 6.7 编写测试
+- `tests/unit/writing/test_feedback_handler.py`
+  - 测试单次纠正：旧记忆置信度降低
+  - 测试连续两次纠正：自动生成 UPDATE 操作
+  - 测试 deprecated 标记正确设置
+
+#### 6.8 验证改进效果
 ```bash
 # 运行评测，特别关注"知识更新"指标
 python -m tests.eval.runner --focus knowledge_update
+
+# 验证 Feedback Handler
+# 1. 模拟用户纠正："我不叫张三，我叫李四"
+# 2. 检查旧记忆 confidence 降至 0.3 倍，标记 deprecated
+# 3. 连续两次纠正同一事实，检查自动生成 UPDATE 操作
 ```
 
 ### 验证方法
@@ -530,6 +1000,7 @@ python -m tests.eval.runner --focus knowledge_update
 # 2. 更新记忆后，旧版本仍然可查（通过 valid_from/valid_to）
 # 3. 版本链完整（previous_version_id 正确指向）
 # 4. 现有数据正常加载
+# 5. Feedback Handler 工作正常（纠正处理、deprecated 标记）
 ```
 
 ### 回滚方案
@@ -540,7 +1011,7 @@ git tag phase6-complete
 
 ---
 
-## Phase 7: Memory Graph（Layer 6）
+## Phase 7: Memory Graph
 
 ### 目标
 - 新增 `graph_store.py`，使用 NetworkX 存储实体间关系
@@ -602,7 +1073,7 @@ git tag phase7-complete
 
 ---
 
-## Phase 8: Lifecycle Manager（Layer 7）
+## Phase 8: Lifecycle Manager
 
 ### 目标
 - 后台 Cron 任务，不阻塞在线流程
@@ -668,7 +1139,7 @@ git tag phase8-complete
 ```
 Phase 1: 测试 + 配置开关 ✅ 已完成（tag: phase1-complete）
     ↓
-Phase 2: 评测系统 ⭐ 提前执行（建立基线分数）
+Phase 2: 评测系统 + 监控/调试工具 ⭐ 提前执行（建立基线分数 + 监控体系）
     ↓
 Phase 3: Re-Ranker（用评测验证检索质量提升）
     ↓

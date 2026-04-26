@@ -19,4 +19,27 @@
 ### Git 信息
 
 - Commit: `06d982a` - "feat: Phase 1 - 测试框架 + 配置开关"
-- Tag: `phase1-complete`
+
+Tag: `phase1-complete`
+
+### 测试方法
+
+```
+  自动化测试（已通过）：
+  cd "D:/code Project/vir-bot"
+  .venv/Scripts/python.exe -m pytest tests/unit/ -v
+  # 结果：23 passed, 0 failed
+
+  手动验证语义理解：
+  # 启动服务
+  python -m vir-bot.main
+
+  # 然后问 AI 伴侣：
+  # 1. "我叫什么名字？" → 应该回答不知道（如果没存过）
+  # 2. "我喜欢吃什么？" → 应该能回忆起"火锅"（如果存过）
+  # 3. "现在几点了？" → 应该回答当前时间（从系统提示词获取）
+
+  Phase 1 不改变任何现有行为，只是：
+  - 补了测试（之前项目0测试）
+  - 加了配置开关（后续Phase 2-8的新功能通过开关控制，默认关闭）
+```
