@@ -243,6 +243,8 @@ uv run pytest tests/eval/ -v
 
 ## 配置说明
 
+env:VIRBOT_OPENAI_KEY = "sk-30b9590b791946cd9743ae7be7a8ad41"
+
 所有配置集中 in `config.yaml`，关键配置项：
 
 ```yaml
