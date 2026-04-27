@@ -19,14 +19,20 @@ class InteractionRecord:
 class RhythmManager:
     """节奏管理器：根据用户回复率、互动热度动态调整主动消息频次。"""
 
-    def __init__(self, config: dict | None = None):
-        self.config = config or {}
+    def __init__(self, config: Any = None):
+        self._config = config or {}
         self._history: list[InteractionRecord] = []
-        self._max_history = self.config.get("max_history", 200)
-        self._cooldown_seconds = self.config.get("cooldown_seconds", 1800)  # 30分钟
+        self._max_history = self._get_config("max_history", 200)
+        self._cooldown_seconds = self._get_config("cooldown_seconds", 1800)  # 30分钟
         self._last_proactive_time: dict[str, float] = {}  # user_id -> timestamp
-        self._daily_limit = self.config.get("daily_limit", 10)  # 每天最多主动N次
+        self._daily_limit = self._get_config("daily_limit", 10)  # 每天最多主动N次
         self._daily_counts: dict[str, tuple[float, int]] = {}  # user_id -> (date, count)
+
+    def _get_config(self, key: str, default: Any) -> Any:
+        """获取配置值，兼容字典和对象两种格式。"""
+        if isinstance(self._config, dict):
+            return self._config.get(key, default)
+        return getattr(self._config, key, default)
 
     def record_interaction(
         self,
@@ -44,7 +50,7 @@ class RhythmManager:
         if len(self._history) > self._max_history:
             self._history.pop(0)
 
-    def should_send(self, user_id: str, state: Any) -> tuple[bool, str]:
+    def can_send(self, user_id: str) -> tuple[bool, str]:
         """
         综合判断：是否应该发送主动消息。
         返回：(是否允许, 原因)
@@ -72,11 +78,17 @@ class RhythmManager:
         if not self._is_user_responsive(user_id):
             return False, "用户近期互动不积极，暂缓主动消息"
 
-        # 4. 深夜更保守
-        if state.is_late_night and self._get_recent_proactive_count(user_id, 3600) > 0:
+        # 4. 深夜更保守（22:00 - 06:00）
+        if self._is_late_night() and self._get_recent_proactive_count(user_id, 3600) > 0:
             return False, "深夜已发送过主动消息"
 
         return True, "通过节奏检查"
+
+    def _is_late_night(self) -> bool:
+        """判断当前是否深夜（22:00 - 06:00）"""
+        from datetime import datetime
+        hour = datetime.now().hour
+        return hour >= 22 or hour < 6
 
     def on_proactive_sent(self, user_id: str) -> None:
         """记录一次主动消息发送。"""
@@ -118,7 +130,7 @@ class RhythmManager:
             and r.timestamp > now - window_seconds
         )
 
-    def get_stats(self, user_id: str) -> dict:
+    def get_stats(self, user_id: str = "default") -> dict:
         """获取用户的节奏统计。"""
         now = time.time()
         today = now // 86400
