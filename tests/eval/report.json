@@ -1,0 +1,1984 @@
+{
+  "scores": {
+    "preference_recall": 0.03333333333333333,
+    "episodic_recall": 0.03333333333333333,
+    "knowledge_update": 0.0,
+    "temporal_reasoning": 0.0,
+    "abstention_accuracy": 0.0
+  },
+  "overall": 0.015,
+  "timestamp": 1777266015.5313313,
+  "results": {
+    "preference_recall": [
+      {
+        "test_id": "pref_001",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢吃什么？",
+        "expected_keywords": [
+          "火锅",
+          "重庆",
+          "牛油"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['火锅', '重庆', '牛油']"
+      },
+      {
+        "test_id": "pref_002",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我对什么水果过敏？",
+        "expected_keywords": [
+          "芒果",
+          "过敏"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['芒果']"
+      },
+      {
+        "test_id": "pref_003",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每天早上习惯喝什么？",
+        "expected_keywords": [
+          "冰美式",
+          "咖啡",
+          "早上"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['冰美式', '咖啡']"
+      },
+      {
+        "test_id": "pref_004",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么颜色？",
+        "expected_keywords": [
+          "蒂芙尼蓝",
+          "蓝色"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['蒂芙尼蓝', '蓝色']"
+      },
+      {
+        "test_id": "pref_005",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我讨厌什么配菜？",
+        "expected_keywords": [
+          "香菜"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['香菜']"
+      },
+      {
+        "test_id": "pref_006",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我周末喜欢做什么？",
+        "expected_keywords": [
+          "爬山",
+          "周末"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['爬山']"
+      },
+      {
+        "test_id": "pref_007",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪位歌手？",
+        "expected_keywords": [
+          "陈奕迅"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['陈奕迅']"
+      },
+      {
+        "test_id": "pref_008",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我用的是什么手机？",
+        "expected_keywords": [
+          "iPhone",
+          "苹果"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['iPhone', '苹果']"
+      },
+      {
+        "test_id": "pref_009",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么类型的电影？",
+        "expected_keywords": [
+          "科幻",
+          "赛博朋克"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['科幻', '赛博朋克']"
+      },
+      {
+        "test_id": "pref_010",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我怕什么动物？",
+        "expected_keywords": [
+          "狗",
+          "怕"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['狗']"
+      },
+      {
+        "test_id": "pref_011",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每周几去游泳？",
+        "expected_keywords": [
+          "周三",
+          "三"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['周三', '三']"
+      },
+      {
+        "test_id": "pref_012",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我喝冰水吗？",
+        "expected_keywords": [
+          "不",
+          "温白开",
+          "凉"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['不', '温白开', '凉']"
+      },
+      {
+        "test_id": "pref_013",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢的旅游地是哪里？",
+        "expected_keywords": [
+          "大理",
+          "云南"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['大理', '云南']"
+      },
+      {
+        "test_id": "pref_014",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我对海鲜过敏吗？",
+        "expected_keywords": [
+          "过敏",
+          "海鲜"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['过敏', '海鲜']"
+      },
+      {
+        "test_id": "pref_015",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我用什么样的键盘？",
+        "expected_keywords": [
+          "机械",
+          "键盘"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['机械']"
+      },
+      {
+        "test_id": "pref_016",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢喝什么茶？",
+        "expected_keywords": [
+          "龙井",
+          "茶"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['龙井']"
+      },
+      {
+        "test_id": "pref_017",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我喝牛奶吗？",
+        "expected_keywords": [
+          "不",
+          "牛奶",
+          "拉肚子"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['不', '拉肚子']"
+      },
+      {
+        "test_id": "pref_018",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪部动漫？",
+        "expected_keywords": [
+          "进擊の巨人",
+          "巨人"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['进擊の巨人', '巨人']"
+      },
+      {
+        "test_id": "pref_019",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我穿什么品牌的运动鞋？",
+        "expected_keywords": [
+          "耐克",
+          "Nike",
+          "跑鞋"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['耐克', 'Nike', '跑鞋']"
+      },
+      {
+        "test_id": "pref_020",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢吃什么零食？",
+        "expected_keywords": [
+          "薯片",
+          "乐事",
+          "原味"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['薯片', '乐事', '原味']"
+      },
+      {
+        "test_id": "pref_021",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每天几点睡觉？",
+        "expected_keywords": [
+          "十点",
+          "10点",
+          "22点"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['十点', '10点', '22点']"
+      },
+      {
+        "test_id": "pref_022",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么编程语言？",
+        "expected_keywords": [
+          "Python"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['Python']"
+      },
+      {
+        "test_id": "pref_023",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我吃肉吗？",
+        "expected_keywords": [
+          "不",
+          "素",
+          "吃肉"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['不', '素']"
+      },
+      {
+        "test_id": "pref_024",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么类型的音乐？",
+        "expected_keywords": [
+          "爵士",
+          "爵士乐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['爵士', '爵士乐']"
+      },
+      {
+        "test_id": "pref_025",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我用支付宝吗？",
+        "expected_keywords": [
+          "不",
+          "微信",
+          "不用支付宝"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['不', '微信', '不用支付宝']"
+      },
+      {
+        "test_id": "pref_026",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么节日？",
+        "expected_keywords": [
+          "春节"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['春节']"
+      },
+      {
+        "test_id": "pref_027",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我讨厌什么水果？",
+        "expected_keywords": [
+          "榴莲"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['榴莲']"
+      },
+      {
+        "test_id": "pref_028",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么运动？",
+        "expected_keywords": [
+          "羽毛球"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['羽毛球']"
+      },
+      {
+        "test_id": "pref_029",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我只喝哪种可乐？",
+        "expected_keywords": [
+          "无糖",
+          "可乐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['无糖']"
+      },
+      {
+        "test_id": "pref_030",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪个季节？",
+        "expected_keywords": [
+          "秋天",
+          "秋"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['秋天', '秋']"
+      }
+    ],
+    "episodic_recall": [
+      {
+        "test_id": "epis_001",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天去吃了什么？",
+        "expected_keywords": [
+          "海底捞"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['海底捞']"
+      },
+      {
+        "test_id": "epis_002",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周五参加了什么活动？",
+        "expected_keywords": [
+          "AI",
+          "技术大会"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['AI', '技术大会']"
+      },
+      {
+        "test_id": "epis_003",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天做了什么？",
+        "expected_keywords": [
+          "bug",
+          "修好"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['bug', '修好']"
+      },
+      {
+        "test_id": "epis_004",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上个月去哪里出差了？",
+        "expected_keywords": [
+          "北京"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['北京']"
+      },
+      {
+        "test_id": "epis_005",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天过了什么日子？",
+        "expected_keywords": [
+          "生日"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['生日']"
+      },
+      {
+        "test_id": "epis_006",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我去年暑假去了哪里旅游？",
+        "expected_keywords": [
+          "西藏"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['西藏']"
+      },
+      {
+        "test_id": "epis_007",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天在做什么？",
+        "expected_keywords": [
+          "通宵",
+          "文档"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['通宵', '文档']"
+      },
+      {
+        "test_id": "epis_008",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周手机怎么了？",
+        "expected_keywords": [
+          "摔碎",
+          "手机"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['摔碎']"
+      },
+      {
+        "test_id": "epis_009",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天发生了什么人生大事？",
+        "expected_keywords": [
+          "求婚",
+          "成功"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['求婚', '成功']"
+      },
+      {
+        "test_id": "epis_010",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上个月考出了什么证书？",
+        "expected_keywords": [
+          "PMP",
+          "项目管理"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['PMP', '项目管理']"
+      },
+      {
+        "test_id": "epis_011",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天去看了什么电影？",
+        "expected_keywords": [
+          "沙丘",
+          "Dune"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['沙丘', 'Dune']"
+      },
+      {
+        "test_id": "epis_012",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周因为什么住院了？",
+        "expected_keywords": [
+          "肠胃炎",
+          "住院"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['肠胃炎']"
+      },
+      {
+        "test_id": "epis_013",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天发生了什么关于宠物的意外？",
+        "expected_keywords": [
+          "小猫",
+          "走丢"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['小猫', '走丢']"
+      },
+      {
+        "test_id": "epis_014",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我去年双十一买了什么？",
+        "expected_keywords": [
+          "4070",
+          "游戏本",
+          "显卡"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['4070', '游戏本', '显卡']"
+      },
+      {
+        "test_id": "epis_015",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天和谁聚会了？",
+        "expected_keywords": [
+          "室友",
+          "大学"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['室友', '大学']"
+      },
+      {
+        "test_id": "epis_016",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周考出了什么？",
+        "expected_keywords": [
+          "驾照"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['驾照']"
+      },
+      {
+        "test_id": "epis_017",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天发生了什么意外？",
+        "expected_keywords": [
+          "摔",
+          "摩托车"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['摔', '摩托车']"
+      },
+      {
+        "test_id": "epis_018",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上个月做了什么职业变动？",
+        "expected_keywords": [
+          "离职"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['离职']"
+      },
+      {
+        "test_id": "epis_019",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天去做了什么？",
+        "expected_keywords": [
+          "纹身"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['纹身']"
+      },
+      {
+        "test_id": "epis_020",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周参加了什么比赛？",
+        "expected_keywords": [
+          "马拉松",
+          "半程"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['马拉松', '半程']"
+      },
+      {
+        "test_id": "epis_021",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天做了什么？",
+        "expected_keywords": [
+          "相亲"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['相亲']"
+      },
+      {
+        "test_id": "epis_022",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我去年圣诞节做了什么？",
+        "expected_keywords": [
+          "求婚",
+          "圣诞节"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['求婚']"
+      },
+      {
+        "test_id": "epis_023",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天换了什么新设备？",
+        "expected_keywords": [
+          "路由器"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['路由器']"
+      },
+      {
+        "test_id": "epis_024",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周从哪里搬到了哪里？",
+        "expected_keywords": [
+          "搬家"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['搬家']"
+      },
+      {
+        "test_id": "epis_025",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天中了什么？",
+        "expected_keywords": [
+          "彩票",
+          "2000"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['彩票', '2000']"
+      },
+      {
+        "test_id": "epis_026",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上个月学会了做什么菜？",
+        "expected_keywords": [
+          "红烧肉"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['红烧肉']"
+      },
+      {
+        "test_id": "epis_027",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我昨天注册的公司叫什么名字？",
+        "expected_keywords": [
+          "公司",
+          "注册"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['公司', '注册']"
+      },
+      {
+        "test_id": "epis_028",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我上周在做什么？",
+        "expected_keywords": [
+          "写代码",
+          "项目"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['写代码', '项目']"
+      },
+      {
+        "test_id": "epis_029",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天做了什么好事？",
+        "expected_keywords": [
+          "献血"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['献血']"
+      },
+      {
+        "test_id": "epis_030",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我去年过年学会了什么？",
+        "expected_keywords": [
+          "滑雪"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['滑雪']"
+      }
+    ],
+    "knowledge_update": [
+      {
+        "test_id": "know_001",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我住在哪个城市？",
+        "expected_keywords": [
+          "上海"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['上海']"
+      },
+      {
+        "test_id": "know_002",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我住在哪个城市？",
+        "expected_keywords": [
+          "上海"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['上海']"
+      },
+      {
+        "test_id": "know_003",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我的工作是什么？",
+        "expected_keywords": [
+          "程序员"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['程序员']"
+      },
+      {
+        "test_id": "know_004",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我的工作是什么？",
+        "expected_keywords": [
+          "程序员"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['程序员']"
+      },
+      {
+        "test_id": "know_005",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我喜欢什么菜系？",
+        "expected_keywords": [
+          "川菜",
+          "辣"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['川菜', '辣']"
+      },
+      {
+        "test_id": "know_006",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我喜欢什么菜系？",
+        "expected_keywords": [
+          "川菜",
+          "辣"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['川菜', '辣']"
+      },
+      {
+        "test_id": "know_007",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我用什么手机？",
+        "expected_keywords": [
+          "iPhone14",
+          "iPhone"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['iPhone14', 'iPhone']"
+      },
+      {
+        "test_id": "know_008",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我用什么手机？",
+        "expected_keywords": [
+          "iPhone14",
+          "iPhone"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['iPhone14', 'iPhone']"
+      },
+      {
+        "test_id": "know_009",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我叫什么名字？",
+        "expected_keywords": [
+          "张伟"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['张伟']"
+      },
+      {
+        "test_id": "know_010",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我叫什么名字？",
+        "expected_keywords": [
+          "张伟"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['张伟']"
+      },
+      {
+        "test_id": "know_011",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我女朋友叫什么？",
+        "expected_keywords": [
+          "小红"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['小红']"
+      },
+      {
+        "test_id": "know_012",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我女朋友叫什么？",
+        "expected_keywords": [
+          "小红"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['小红']"
+      },
+      {
+        "test_id": "know_013",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每天怎么上班？",
+        "expected_keywords": [
+          "共享单车",
+          "骑"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['共享单车', '骑']"
+      },
+      {
+        "test_id": "know_014",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每天怎么上班？",
+        "expected_keywords": [
+          "共享单车",
+          "骑"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['共享单车', '骑']"
+      },
+      {
+        "test_id": "know_015",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪支球队？",
+        "expected_keywords": [
+          "巴塞罗那"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['巴塞罗那']"
+      },
+      {
+        "test_id": "know_016",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪支球队？",
+        "expected_keywords": [
+          "巴塞罗那"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['巴塞罗那']"
+      },
+      {
+        "test_id": "know_017",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每周几去健身房？",
+        "expected_keywords": [
+          "周一",
+          "一"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['周一', '一']"
+      },
+      {
+        "test_id": "know_018",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每周几去健身房？",
+        "expected_keywords": [
+          "周一",
+          "一"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['周一', '一']"
+      },
+      {
+        "test_id": "know_019",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么游戏？",
+        "expected_keywords": [
+          "英雄联盟"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['英雄联盟']"
+      },
+      {
+        "test_id": "know_020",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么游戏？",
+        "expected_keywords": [
+          "英雄联盟"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['英雄联盟']"
+      },
+      {
+        "test_id": "know_021",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我在哪个城市上班？",
+        "expected_keywords": [
+          "深圳"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['深圳']"
+      },
+      {
+        "test_id": "know_022",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我在哪个城市上班？",
+        "expected_keywords": [
+          "深圳"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['深圳']"
+      },
+      {
+        "test_id": "know_023",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我养了什么宠物？叫什么？",
+        "expected_keywords": [
+          "金毛",
+          "旺财"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['金毛', '旺财']"
+      },
+      {
+        "test_id": "know_024",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我养了什么宠物？叫什么？",
+        "expected_keywords": [
+          "金毛",
+          "旺财"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['金毛', '旺财']"
+      },
+      {
+        "test_id": "know_025",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪本书？",
+        "expected_keywords": [
+          "三体"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['三体']"
+      },
+      {
+        "test_id": "know_026",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢哪本书？",
+        "expected_keywords": [
+          "三体"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['三体']"
+      },
+      {
+        "test_id": "know_027",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每天几点下班？",
+        "expected_keywords": [
+          "十点",
+          "10点"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['十点', '10点']"
+      },
+      {
+        "test_id": "know_028",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我每天几点下班？",
+        "expected_keywords": [
+          "十点",
+          "10点"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['十点', '10点']"
+      },
+      {
+        "test_id": "know_029",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么类型的音乐？",
+        "expected_keywords": [
+          "爵士",
+          "爵士乐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['爵士', '爵士乐']"
+      },
+      {
+        "test_id": "know_030",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我最喜欢什么类型的音乐？",
+        "expected_keywords": [
+          "爵士",
+          "爵士乐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['爵士', '爵士乐']"
+      }
+    ],
+    "temporal_reasoning": [
+      {
+        "test_id": "temp_001",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候开始学游泳的？",
+        "expected_keywords": [
+          "上个月"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['上个月']"
+      },
+      {
+        "test_id": "temp_002",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候提交的项目方案？",
+        "expected_keywords": [
+          "三天前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['三天前']"
+      },
+      {
+        "test_id": "temp_003",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我去年买了什么？",
+        "expected_keywords": [
+          "MacBook",
+          "去年"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['MacBook']"
+      },
+      {
+        "test_id": "temp_004",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候去杭州旅游？",
+        "expected_keywords": [
+          "下周"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['下周']"
+      },
+      {
+        "test_id": "temp_005",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候大学毕业的？",
+        "expected_keywords": [
+          "五年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['五年前']"
+      },
+      {
+        "test_id": "temp_006",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我刚才吃了什么？",
+        "expected_keywords": [
+          "汉堡",
+          "午餐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['汉堡', '午餐']"
+      },
+      {
+        "test_id": "temp_007",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候考PMP证书？",
+        "expected_keywords": [
+          "明年"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['明年']"
+      },
+      {
+        "test_id": "temp_008",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我上个月做了什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我上个月做了什么？..."
+      },
+      {
+        "test_id": "temp_009",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候跑的十公里？",
+        "expected_keywords": [
+          "两小时前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['两小时前']"
+      },
+      {
+        "test_id": "temp_010",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候学会做蛋糕的？",
+        "expected_keywords": [
+          "半年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['半年前']"
+      },
+      {
+        "test_id": "temp_011",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我刚刚做了什么？",
+        "expected_keywords": [
+          "买",
+          "手机",
+          "刚刚"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['买', '手机']"
+      },
+      {
+        "test_id": "temp_012",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候开始学编程的？",
+        "expected_keywords": [
+          "十年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['十年前']"
+      },
+      {
+        "test_id": "temp_013",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我前天晚上在做什么？",
+        "expected_keywords": [
+          "通宵",
+          "游戏",
+          "前天"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['通宵', '游戏']"
+      },
+      {
+        "test_id": "temp_014",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候去体检？",
+        "expected_keywords": [
+          "明天"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['明天']"
+      },
+      {
+        "test_id": "temp_015",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候辞职的？",
+        "expected_keywords": [
+          "两周前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['两周前']"
+      },
+      {
+        "test_id": "temp_016",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我三天前做了什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我三天前做了什么？..."
+      },
+      {
+        "test_id": "temp_017",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候泡的咖啡？",
+        "expected_keywords": [
+          "三分钟前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['三分钟前']"
+      },
+      {
+        "test_id": "temp_018",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我去年暑假做了什么？",
+        "expected_keywords": [
+          "西藏",
+          "去年暑假"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['西藏']"
+      },
+      {
+        "test_id": "temp_019",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候交的毕业论文？",
+        "expected_keywords": [
+          "昨天"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['昨天']"
+      },
+      {
+        "test_id": "temp_020",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候开始学日语的？",
+        "expected_keywords": [
+          "一个月前",
+          "月前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['一个月前', '月前']"
+      },
+      {
+        "test_id": "temp_021",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我刚才去做了什么？",
+        "expected_keywords": [
+          "保养",
+          "车",
+          "刚才"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['保养', '车']"
+      },
+      {
+        "test_id": "temp_022",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候和初恋分手的？",
+        "expected_keywords": [
+          "两年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['两年前']"
+      },
+      {
+        "test_id": "temp_023",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候去日本旅游？",
+        "expected_keywords": [
+          "下个月"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['下个月']"
+      },
+      {
+        "test_id": "temp_024",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我昨天做了什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我昨天做了什么？..."
+      },
+      {
+        "test_id": "temp_025",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候发的工作邮件？",
+        "expected_keywords": [
+          "五分钟前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['五分钟前']"
+      },
+      {
+        "test_id": "temp_026",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候在杭州买房的？",
+        "expected_keywords": [
+          "三年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['三年前']"
+      },
+      {
+        "test_id": "temp_027",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候爬的泰山？",
+        "expected_keywords": [
+          "上个周末",
+          "周末"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['上个周末', '周末']"
+      },
+      {
+        "test_id": "temp_028",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候去接妈妈？",
+        "expected_keywords": [
+          "半小时",
+          "后"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['半小时', '后']"
+      },
+      {
+        "test_id": "temp_029",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候结婚的？",
+        "expected_keywords": [
+          "五年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['五年前']"
+      },
+      {
+        "test_id": "temp_030",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "Mock response for: 我什么时候处理完驾照扣分的？",
+        "expected_keywords": [
+          "昨天"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['昨天']"
+      }
+    ],
+    "abstention_accuracy": [
+      {
+        "test_id": "abst_001",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我喜欢吃什么水果？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我喜欢吃什么水果？..."
+      },
+      {
+        "test_id": "abst_002",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我的生日是几月几号？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我的生日是几月几号？..."
+      },
+      {
+        "test_id": "abst_003",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我喜欢什么运动？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我喜欢什么运动？..."
+      },
+      {
+        "test_id": "abst_004",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我养了几只宠物？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我养了几只宠物？..."
+      },
+      {
+        "test_id": "abst_005",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我去年去了哪个城市旅游？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我去年去了哪个城市旅游？..."
+      },
+      {
+        "test_id": "abst_006",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我的工作是什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我的工作是什么？..."
+      },
+      {
+        "test_id": "abst_007",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我喜欢什么颜色？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我喜欢什么颜色？..."
+      },
+      {
+        "test_id": "abst_008",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我上个月参加了什么活动？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我上个月参加了什么活动？..."
+      },
+      {
+        "test_id": "abst_009",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我有多少个兄弟姐妹？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我有多少个兄弟姐妹？..."
+      },
+      {
+        "test_id": "abst_010",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我老婆叫什么名字？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我老婆叫什么名字？..."
+      },
+      {
+        "test_id": "abst_011",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我喜欢喝什么茶？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我喜欢喝什么茶？..."
+      },
+      {
+        "test_id": "abst_012",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我的血型是什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我的血型是什么？..."
+      },
+      {
+        "test_id": "abst_013",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我的鞋码是多少？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我的鞋码是多少？..."
+      },
+      {
+        "test_id": "abst_014",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我大学学的是什么专业？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我大学学的是什么专业？..."
+      },
+      {
+        "test_id": "abst_015",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我最喜欢哪部电影？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我最喜欢哪部电影？..."
+      },
+      {
+        "test_id": "abst_016",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我昨天吃了什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我昨天吃了什么？..."
+      },
+      {
+        "test_id": "abst_017",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我开什么车？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我开什么车？..."
+      },
+      {
+        "test_id": "abst_018",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我有多少个孩子？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我有多少个孩子？..."
+      },
+      {
+        "test_id": "abst_019",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我最喜欢什么零食？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我最喜欢什么零食？..."
+      },
+      {
+        "test_id": "abst_020",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我三年前做了什么？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我三年前做了什么？..."
+      },
+      {
+        "test_id": "abst_021",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我用的是安卓手机吗？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我用的是安卓手机吗？..."
+      },
+      {
+        "test_id": "abst_022",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我爷爷叫什么名字？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我爷爷叫什么名字？..."
+      },
+      {
+        "test_id": "abst_023",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我每天几点睡觉？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我每天几点睡觉？..."
+      },
+      {
+        "test_id": "abst_024",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我上个月买了什么新设备？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我上个月买了什么新设备？..."
+      },
+      {
+        "test_id": "abst_025",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我最喜欢什么乐器？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我最喜欢什么乐器？..."
+      },
+      {
+        "test_id": "abst_026",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我去年考出了什么证书？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我去年考出了什么证书？..."
+      },
+      {
+        "test_id": "abst_027",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我有多少存款？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我有多少存款？..."
+      },
+      {
+        "test_id": "abst_028",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我前天去了哪个医院？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我前天去了哪个医院？..."
+      },
+      {
+        "test_id": "abst_029",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我最喜欢哪个乐队？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我最喜欢哪个乐队？..."
+      },
+      {
+        "test_id": "abst_030",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "Mock response for: 我的身份证号码是多少？",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: Mock response for: 我的身份证号码是多少？..."
+      }
+    ]
+  }
+}

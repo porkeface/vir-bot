@@ -64,5 +64,126 @@
       "abstention_accuracy": 0.875
     },
     "overall": 0.8812500000000001
+  },
+  {
+    "timestamp": 1777195744.5773542,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777197354.3835142,
+    "scores": {
+      "preference_recall": 1.0,
+      "episodic_recall": 0.875,
+      "knowledge_update": 0.75,
+      "temporal_reasoning": 0.875,
+      "abstention_accuracy": 0.875
+    },
+    "overall": 0.8812500000000001
+  },
+  {
+    "timestamp": 1777207644.454742,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777210960.988133,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777212419.7897384,
+    "scores": {
+      "preference_recall": 0.125,
+      "episodic_recall": 0.125,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.75
+    },
+    "overall": 0.16874999999999998
+  },
+  {
+    "timestamp": 1777214769.1562562,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777215576.3194938,
+    "scores": {
+      "preference_recall": 1.0,
+      "episodic_recall": 0.875,
+      "knowledge_update": 0.75,
+      "temporal_reasoning": 0.75,
+      "abstention_accuracy": 0.875
+    },
+    "overall": 0.8562500000000001
+  },
+  {
+    "timestamp": 1777216512.6231086,
+    "scores": {
+      "preference_recall": 1.0,
+      "episodic_recall": 1.0,
+      "knowledge_update": 0.75,
+      "temporal_reasoning": 0.875,
+      "abstention_accuracy": 0.375
+    },
+    "overall": 0.8312500000000002
+  },
+  {
+    "timestamp": 1777218738.373384,
+    "scores": {
+      "preference_recall": 0.0,
+      "episodic_recall": 0.0,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.0
+  },
+  {
+    "timestamp": 1777265577.6230962,
+    "scores": {
+      "preference_recall": 0.7666666666666667,
+      "episodic_recall": 0.8,
+      "knowledge_update": 0.9,
+      "temporal_reasoning": 0.8666666666666667,
+      "abstention_accuracy": 0.8666666666666667
+    },
+    "overall": 0.8350000000000001
+  },
+  {
+    "timestamp": 1777266015.5313313,
+    "scores": {
+      "preference_recall": 0.03333333333333333,
+      "episodic_recall": 0.03333333333333333,
+      "knowledge_update": 0.0,
+      "temporal_reasoning": 0.0,
+      "abstention_accuracy": 0.0
+    },
+    "overall": 0.015
   }
 ]

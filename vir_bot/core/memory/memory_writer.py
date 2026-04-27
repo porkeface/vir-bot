@@ -54,7 +54,7 @@ class MemoryWriter:
         if self._is_quality_gate_enabled():
             filtered = []
             for op in operations:
-                passed, reason, conf_adjust = self.quality_gate.check(op)
+                passed, reason, conf_adjust = await self.quality_gate.check(op)
                 if passed:
                     op.confidence *= conf_adjust
                     filtered.append(op)

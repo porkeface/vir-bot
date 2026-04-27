@@ -74,21 +74,21 @@ memory:
       model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
       top_k: 5
     composer:
-      enabled: false
+      enabled: true
       max_tokens: 2000
     quality_gate:
-      enabled: false
+      enabled: true
     verifier:
-      enabled: false
+      enabled: true
     lifecycle:
-      enabled: false
+      enabled: true
       short_term_ttl: 30
       long_term_archive_after: 180
     graph:
-      enabled: false
+      enabled: true
       persist_path: "./data/memory/memory_graph.json"
     versioning:
-      enabled: false
+      enabled: true
       max_versions: 10
 
 # -----------------------------------------------------------------------------

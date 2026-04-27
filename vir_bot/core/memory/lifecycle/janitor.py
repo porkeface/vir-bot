@@ -46,7 +46,8 @@ class MemoryJanitor:
 
             # 等待下次运行（默认每天一次）
             interval = self.config.get("interval_hours", 24) * 3600
-            await time.sleep(interval)
+            import asyncio
+            await asyncio.sleep(interval)
 
     def stop(self) -> None:
         """停止。"""
@@ -73,7 +74,7 @@ class MemoryJanitor:
     def _apply_decay(self) -> None:
         """应用衰减。"""
         changed = False
-        for record in self.semantic_store._records.values():
+        for record in self.semantic_store.get_all_records():
             if not record.is_active:
                 continue
 
@@ -88,7 +89,7 @@ class MemoryJanitor:
                 changed = True
 
         if changed:
-            self.semantic_store._save()
+            self.semantic_store.save()
 
     def _archive_low_confidence(self) -> None:
         """归档低置信度记忆。"""
@@ -99,7 +100,7 @@ class MemoryJanitor:
         archive_dir.mkdir(parents=True, exist_ok=True)
 
         to_archive = []
-        for record in self.semantic_store._records.values():
+        for record in self.semantic_store.get_all_records():
             if (
                 record.confidence < 0.1
                 and time.time() - record.updated_at > 86400 * 90  # 90天未访问
@@ -125,7 +126,7 @@ class MemoryJanitor:
     def _get_all_users(self) -> list[str]:
         """获取所有用户 ID。"""
         users = set()
-        for r in self.semantic_store._records.values():
+        for r in self.semantic_store.get_all_records():
             if r.user_id:
                 users.add(r.user_id)
         return list(users)

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import json; files=['abstention_accuracy.json','episodic_recall.json','knowledge_update.json','preference_recall.json','temporal_reasoning.json']; [print\\(f'{f}: OK'\\) for f in files if json.load\\(open\\(f, encoding='utf-8'\\)\\)]\")",
+      "Bash(python validate_json.py)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const files=['abstention_accuracy.json','episodic_recall.json','knowledge_update.json','preference_recall.json','temporal_reasoning.json']; files.forEach\\(f=>{try{JSON.parse\\(fs.readFileSync\\(f,'utf8'\\)\\);console.log\\(f+': OK'\\);}catch\\(e\\){console.log\\(f+': ERROR - '+e.message\\);}}\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const data=fs.readFileSync\\('episodic_recall.json','utf8'\\); console.log\\(data.substring\\(180,210\\)\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const data=fs.readFileSync\\('episodic_recall.json','utf8'\\); console.log\\(JSON.stringify\\(data.substring\\(185,210\\)\\)\\);\")",
+      "Bash(node -e 'const fs=require\\('\\\\''fs'\\\\''\\); const data=fs.readFileSync\\('\\\\''__TRACKED_VAR__'\\\\'','\\\\''utf8'\\\\''\\); try { JSON.parse\\(data\\); console.log\\('\\\\''VALID'\\\\''\\); } catch\\(e\\) { console.log\\('\\\\''INVALID: '\\\\''+e.message\\); }')"
+    ]
+  }
+}

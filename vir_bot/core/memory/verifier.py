@@ -19,9 +19,58 @@ class WriteVerifier:
         self,
         semantic_store: "SemanticMemoryStore",
         episodic_store: "EpisodicMemoryStore | None" = None,
+        embedding_model: str = "all-MiniLM-L6-v2",
     ):
         self.semantic_store = semantic_store
         self.episodic_store = episodic_store
+        self.embedding_model_name = embedding_model
+        self._model = None
+        self._model_error = False
+        self._sim_threshold = 0.85  # 语义相似度阈值
+
+    async def _ensure_model_loaded(self) -> bool:
+        """懒加载 embedding 模型。"""
+        if self._model is not None:
+            return True
+        if self._model_error:
+            return False
+        try:
+            from sentence_transformers import SentenceTransformer
+            import asyncio
+            loop = asyncio.get_event_loop()
+            self._model = await loop.run_in_executor(
+                None,
+                lambda: SentenceTransformer(self.embedding_model_name),
+            )
+            logger.info(f"Verifier embedding model loaded: {self.embedding_model_name}")
+            return True
+        except Exception as e:
+            self._model_error = True
+            logger.warning(f"Failed to load embedding model: {e}")
+            return False
+
+    def _cosine_similarity(self, vec1, vec2) -> float:
+        """计算余弦相似度。"""
+        import numpy as np
+        v1 = np.array(vec1)
+        v2 = np.array(vec2)
+        return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-8))
+
+    async def _semantic_similarity(self, text1: str, text2: str) -> float:
+        """计算两段文本的语义相似度。"""
+        if not await self._ensure_model_loaded():
+            return 0.0
+        try:
+            import asyncio
+            loop = asyncio.get_event_loop()
+            embeddings = await loop.run_in_executor(
+                None,
+                lambda: self._model.encode([text1, text2]),
+            )
+            return self._cosine_similarity(embeddings[0], embeddings[1])
+        except Exception as e:
+            logger.warning(f"Similarity computation failed: {e}")
+            return 0.0
 
     async def verify(
         self,
@@ -75,28 +124,45 @@ class WriteVerifier:
         op: "MemoryOperation",
         user_id: str,
     ) -> "SemanticMemoryRecord | None":
-        """查找语义相似的现有记忆。"""
-        results = self.semantic_store.search(
+        """查找语义相似的现有记忆（基于 embedding 相似度）。"""
+        candidates = self.semantic_store.search(
             user_id=user_id,
             query=op.object,
-            top_k=1,
+            top_k=5,
         )
-        if results:
-            return results[0]
-        return None
+        if not candidates:
+            return None
+
+        best = None
+        best_sim = 0.0
+        for rec in candidates:
+            sim = await self._semantic_similarity(op.object, rec.object)
+            if sim > best_sim and sim >= self._sim_threshold:
+                best_sim = sim
+                best = rec
+
+        if best:
+            logger.info(f"Found similar memory: {best.object} (sim={best_sim:.3f})")
+        return best
 
     async def _check_conflict(
         self,
         op: "MemoryOperation",
         user_id: str,
     ) -> "SemanticMemoryRecord | None":
-        """检查是否与现有高置信度记忆冲突。"""
+        """检查是否与现有高置信度记忆冲突（基于语义相似度）。"""
         existing = self.semantic_store.search(
             user_id=user_id,
             query=op.predicate,
-            top_k=5,
+            top_k=10,
         )
         for record in existing:
             if record.confidence > 0.8 and record.object != op.object:
-                return record
+                # 使用语义相似度确认是同一谓词的不同值
+                sim = await self._semantic_similarity(op.object, record.object)
+                if sim >= self._sim_threshold:
+                    logger.info(
+                        f"Conflict detected: {record.object} vs {op.object} (sim={sim:.3f})"
+                    )
+                    return record
         return None

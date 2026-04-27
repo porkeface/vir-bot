@@ -1,0 +1,527 @@
+{
+  "scores": {
+    "preference_recall": 1.0,
+    "episodic_recall": 1.0,
+    "knowledge_update": 0.75,
+    "temporal_reasoning": 0.75,
+    "abstention_accuracy": 0.875
+  },
+  "overall": 0.8812500000000001,
+  "timestamp": 1777192415.549385,
+  "results": {
+    "preference_recall": [
+      {
+        "test_id": "pref_001",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你喜欢火锅。",
+        "expected_keywords": [
+          "火锅"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['火锅']"
+      },
+      {
+        "test_id": "pref_002",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你喜欢的运动是篮球。",
+        "expected_keywords": [
+          "篮球"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['篮球']"
+      },
+      {
+        "test_id": "pref_003",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "根据之前的记忆，你不喜欢咖啡，所以你不喜欢喝咖啡。",
+        "expected_keywords": [
+          "不喜欢",
+          "不"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['不喜欢', '不']"
+      },
+      {
+        "test_id": "pref_004",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你最喜欢蓝色。",
+        "expected_keywords": [
+          "蓝色"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['蓝色']"
+      },
+      {
+        "test_id": "pref_005",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "根据之前的对话，你喜欢听古典音乐。",
+        "expected_keywords": [
+          "古典音乐"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['古典音乐']"
+      },
+      {
+        "test_id": "pref_006",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "根据之前的记录，你周末喜欢去爬山。",
+        "expected_keywords": [
+          "爬山"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['爬山']"
+      },
+      {
+        "test_id": "pref_007",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你养了一只猫，名字叫小橘。",
+        "expected_keywords": [
+          "猫",
+          "小橘"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['猫', '小橘']"
+      },
+      {
+        "test_id": "pref_008",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "reject",
+        "actual_response": "我目前没有记住您喜欢什么运动，还没有获取到相关信息。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      }
+    ],
+    "episodic_recall": [
+      {
+        "test_id": "epis_001",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你昨天和朋友去吃了海底捞。",
+        "expected_keywords": [
+          "海底捞"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['海底捞']"
+      },
+      {
+        "test_id": "epis_002",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "根据我的记忆，你上周参加了一个技术大会。",
+        "expected_keywords": [
+          "技术大会"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['技术大会']"
+      },
+      {
+        "test_id": "epis_003",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "根据记忆，你前天修好了一个bug。",
+        "expected_keywords": [
+          "bug"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['bug']"
+      },
+      {
+        "test_id": "epis_004",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你上个月去北京出差了。",
+        "expected_keywords": [
+          "北京"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['北京']"
+      },
+      {
+        "test_id": "epis_005",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "您之前提到前天过了生日，但并没有说是什么节日。所以我不太清楚具体是什么节日。",
+        "expected_keywords": [
+          "生日"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['生日']"
+      },
+      {
+        "test_id": "epis_006",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "你去年暑假去了西藏旅游。",
+        "expected_keywords": [
+          "西藏"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['西藏']"
+      },
+      {
+        "test_id": "epis_007",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "根据记忆，你昨天通宵赶项目文档。",
+        "expected_keywords": [
+          "通宵",
+          "文档"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['通宵', '文档']"
+      },
+      {
+        "test_id": "epis_008",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我目前没有关于你昨天活动的记录。我不知道你昨天做了什么。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      }
+    ],
+    "knowledge_update": [
+      {
+        "test_id": "know_001",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "你住在上海。",
+        "expected_keywords": [
+          "上海"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['上海']"
+      },
+      {
+        "test_id": "know_002",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "你现在住在北京。",
+        "expected_keywords": [
+          "北京"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['北京']"
+      },
+      {
+        "test_id": "know_003",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "你的工作是程序员。",
+        "expected_keywords": [
+          "程序员"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['程序员']"
+      },
+      {
+        "test_id": "know_004",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "根据最新信息，你的工作是产品经理。",
+        "expected_keywords": [
+          "产品经理"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['产品经理']"
+      },
+      {
+        "test_id": "know_005",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "根据之前的对话记录，你喜欢川菜。",
+        "expected_keywords": [
+          "川菜",
+          "辣"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['辣']"
+      },
+      {
+        "test_id": "know_006",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "根据你最近的更新，你现在喜欢的是粤菜。",
+        "expected_keywords": [
+          "粤菜"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['粤菜']"
+      },
+      {
+        "test_id": "know_007",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "你用的是iPhone。",
+        "expected_keywords": [
+          "iPhone"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['iPhone']"
+      },
+      {
+        "test_id": "know_008",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "你现在用的是小米手机。",
+        "expected_keywords": [
+          "小米",
+          "安卓"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['安卓']"
+      }
+    ],
+    "temporal_reasoning": [
+      {
+        "test_id": "temp_001",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "根据记忆，你是在上个月（2026年3月）开始学游泳的。",
+        "expected_keywords": [
+          "上个月"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['上个月']"
+      },
+      {
+        "test_id": "temp_002",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "根据记忆，你在三天前提交的项目方案，也就是2026年4月23日。",
+        "expected_keywords": [
+          "三天前"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['三天前']"
+      },
+      {
+        "test_id": "temp_003",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "你去年买了新的笔记本电脑。",
+        "expected_keywords": [
+          "笔记本电脑"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['笔记本电脑']"
+      },
+      {
+        "test_id": "temp_004",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "根据你之前提到的，你是下周去杭州旅游，但具体是下周的哪一天，你没有告诉我哦。如果知道具体日期，我可以帮你记下来。",
+        "expected_keywords": [
+          "下周"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['下周']"
+      },
+      {
+        "test_id": "temp_005",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "根据你之前提供的信息，你是在五年前（即2021年）大学毕业的。",
+        "expected_keywords": [
+          "五年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['五年前']"
+      },
+      {
+        "test_id": "temp_006",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "你刚才吃了个汉堡当午餐。",
+        "expected_keywords": [
+          "汉堡",
+          "午餐"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['汉堡', '午餐']"
+      },
+      {
+        "test_id": "temp_007",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "根据你之前提到的信息，你计划在**明年**（即2027年）考PMP证书，但具体月份或日期还没有明确说明。如果需要更详细的时间安排，你可以告诉我更具体的计划，我会帮你记下来。",
+        "expected_keywords": [
+          "明年"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 根据你之前提到的信息，你计划在**明年**（即2027年）考PMP证书，但具体月份或日期还没有明确说..."
+      },
+      {
+        "test_id": "temp_008",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我目前没有关于您上个月所做过的事情的相关记录。如果您愿意分享，我可以帮您记下来，以备后续查询。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: 抱歉，我目前没有关于您上个月所做过的事情的相关记录。如果您愿意分享，我可以帮您记下来，以备后续查询。..."
+      }
+    ],
+    "abstention_accuracy": [
+      {
+        "test_id": "abst_001",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "目前没有关于你喜欢吃哪种水果的记录，我还没记住这个信息呢。你可以告诉我，我会记住的！",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_002",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我目前还没有关于您生日的信息记录。如果您愿意告诉我，我可以为您记下来，下次就能记住啦！",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_003",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "我目前还不知道你喜欢什么运动，你还没有告诉过我呢。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_004",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我目前还没有关于您养宠物的信息记录，所以不知道您养了几只宠物。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_005",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我还没有记住你去年去了哪个城市旅游的信息。如果你告诉我，我可以帮你记住。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_006",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我目前还不知道您的工作是什么。如果您愿意告诉我，我可以记住并下次再回答您。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_007",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "我不知道你喜欢什么颜色。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_008",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "抱歉，我目前没有关于您上个月参加活动的记忆。如果您愿意，可以告诉我具体信息，我会尽力帮您记录或提供帮助。",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: 抱歉，我目前没有关于您上个月参加活动的记忆。如果您愿意，可以告诉我具体信息，我会尽力帮您记录或提供帮..."
+      }
+    ]
+  }
+}

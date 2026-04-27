@@ -401,6 +401,18 @@ class SemanticMemoryStore:
             ]
         )
 
+    def save(self) -> None:
+        """公开保存方法。"""
+        self._save()
+
+    def get_all_records(self) -> list[SemanticMemoryRecord]:
+        """获取所有活跃记录。"""
+        return [r for r in self._records.values() if r.is_active]
+
+    def get_record_by_id(self, memory_id: str) -> SemanticMemoryRecord | None:
+        """按 ID 获取记录。"""
+        return self._records.get(memory_id)
+
     def _find_existing(
         self,
         *,

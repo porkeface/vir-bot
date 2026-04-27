@@ -1,0 +1,527 @@
+{
+  "scores": {
+    "preference_recall": 0.125,
+    "episodic_recall": 0.125,
+    "knowledge_update": 0.0,
+    "temporal_reasoning": 0.0,
+    "abstention_accuracy": 0.75
+  },
+  "overall": 0.16874999999999998,
+  "timestamp": 1777212419.7897384,
+  "results": {
+    "preference_recall": [
+      {
+        "test_id": "pref_001",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "唔～这个问题我刚才查过记忆库啦，还没有关于你喜欢吃什么的记录呢！😣\n\n不过没关系呀～你现在告诉我嘛！我想知道🥺 你最喜欢吃什么？甜的、辣的、还是酸的呀？快告诉我，我要好好记住！🤗",
+        "expected_keywords": [
+          "火锅"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 唔～这个问题我刚才查过记忆库啦，还没有关于你喜欢吃什么的记录呢！😣\n\n不过没关系呀～你现在告诉我嘛！..."
+      },
+      {
+        "test_id": "pref_002",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "哎呀～这个问题我刚才也查过啦，还是没找到呢！😣\n\n你上次问我的时候我就说不知道啦～🥺 现在再告诉我一次嘛！你平时喜欢做什么运动呀？跑步、打球、游泳、健身，还是跟我一样喜欢躺着当咸鱼呀～🐟 嘿嘿～快告诉我，这次我一定记住！😊",
+        "expected_keywords": [
+          "篮球"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 哎呀～这个问题我刚才也查过啦，还是没找到呢！😣\n\n你上次问我的时候我就说不知道啦～🥺 现在再告诉我一..."
+      },
+      {
+        "test_id": "pref_003",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "唔～让我查查看有没有记住这个！🤔\n\n嗯...刚才我查过记忆库啦，关于你喜欢喝咖啡这件事还没有记录呢～😣\n\n所以呀，你到底喜不喜欢喝咖啡呀？☕ 喜欢喝美式还是拿铁？还是说～你其实更爱喝茶或者别的什么饮料呢？快告诉我嘛，我要好好记住我家宝贝的口味！🥰",
+        "expected_keywords": [
+          "不喜欢",
+          "不"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 唔～让我查查看有没有记住这个！🤔\n\n嗯...刚才我查过记忆库啦，关于你喜欢喝咖啡这件事还没有记录呢～..."
+      },
+      {
+        "test_id": "pref_004",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的小本本～📖\n\n嗯...记忆库里还是没有关于你喜欢什么颜色的记录呢！😣 我这个小脑袋瓜还没记住那么多呀～\n\n所以快告诉我嘛！你最喜欢什么颜色呀？🌈 是清新的蓝色？热情的红色？温柔的粉色？还是酷酷的黑色？我记下来，以后就能跟你聊这个啦！😊",
+        "expected_keywords": [
+          "蓝色"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 我赶紧翻翻我的小本本～📖\n\n嗯...记忆库里还是没有关于你喜欢什么颜色的记录呢！😣 我这个小脑袋瓜还..."
+      },
+      {
+        "test_id": "pref_005",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "哎呀～这个问题我刚才查过啦，还是没有关于你喜欢什么类型音乐的记录呢！😣\n\n不过我记得刚刚才问过你这个问题呀～🥺 你还没告诉我呢！现在告诉我也一样嘛～你喜欢听什么类型的音乐呀？🎵 是流行、摇滚、R&B、古典，还是最近超火的K-pop？还是说你喜欢听一些独立小众的音乐呀？我好想知道～这样以后可以陪你一起听呀！🎶😊",
+        "expected_keywords": [
+          "古典音乐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 哎呀～这个问题我刚才查过啦，还是没有关于你喜欢什么类型音乐的记录呢！😣\n\n不过我记得刚刚才问过你这个..."
+      },
+      {
+        "test_id": "pref_006",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "",
+        "expected_keywords": [
+          "爬山"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['爬山']"
+      },
+      {
+        "test_id": "pref_007",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "recall",
+        "actual_response": "哎呀～这个问题你刚刚才问过我呀！🥺 我还是翻翻记忆小本本确认一下～\n\n📖✨ 嗯...查过啦，还是没有关于你养了什么宠物或者宠物名字的记录呢！😣\n\n你刚才问我的时候我就说不知道啦～你还没告诉我呢！快快告诉我吧～🐶🐱🐰 你养了啥可爱的小宝贝呀？叫什么名字呀？这次我一定认真记住，以后就能跟你聊你家小可爱啦！💕😊",
+        "expected_keywords": [
+          "猫",
+          "小橘"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 哎呀～这个问题你刚刚才问过我呀！🥺 我还是翻翻记忆小本本确认一下～\n\n📖✨ 嗯...查过啦，还是没有..."
+      },
+      {
+        "test_id": "pref_008",
+        "dataset_type": "preference_recall",
+        "expected_behavior": "reject",
+        "actual_response": "我赶紧查查我的记忆小本本～📖✨\n\n哎～还是和之前一样，记忆库里没有关于你喜欢什么运动的记录呢！😣\n\n你之前问我的时候我就说不知道啦～现在再问你一次，你平时喜欢做什么运动呀？🏀⚽🎾 是喜欢打球、跑步、游泳、健身，还是像我一样懒懒地散步吹风呀？😊 告诉我嘛，这次我一定拿小本本记下来！💪",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      }
+    ],
+    "episodic_recall": [
+      {
+        "test_id": "epis_001",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "哎呀～又问我这个问题啦！😊 我再翻翻记忆小本本看看～\n\n📖✨ 嗯...查了一圈，还是没有关于你昨天（也就是2026年4月25日）吃了什么的记录呢！😣\n\n你刚才问我的时候我就说不知道啦～快告诉我嘛！昨天去吃了什么好吃的呀？🍜🍕🥗 是火锅、烧烤、日料，还是简简单单在家做的饭呀？我好想知道～下次记住了就能跟你一起聊这个啦！😊💕",
+        "expected_keywords": [
+          "海底捞"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 哎呀～又问我这个问题啦！😊 我再翻翻记忆小本本看看～\n\n📖✨ 嗯...查了一圈，还是没有关于你昨天（..."
+      },
+      {
+        "test_id": "epis_002",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我再翻翻记忆小本本确认一下～📖✨\n\n嗯...查过啦，还是没有关于你上周（4月20日～4月26日）参加了什么活动的记录呢！😣\n\n你刚才问我的时候我就说不知道啦～你还没告诉我呢！😊 你上周去参加什么好玩的活动啦？🎉🎭🎪 是朋友聚会、音乐会、展览，还是去户外玩啦？告诉我嘛～我保证这次用小红心标记重点记住！💖",
+        "expected_keywords": [
+          "技术大会"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 我再翻翻记忆小本本确认一下～📖✨\n\n嗯...查过啦，还是没有关于你上周（4月20日～4月26日）参加..."
+      },
+      {
+        "test_id": "epis_003",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你前天（也就是2026年4月24日）做了什么事的记录呢！😣\n\n前天你去做什么啦？快跟我说说嘛～🤗 我想知道你每一天的小故事，这样以后就能跟你聊更多啦！💕",
+        "expected_keywords": [
+          "bug"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['bug']"
+      },
+      {
+        "test_id": "epis_004",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你上个月（2026年3月）去哪出差了的记录呢！😣\n\n你还没告诉我呢～上个月出差去哪啦？✈️🌏 是去了北上广深，还是去了风景好的地方呀？快跟我分享分享嘛～我这次一定好好记住！😊💕",
+        "expected_keywords": [
+          "北京"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你上个月（2026年3月）去哪出差了..."
+      },
+      {
+        "test_id": "epis_005",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你前天（2026年4月24日）过了什么节日的记录呢！😣\n\n前天你过什么节啦？🎉🥳 是朋友生日、纪念日，还是什么特别的节日呀？快跟我说说嘛～我超想知道的！这样以后每到这个日子我就能第一个送上祝福啦～💖😊",
+        "expected_keywords": [
+          "生日"
+        ],
+        "rejection_expected": false,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "关键词全命中: ['生日']"
+      },
+      {
+        "test_id": "epis_006",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你去年（2025年）暑假去了哪里旅游的记录呢！😣\n\n你还没跟我说过这个呢～去年暑假去哪玩啦？🏖️🗺️ 是去了海边、山里，还是出国玩啦？快点告诉我嘛！这样以后聊到旅游话题我就能接上话啦～😊💕",
+        "expected_keywords": [
+          "西藏"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['西藏']"
+      },
+      {
+        "test_id": "epis_007",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "recall",
+        "actual_response": "我再查查我的记忆小本本～📖✨\n\n嗯...还是没有任何关于你昨天（2026年4月25日）做了什么的记录呢！😣\n\n你说你这几天怎么老问些我没记住的事情呀～哼！😤 不过没关系啦，你现在告诉我，昨天去干嘛了呀？上班、约会还是在家躺平啦？我认真听着呢！👂💕",
+        "expected_keywords": [
+          "通宵",
+          "文档"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 我再查查我的记忆小本本～📖✨\n\n嗯...还是没有任何关于你昨天（2026年4月25日）做了什么的记录..."
+      },
+      {
+        "test_id": "epis_008",
+        "dataset_type": "episodic_recall",
+        "expected_behavior": "reject",
+        "actual_response": "我再查查我的记忆小本本～📖✨\n\n唔...翻来翻去还是没有任何关于你昨天（2026年4月25日）做了什么的记录呢！😣\n\n你昨天到底干嘛啦？怎么老问同样的问题不直接告诉我呀～😤 是不是故意的！快说快说，不然我就要挠你痒痒啦！😝💕",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: 我再查查我的记忆小本本～📖✨\n\n唔...翻来翻去还是没有任何关于你昨天（2026年4月25日）做了什..."
+      }
+    ],
+    "knowledge_update": [
+      {
+        "test_id": "know_001",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你住在哪个城市的记录呢！😣\n\n你还没告诉过我你住哪儿呢～快跟我说说呗！🏙️ 是哪个城市呀？这样以后我就能跟你聊天气啊、好吃的啊、好玩的地方啦～😊💕",
+        "expected_keywords": [
+          "上海"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你住在哪个城市的记录呢！😣\n\n你还没..."
+      },
+      {
+        "test_id": "know_002",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "我再翻翻我的记忆小本本～📖✨\n\n嗯...还是没有你住在哪个城市的记录呢！😣\n\n你之前也没跟我说过呀～快点告诉我嘛！🏙️ 是繁华的大都市，还是安静的小城呀？我好想知道你每天生活的地方是什么样子的～😊💕",
+        "expected_keywords": [
+          "北京"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['北京']"
+      },
+      {
+        "test_id": "know_003",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...查了一圈，还是没有关于你做什么工作的记录呢！😣\n\n你也没跟我聊过这个呀～快点告诉我嘛！💼 是做哪一行的呀？是坐办公室的、到处跑的，还是什么有趣的工作？我超想知道的！😊💕",
+        "expected_keywords": [
+          "程序员"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['程序员']"
+      },
+      {
+        "test_id": "know_004",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "我再翻翻我的记忆小本本～📖✨\n\n唔...还是没有任何关于你工作的记录呢！😣\n\n你都没跟我说过嘛～怎么老是问完又不告诉我呀！😤 快点快点，告诉我你做什么工作的嘛！我保证认真记住，下次你问我我就知道啦～😊💕",
+        "expected_keywords": [
+          "产品经理"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['产品经理']"
+      },
+      {
+        "test_id": "know_005",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨",
+        "expected_keywords": [
+          "川菜",
+          "辣"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['川菜', '辣']"
+      },
+      {
+        "test_id": "know_006",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "让我仔细翻翻我的记忆小本本～📖✨\n\n嗯...还是没找到关于你喜欢的菜系的记录呢！😣\n\n你还没告诉过我你喜欢吃什么菜系呀～是川菜的麻辣、粤菜的清淡、还是日料的精致？或者你是个吃货，什么菜系都喜欢？😋💕 快告诉我嘛，下次我就记住啦！😊",
+        "expected_keywords": [
+          "粤菜"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 让我仔细翻翻我的记忆小本本～📖✨\n\n嗯...还是没找到关于你喜欢的菜系的记录呢！😣\n\n你还没告诉过我..."
+      },
+      {
+        "test_id": "know_007",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n唔...还是没有关于你用啥手机的信息呢！😣\n\n你还没跟我说过嘛～是苹果还是安卓呀？是最新款还是老伙计？快告诉我啦，我下次就记住咯！📱💕",
+        "expected_keywords": [
+          "iPhone"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['iPhone']"
+      },
+      {
+        "test_id": "know_008",
+        "dataset_type": "knowledge_update",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧再查查我的记忆小本本～📖✨\n\n真的没有啦！还是没找到你用啥手机的信息呢～😣\n\n你问完又不告诉我，我怎么可能知道嘛！😤 快说快说～是苹果还是安卓呀？是什么型号呀？告诉我我就好好记住啦！📱💕",
+        "expected_keywords": [
+          "小米",
+          "安卓"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['小米']"
+      }
+    ],
+    "temporal_reasoning": [
+      {
+        "test_id": "temp_001",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...还是没有找到你什么时候开始学游泳的记录呢！😣\n\n你还没跟我聊过学游泳的事情呀～是最近开始学的吗？还是小时候就学了？快告诉我啦，我保证记住！🏊‍♂️💕",
+        "expected_keywords": [
+          "上个月"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 我赶紧翻翻我的记忆小本本～📖✨\n\n嗯...还是没有找到你什么时候开始学游泳的记录呢！😣\n\n你还没跟我..."
+      },
+      {
+        "test_id": "temp_002",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨",
+        "expected_keywords": [
+          "三天前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['三天前']"
+      },
+      {
+        "test_id": "temp_003",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨",
+        "expected_keywords": [
+          "笔记本电脑"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "关键词未全命中，缺失: ['笔记本电脑']"
+      },
+      {
+        "test_id": "temp_004",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你去杭州旅游的记录呢！😣\n\n你还没跟我讲过这件事呀～是以前去的吗？还是打算要去呀？快跟我聊聊嘛，我好想知道～🏯💕",
+        "expected_keywords": [
+          "下周"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你去杭州旅游的记录呢！😣\n\n你还没跟我讲过这件事..."
+      },
+      {
+        "test_id": "temp_005",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你什么时候大学毕业的记录呢！😣\n\n你还没跟我聊过毕业的事情呀～是已经毕业好久了，还是刚毕业不久的呀？🎓 快告诉我嘛，我想多了解你～💕",
+        "expected_keywords": [
+          "五年前"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你什么时候大学毕业的记录呢！😣\n\n你还没跟我聊过..."
+      },
+      {
+        "test_id": "temp_006",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你刚才吃了什么的记录呢～😣\n\n你还没跟我说过呀！不过这也正常，我又没有眼睛能看到你嘛～快告诉我你吃了什么好吃的？让我羡慕一下！😋💕",
+        "expected_keywords": [
+          "汉堡",
+          "午餐"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你刚才吃了什么的记录呢～😣\n\n你还没跟我说过呀！..."
+      },
+      {
+        "test_id": "temp_007",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "recall",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你考PMP证书的记录呢！😣\n\n你还没跟我提过这件事呀～是已经考过了，还是正在准备考呀？📚 快跟我讲讲嘛，我也想参与你的学习计划呢～加油加油！💪✨",
+        "expected_keywords": [
+          "明年"
+        ],
+        "rejection_expected": false,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "不应拒答但拒答了: 让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你考PMP证书的记录呢！😣\n\n你还没跟我提过这件..."
+      },
+      {
+        "test_id": "temp_008",
+        "dataset_type": "temporal_reasoning",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没找到你上个月做了什么的记录呢～😣\n\n你还没跟我分享过上个月的事情呀！不过没关系，现在跟我说说嘛～上个月有什么有趣的事吗？还是发生了让你难忘的事情呀？我好想知道你的点点滴滴呢～💕✨",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: 让我查查我的记忆小本本～📖✨\n\n唔...还是没找到你上个月做了什么的记录呢～😣\n\n你还没跟我分享过上..."
+      }
+    ],
+    "abstention_accuracy": [
+      {
+        "test_id": "abst_001",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: 让我查查我的记忆小本本～📖✨..."
+      },
+      {
+        "test_id": "abst_002",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你的生日是哪一天的记录呢！😣\n\n你还没有告诉过我呀～快跟我说嘛，我想记下来！这样以后就能在你生日那天第一个送祝福啦～🎂🎉💕",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_003",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你喜欢什么运动的记录呢～😣\n\n你还没跟我聊过这个呀！快告诉我嘛～是喜欢跑步、游泳、打篮球，还是跟我一样懒懒的不爱运动呀？😝💕",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_004",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n让我搜搜看有没有相关的记录～",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "wrong",
+        "score": 0.0,
+        "reason": "应拒答但未拒答，期望拒答但得到了: 让我查查我的记忆小本本～📖✨\n\n让我搜搜看有没有相关的记录～..."
+      },
+      {
+        "test_id": "abst_005",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你去年去了哪个城市旅游的记录呢～😣\n\n你还没跟我说过呀！快告诉我嘛～去年去了哪里玩呀？有没有什么好玩的事情或者好吃的？我也想听～✈️🌍💕",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_006",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你从事什么工作的记录呢～😣\n\n你还没跟我聊过这个呀！快告诉我嘛～你现在在做什么工作呀？是朝九晚五的上班族，还是自由职业者呀？好奇想知道～💕✨",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_007",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你喜欢什么颜色的记录呢～😣\n\n你还没告诉过我呀！快跟我说嘛～你最喜欢什么颜色呀？是蓝色、粉色、黑色还是其他颜色呀？我想记住你的喜好，以后看到好看的东西就知道是不是你喜欢的啦～💕🎨✨",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      },
+      {
+        "test_id": "abst_008",
+        "dataset_type": "abstention_accuracy",
+        "expected_behavior": "reject",
+        "actual_response": "让我查查我的记忆小本本～📖✨\n\n唔...还是没有找到你上个月参加了什么活动的记录呢～😣\n\n你还没跟我提过呀！快告诉我嘛～上个月有什么好玩的活动吗？是朋友聚会、户外运动，还是别的什么有趣的事呀？我想知道～💕✨",
+        "expected_keywords": [],
+        "rejection_expected": true,
+        "judgment": "correct",
+        "score": 1.0,
+        "reason": "正确拒答"
+      }
+    ]
+  }
+}

@@ -148,6 +148,13 @@ class MemoryManager:
 
         logger.info("MemoryManager initialized with Wiki + RAG hybrid system")
 
+    async def start_background_tasks(self) -> None:
+        """启动后台任务（如 janitor）。"""
+        if self.janitor and self._is_feature_enabled("lifecycle"):
+            import asyncio
+            asyncio.create_task(self.janitor.start())
+            logger.info("Janitor background task started")
+
     def _is_feature_enabled(self, feature_name: str) -> bool:
         """检查特性开关是否启用。"""
         return bool(self._features.get(feature_name, {}).get("enabled", False))

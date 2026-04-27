@@ -80,7 +80,7 @@ class FeedbackHandler:
             record.confidence_history.append(record.confidence)
             record.updated_at = time.time()
 
-        self.semantic_store._save()
+        self.semantic_store.save()
         logger.info(f"Reduced confidence for predicate {predicate}: {reason}")
         return "confidence_reduced"
 

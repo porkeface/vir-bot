@@ -68,7 +68,7 @@ class MemoryMerger:
                 merged_count += 1
 
         if merged_count > 0:
-            self.store._save()
+            self.store.save()
             logger.info(f"Merged {merged_count} similar records for {user_id}")
 
         return merged_count

@@ -23,11 +23,11 @@ class QualityGate:
     # 来源可靠性检查：最小长度
     MIN_SOURCE_LENGTH = 5
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None, ai_provider=None):
         self.config = config or {}
-        self._llm_client = None
+        self._ai_provider = ai_provider
 
-    def check(
+    async def check(
         self,
         operation: "MemoryOperation",
         context: str = "",
@@ -52,7 +52,14 @@ class QualityGate:
         if not operation.object or operation.object.strip() == "":
             return False, "记忆对象为空", 0.0
 
-        # 通过所有规则检查
+        # 规则检查通过，检查是否需要 LLM 二次检查
+        if self._needs_llm_check(operation) and self._ai_provider:
+            passed, reason, adj = await self._llm_check(operation)
+            if not passed:
+                return False, f"LLM质量检查未通过: {reason}", adj
+            return True, f"LLM检查通过: {reason}", adj
+
+        # 通过所有检查
         return True, "通过", 1.0
 
     def _has_fuzzy_time_words(self, text: str) -> bool:
@@ -73,6 +80,45 @@ class QualityGate:
 
     async def _llm_check(self, op: "MemoryOperation") -> tuple[bool, str, float]:
         """使用 LLM 判断记忆质量（灰色地带）。"""
-        # TODO: 实现 LLM 二次检查
-        # 暂时返回通过
-        return True, "LLM检查通过", 1.0
+        if not self._ai_provider:
+            return True, "LLM client not available, passing", 1.0
+
+        prompt = f"""请判断以下记忆操作是否可靠，给出判断和置信度调整建议。
+
+操作类型: {op.op}
+谓词: {op.predicate}
+对象: {op.object}
+来源文本: {op.source_text}
+当前置信度: {op.confidence}
+
+请考虑：
+1. 来源文本是否清晰明确？
+2. 是否有情绪化表达？
+3. 是否包含模糊时间词？
+4. 内容是否自相矛盾？
+
+返回格式（只返回JSON）:
+{{"passed": true/false, "reason": "原因", "confidence_adjustment": 0.0-1.0}}"""
+
+        try:
+            response = await self._ai_provider.chat(
+                messages=[{"role": "user", "content": prompt}],
+                system="你是一个记忆质量审查员，只返回JSON格式，不要其他内容。",
+            )
+            import json
+
+            content = response.content.strip()
+            # 提取JSON（可能包含在```json 块中）
+            if "```" in content:
+                content = content.split("```")[1]
+                if content.startswith("json"):
+                    content = content[4:]
+            result = json.loads(content)
+            return (
+                result.get("passed", True),
+                result.get("reason", "LLM检查通过"),
+                float(result.get("confidence_adjustment", 1.0)),
+            )
+        except Exception as e:
+            logger.warning(f"LLM check failed: {e}")
+            return True, f"LLM检查失败: {e}", 1.0

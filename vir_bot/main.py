@@ -201,6 +201,7 @@ async def lifespan(app: FastAPI):
     app_state.config = config
     app_state.ai_provider = core["ai_provider"]
     app_state.memory_manager = core["memory_manager"]
+    await app_state.memory_manager.start_background_tasks()
     app_state.character_card = core["character_card"]
     app_state.mcp_registry = core["mcp_registry"]
     app_state.pipeline = core["pipeline"]
