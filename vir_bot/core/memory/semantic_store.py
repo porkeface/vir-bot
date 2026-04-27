@@ -189,7 +189,7 @@ class SemanticMemoryStore:
         self._save()
         return record
 
-    def _find_by_predicate(
+    def find_by_predicate(
         self,
         user_id: str,
         namespace: str,
@@ -412,6 +412,14 @@ class SemanticMemoryStore:
     def get_record_by_id(self, memory_id: str) -> SemanticMemoryRecord | None:
         """按 ID 获取记录。"""
         return self._records.get(memory_id)
+
+    def delete_record(self, memory_id: str) -> bool:
+        """按 ID 删除记录。"""
+        if memory_id in self._records:
+            del self._records[memory_id]
+            self._save()
+            return True
+        return False
 
     def _find_existing(
         self,

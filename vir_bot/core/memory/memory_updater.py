@@ -57,7 +57,7 @@ class MemoryUpdater:
             elif operation.op == "DELETE":
                 if self.enable_versioning:
                     # 版本模式：标记旧版本为废弃，而不是物理删除
-                    existing = self.semantic_store._find_by_predicate(
+                    existing = self.semantic_store.find_by_predicate(
                         user_id=user_id,
                         namespace=operation.namespace,
                         predicate=operation.predicate,

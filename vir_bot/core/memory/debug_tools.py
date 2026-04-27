@@ -74,13 +74,17 @@ class MemoryDebugTools:
 
     def get_version_chain(self, memory_id: str) -> list[dict]:
         """
-        查看记忆版本链（需要 versioning 特性支持）。
+        查看记忆版本链。
 
-        目前返回空列表（待实现）。
+        返回版本链列表，从最新到最旧，每个元素包含：
+        - memory_id: 记忆ID
+        - version_number: 版本号
+        - object: 对象值
+        - confidence: 置信度
+        - valid_from: 有效开始时间
+        - valid_to: 有效结束时间
         """
-        # TODO: 实现版本链查询
-        # 需要 memory_versioning 模块支持
-        return []
+        return self.memory_manager.semantic_store.get_version_chain(memory_id)
 
     def manual_intervention(
         self,
@@ -97,27 +101,25 @@ class MemoryDebugTools:
         - "delete": 删除记忆
         """
         if action == "deactivate":
-            record = self.memory_manager.semantic_store._records.get(memory_id)
+            record = self.memory_manager.semantic_store.get_record_by_id(memory_id)
             if record:
                 record.is_active = False
                 record.updated_at = time.time()
-                self.memory_manager.semantic_store._save()
+                self.memory_manager.semantic_store.save()
                 return True
 
         elif action == "update":
-            record = self.memory_manager.semantic_store._records.get(memory_id)
+            record = self.memory_manager.semantic_store.get_record_by_id(memory_id)
             if record:
                 for key, value in kwargs.items():
                     if hasattr(record, key):
                         setattr(record, key, value)
                 record.updated_at = time.time()
-                self.memory_manager.semantic_store._save()
+                self.memory_manager.semantic_store.save()
                 return True
 
         elif action == "delete":
-            if memory_id in self.memory_manager.semantic_store._records:
-                del self.memory_manager.semantic_store._records[memory_id]
-                self.memory_manager.semantic_store._save()
+            if self.memory_manager.semantic_store.delete_record(memory_id):
                 return True
 
         return False
