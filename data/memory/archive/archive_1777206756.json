@@ -1,0 +1,23 @@
+[
+  {
+    "memory_id": "d0557d14-9754-4746-8e83-5797e846ea6b",
+    "user_id": "user1",
+    "namespace": "",
+    "subject": "user",
+    "predicate": "",
+    "object": "",
+    "confidence": 0.05,
+    "source_text": "",
+    "source_message_id": null,
+    "created_at": 1777206756.235299,
+    "updated_at": 1768566756.235299,
+    "is_active": true,
+    "valid_from": 1777206756.235299,
+    "valid_to": null,
+    "previous_version_id": null,
+    "version_number": 1,
+    "confidence_history": [],
+    "is_deprecated": false,
+    "deprecation_reason": null
+  }
+]
