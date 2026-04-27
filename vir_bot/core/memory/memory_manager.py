@@ -68,16 +68,25 @@ class MemoryManager:
         if self._is_feature_enabled("quality_gate"):
             from .quality_gate import QualityGate
 
-            quality_gate = QualityGate(config=self._features.get("quality_gate"))
+            quality_gate = QualityGate(
+                config=self._features.get("quality_gate"),
+                ai_provider=self._ai_provider,
+            )
 
         # 初始化 verifier（如果启用）
         verifier = None
         if self._is_feature_enabled("verifier"):
             from .verifier import WriteVerifier
 
+            embedding_model = getattr(
+                config.long_term if hasattr(config, "long_term") else None,
+                "embedding_model",
+                "all-MiniLM-L6-v2",
+            )
             verifier = WriteVerifier(
                 semantic_store=semantic_store,
                 episodic_store=self.episodic_store,
+                embedding_model=embedding_model,
             )
 
         # 初始化 memory_writer（支持质量门）
