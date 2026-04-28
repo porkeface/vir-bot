@@ -244,6 +244,39 @@ class WebConsoleConfig(BaseModel):
     cors: WebConsoleCORSConfig = Field(default_factory=WebConsoleCORSConfig)
 
 
+class ProactiveConcernConfig(BaseModel):
+    threshold: float = 0.7
+    llm_evaluate: bool = True
+
+
+class ProactiveExpressionConfig(BaseModel):
+    max_context_memories: int = 5
+    max_tokens: int = 200
+
+
+class ProactiveTargetsQQConfig(BaseModel):
+    user_id: str = ""
+    group_id: str = ""
+
+
+class ProactiveTargetsDiscordConfig(BaseModel):
+    channel_id: str = ""
+
+
+class ProactiveTargetsWeChatConfig(BaseModel):
+    touser: str = ""
+
+
+class ProactiveConfig(BaseModel):
+    enabled: bool = False
+    check_interval_seconds: int = 60
+    min_cooldown_seconds: int = 60
+    max_daily_messages: int = 20
+    concern: ProactiveConcernConfig = Field(default_factory=ProactiveConcernConfig)
+    expression: ProactiveExpressionConfig = Field(default_factory=ProactiveExpressionConfig)
+    targets: dict = Field(default_factory=dict)
+
+
 class SecurityConfig(BaseModel):
     log_sanitization: bool = True
     encrypt_local_data: bool = False
@@ -268,6 +301,7 @@ class Config(BaseModel):
     visual: VisualConfig = Field(default_factory=VisualConfig)
     web_console: WebConsoleConfig = Field(default_factory=WebConsoleConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
+    proactive: ProactiveConfig = Field(default_factory=ProactiveConfig)
 
 
 # =============================================================================

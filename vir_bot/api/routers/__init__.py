@@ -1,4 +1,4 @@
 """API 路由包"""
-from vir_bot.api.routers import character, memory, config_router, tools, logs, platforms, chat
+from vir_bot.api.routers import character, memory, config_router, tools, logs, platforms, chat, proactive
 
 __all__ = ["character", "memory", "config_router", "tools", "logs", "platforms", "chat"]

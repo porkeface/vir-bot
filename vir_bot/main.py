@@ -28,6 +28,7 @@ class _AppState:
         self.mcp_registry: Any = None
         self.pipeline: Any = None
         self.adapters: dict = {}
+        self.proactive_service: Any = None
         self.hardware: Any = None
         self.visual: Any = None
 
@@ -218,9 +219,42 @@ async def lifespan(app: FastAPI):
     if config.visual.enabled:
         app_state.visual = await _init_visual(config)
 
+    # 初始化主动消息服务
+    print("DEBUG: 开始初始化主动消息服务...", flush=True)
+    logger.info("初始化主动消息服务...")
+    try:
+        from vir_bot.core.proactive.proactive_service import ProactiveService
+        logger.info(f"ProactiveService 导入成功, app_state.config 存在: {hasattr(app_state, 'config')}")
+        print(f"DEBUG: ProactiveService 类导入成功", flush=True)
+    except Exception as e:
+        print(f"DEBUG: ProactiveService 导入失败: {e}", flush=True)
+        logger.error(f"ProactiveService 导入失败: {e}")
+        raise
+    app_state.proactive_service = ProactiveService(
+        ai_provider=app_state.ai_provider,
+        memory_manager=app_state.memory_manager,
+        character_card=app_state.character_card,
+        config=app_state.config,
+        platform_adapters=app_state.adapters,
+    )
+    logger.info(f"app_state.proactive_service 已设置: {hasattr(app_state, 'proactive_service')}")
+    if app_state.proactive_service._enabled:
+        await app_state.proactive_service.start()
+        logger.info("主动消息服务已启动")
+    else:
+        logger.info("主动消息服务未启用")
+
     logger.info(f"=== vir-bot 启动完成 ===")
 
     yield
+
+    # 关闭主动消息服务
+    if hasattr(app_state, 'proactive_service') and app_state.proactive_service and app_state.proactive_service._enabled:
+        try:
+            await app_state.proactive_service.stop()
+            logger.info("主动消息服务已停止")
+        except Exception as e:
+            logger.error(f"停止主动消息服务失败: {e}")
 
     logger.info("=== vir-bot 关闭中 ===")
     for name, adapter in app_state.adapters.items():
@@ -264,6 +298,7 @@ def create_app() -> FastAPI:
         logs,
         memory,
         platforms,
+        proactive,
         tools,
     )
 
@@ -274,6 +309,7 @@ def create_app() -> FastAPI:
     app.include_router(logs.router, prefix="/api/logs", tags=["日志"])
     app.include_router(platforms.router, prefix="/api/platforms", tags=["平台"])
     app.include_router(distillation.router, prefix="/api/distillation", tags=["蒸馏"])
+    app.include_router(proactive.router, prefix="/api/proactive", tags=["主动消息"])
     # Serve the distillation static UI (if present)
     # StaticFiles is imported here to avoid changing top-level imports; this will
     # mount the directory vir_bot/api/static/distillation at the route /distillation.

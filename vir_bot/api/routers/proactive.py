@@ -24,7 +24,7 @@ class ProactiveResponse(BaseModel):
     message: str | None = None
 
 
-@router.get("/api/proactive", tags=["主动消息"], response_model=ProactiveResponse)
+@router.get("/", tags=["主动消息"], response_model=ProactiveResponse)
 async def get_proactive_status():
     """获取主动消息状态"""
     import sys
@@ -37,7 +37,7 @@ async def get_proactive_status():
     return ProactiveResponse(enabled=stats.get("enabled", False), stats=stats)
 
 
-@router.post("/api/proactive/enable", tags=["主动消息"])
+@router.post("/enable", tags=["主动消息"])
 async def enable_proactive():
     """启用主动消息"""
     import sys
@@ -51,7 +51,7 @@ async def enable_proactive():
     return {"status": "enabled"}
 
 
-@router.post("/api/proactive/disable", tags=["主动消息"])
+@router.post("/disable", tags=["主动消息"])
 async def disable_proactive():
     """禁用主动消息"""
     import sys
@@ -65,7 +65,7 @@ async def disable_proactive():
     return {"status": "disabled"}
 
 
-@router.post("/api/proactive/send", tags=["主动消息"])
+@router.post("/send", tags=["主动消息"])
 async def trigger_proactive_send():
     """手动触发一次主动消息（测试用）"""
     import sys
@@ -82,7 +82,7 @@ async def trigger_proactive_send():
     return {"status": "triggered"}
 
 
-@router.get("/api/proactive/stats", tags=["主动消息"])
+@router.get("/stats", tags=["主动消息"])
 async def get_proactive_stats():
     """获取主动消息统计"""
     import sys
