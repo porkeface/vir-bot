@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": 1777267332.0048158,
+  "updated_at": 1777371277.7987754,
   "records": [
     {
       "episode_id": "bd636f80-02e7-47e6-aee9-c2e385b1eff9",
@@ -18,6 +18,90 @@
       "episode_type": "session",
       "created_at": 1777267332.0048158,
       "updated_at": 1777267332.0048158,
+      "is_active": true
+    },
+    {
+      "episode_id": "97280776-ee7b-4a44-a74a-3d86a022069f",
+      "user_id": "web_user",
+      "summary": "用户问吃饭了吗，助手提醒其好好吃饭",
+      "entities": [],
+      "start_at": 1777288495.0923085,
+      "end_at": 1777288495.0923085,
+      "importance": 0.6,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777288495.0923085,
+      "updated_at": 1777288495.0923085,
+      "is_active": true
+    },
+    {
+      "episode_id": "1164283f-0fdf-4e33-bcee-bb4f88ee19b5",
+      "user_id": "web_user",
+      "summary": "用户质疑助手死板，助手以活泼语气安抚互动。",
+      "entities": [
+        "情绪"
+      ],
+      "start_at": 1777289714.8697422,
+      "end_at": 1777289714.8697422,
+      "importance": 0.6,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777289714.8697422,
+      "updated_at": 1777289714.8697422,
+      "is_active": true
+    },
+    {
+      "episode_id": "f3e19d91-bd14-4e39-8d94-cee03e96d6f9",
+      "user_id": "web_user",
+      "summary": "助手遗忘昨日记录并询问用户分享经历。",
+      "entities": [],
+      "start_at": 1777289738.725753,
+      "end_at": 1777289738.725753,
+      "importance": 0.6,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777289738.725753,
+      "updated_at": 1777289738.725753,
+      "is_active": true
+    },
+    {
+      "episode_id": "58f53700-1836-4619-bcb6-61b0c85bc1c8",
+      "user_id": "web_user",
+      "summary": "傍晚互问安好，闲聊日常与心事共度时光。",
+      "entities": [
+        "工作"
+      ],
+      "start_at": 1777369445.809935,
+      "end_at": 1777369445.809935,
+      "importance": 0.6,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777369445.809935,
+      "updated_at": 1777369445.809935,
+      "is_active": true
+    },
+    {
+      "episode_id": "8f353cfa-f486-48a3-9d2c-69fa729bbd39",
+      "user_id": "web_user",
+      "summary": "用户回应有空，助手热情开启陪伴聊天。",
+      "entities": [],
+      "start_at": 1777371277.7987754,
+      "end_at": 1777371277.7987754,
+      "importance": 0.6,
+      "source_message_ids": [
+        "web_test"
+      ],
+      "episode_type": "session",
+      "created_at": 1777371277.7987754,
+      "updated_at": 1777371277.7987754,
       "is_active": true
     }
   ]
