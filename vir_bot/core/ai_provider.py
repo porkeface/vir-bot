@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, AsyncIterator
 
 import aiohttp
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from vir_bot.config import AIConfig
@@ -215,7 +218,8 @@ class OpenAIProvider(AIProvider):
             body["tool_choice"] = "auto"
 
         headers = self._build_headers()
-        url = f"{self.config.openai.base_url}/chat/completions"
+        base = self.config.openai.base_url.rstrip("/")
+        url = f"{base}/chat/completions"
 
         for attempt in range(self.config.openai.max_retries):
             try:
@@ -264,7 +268,8 @@ class OpenAIProvider(AIProvider):
             body["tools"] = tools
 
         headers = self._build_headers()
-        url = f"{self.config.openai.base_url}/chat/completions"
+        base = self.config.openai.base_url.rstrip("/")
+        url = f"{base}/chat/completions"
 
         async with client.post(url, json=body, headers=headers, timeout=aiohttp.ClientTimeout(self.config.openai.timeout)) as resp:
             resp.raise_for_status()
@@ -287,12 +292,21 @@ class OpenAIProvider(AIProvider):
 
     async def health_check(self) -> bool:
         try:
+            if not self.config.openai.api_key:
+                logger.warning("OpenAI API key 未配置，健康检查将失败")
+                return False
             client = await self._get_client()
             headers = self._build_headers()
-            url = f"{self.config.openai.base_url}/models"
+            base = self.config.openai.base_url.rstrip("/")
+            url = f"{base}/models"
             async with client.get(url, headers=headers) as resp:
-                return resp.status == 200
-        except Exception:
+                if resp.status != 200:
+                    body = await resp.text()
+                    logger.warning(f"AI 健康检查失败 ({resp.status}): {body[:200]}")
+                    return False
+                return True
+        except Exception as e:
+            logger.warning(f"AI 健康检查异常: {e}")
             return False
 
     async def close(self) -> None:

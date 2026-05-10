@@ -139,6 +139,7 @@ async def _init_core(config):
 async def _init_platforms(config, pipeline):
     from vir_bot.platforms.discord_adapter import DiscordAdapter
     from vir_bot.platforms.qq_adapter import QQAdapter
+    from vir_bot.platforms.qq_official_adapter import QQOfficialAdapter
 
     adapters = {}
     if config.platforms.qq.enabled:
@@ -147,6 +148,13 @@ async def _init_platforms(config, pipeline):
             logger.info("QQ 适配器已创建")
         except Exception as e:
             logger.error(f"QQ 适配器失败: {e}")
+
+    if config.platforms.qq_official.enabled and config.platforms.qq_official.app_id:
+        try:
+            adapters["qq_official"] = QQOfficialAdapter(pipeline, config.platforms.qq_official)
+            logger.info("QQ官方机器人适配器已创建")
+        except Exception as e:
+            logger.error(f"QQ官方机器人适配器失败: {e}")
 
     if config.platforms.discord.enabled:
         if not config.platforms.discord.bot_token:

@@ -28,9 +28,9 @@ ai:
 
   # OpenAI 兼容 API（Qwen / DeepSeek / 等）
   openai:
-    base_url: "https://openrouter.ai/api/v1"
+    base_url: "https://token-plan-cn.xiaomimimo.com/v1"
     api_key: "" # 从环境变量 VIRBOT_OPENAI_KEY 读取，勿在此硬编码
-    model: "inclusionai/ling-2.6-1t:free"
+    model: "mimo-v2.5-pro"
     timeout: 60
     max_retries: 3
 
@@ -110,6 +110,13 @@ platforms:
     rate_limit:
       per_user: 20
       per_group: 60
+
+  # QQ 官方机器人（QQ 开放平台）
+  qq_official:
+    enabled: true
+    app_id: "1903915316"
+    app_secret: "***REMOVED***"
+    callback_path: "https://606f-223-160-220-195.ngrok-free.app/api/platforms/qq/callback"
 
   # 微信
   wechat:

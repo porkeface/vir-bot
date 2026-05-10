@@ -105,6 +105,13 @@ class QQConfig(BaseModel):
     rate_limit: QQRateLimitConfig = Field(default_factory=QQRateLimitConfig)
 
 
+class QQOfficialConfig(BaseModel):
+    enabled: bool = False
+    app_id: str = ""
+    app_secret: str = ""
+    callback_path: str = "/api/qq/callback"
+
+
 class WeChatWorkConfig(BaseModel):
     corp_id: str = ""
     corp_secret: str = ""
@@ -139,6 +146,7 @@ class DiscordConfig(BaseModel):
 
 class PlatformsConfig(BaseModel):
     qq: QQConfig = Field(default_factory=QQConfig)
+    qq_official: QQOfficialConfig = Field(default_factory=QQOfficialConfig)
     wechat: WeChatConfig = Field(default_factory=WeChatConfig)
     discord: DiscordConfig = Field(default_factory=DiscordConfig)
 

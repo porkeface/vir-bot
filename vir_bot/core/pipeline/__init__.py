@@ -47,6 +47,7 @@ class PlatformMessage:
     timestamp: float = field(default_factory=time.time)
     reply_to: str | None = None
     attachments: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
 
     def to_messages(self) -> list[dict]:
         return [{"role": "user", "content": self.content}]
@@ -60,6 +61,7 @@ class PlatformResponse:
     content: str
     reply: bool = True
     quote: bool = False
+    metadata: dict = field(default_factory=dict)
 
 
 class RateLimiter:

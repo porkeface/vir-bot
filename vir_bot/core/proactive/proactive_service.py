@@ -128,6 +128,17 @@ class ProactiveService:
                 if hasattr(adapter, "send_proactive_message"):
                     await adapter.send_proactive_message(message, target)
                     logger.info(f"主动消息已通过 {name} 发送")
+                elif hasattr(adapter, "send_message"):
+                    # 构造 PlatformResponse 并调用 send_message
+                    from vir_bot.core.pipeline import PlatformResponse, MessageType
+
+                    response = PlatformResponse(
+                        content=message,
+                        msg_type=MessageType.TEXT,
+                        metadata=target,
+                    )
+                    await adapter.send_message(response)
+                    logger.info(f"主动消息已通过 {name} 发送")
                 else:
                     logger.warning(f"平台 {name} 不支持主动消息发送")
             except Exception as e:

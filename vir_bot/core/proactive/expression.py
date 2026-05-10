@@ -80,7 +80,7 @@ class ExpressionLayer:
         """构建用户消息部分。"""
         lines = [
             f"牵挂类型：{thought.concern_type}",
-            f"牵挂内容：{thought.thought}",
+            f"牵挂内容：{thought.content}",
             f"动机：{thought.motivation}",
             "",
         ]
@@ -90,7 +90,7 @@ class ExpressionLayer:
             try:
                 records = self.memory.search_semantic_memory(
                     user_id=user_id,
-                    query=thought.thought,
+                    query=thought.content,
                     top_k=3,
                 )
                 if records:
