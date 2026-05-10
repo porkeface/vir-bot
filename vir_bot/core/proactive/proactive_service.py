@@ -133,8 +133,8 @@ class ProactiveService:
                     from vir_bot.core.pipeline import PlatformResponse, MessageType
 
                     response = PlatformResponse(
+                        msg_id="",
                         content=message,
-                        msg_type=MessageType.TEXT,
                         metadata=target,
                     )
                     await adapter.send_message(response)

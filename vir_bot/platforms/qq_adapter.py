@@ -7,7 +7,7 @@ import time
 from typing import AsyncIterator
 
 import websockets
-from websockets.client import connect
+from websockets.asyncio.client import connect
 
 from vir_bot.core.pipeline import Platform, PlatformMessage, PlatformResponse, MessageType
 from vir_bot.platforms.base_adapter import PlatformAdapter
@@ -20,7 +20,7 @@ class QQAdapter(PlatformAdapter):
     def __init__(self, pipeline, config):
         super().__init__(pipeline)
         self.config = config
-        self.ws: websockets.WebSocketClientProtocol | None = None
+        self.ws = None
         self._pending_messages: dict = {}
 
     @property
@@ -30,7 +30,8 @@ class QQAdapter(PlatformAdapter):
     async def connect(self) -> None:
         conn = self.config.connection
         if conn.type == "正向WebSocket":
-            uri = f"ws://{conn.host}:{conn.port}"
+            suffix = getattr(conn, "suffix", "/onebot/v11/ws")
+            uri = f"ws://{conn.host}:{conn.port}{suffix}"
         else:
             uri = conn.type  # 反向 WS
 
@@ -121,16 +122,18 @@ class QQAdapter(PlatformAdapter):
         if not self.ws:
             return
 
-        # 查找原始消息的会话信息
+        # 查找原始消息的会话信息，metadata 优先（主动消息场景）
         data = self._pending_messages.get(response.msg_id, {})
+        user_id = response.metadata.get("user_id") or data.get("user_id")
+        group_id = response.metadata.get("group_id") or data.get("group_id")
         message = [{"type": "text", "data": {"text": response.content}}]
 
         payload = {
             "action": "send_msg",
             "params": {
                 "message": message,
-                "user_id": data.get("user_id"),
-                "group_id": data.get("group_id"),
+                "user_id": user_id,
+                "group_id": group_id,
             },
         }
 

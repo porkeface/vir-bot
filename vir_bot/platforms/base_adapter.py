@@ -64,7 +64,7 @@ class PlatformAdapter(ABC):
             async for msg in self._receive_loop():
                 response = await self.pipeline.process(msg)
                 if response:
-                    await self._send_queue.put(response)
+                    await self.send_message(response)
         except Exception as e:
             logger.error(f"[{self.platform.value}] 接收循环异常: {e}")
         finally:
