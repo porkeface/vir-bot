@@ -97,12 +97,13 @@ memory:
 platforms:
   # QQ（OneBot v11/v12）
   qq:
-    enabled: false
+    enabled: true
     adapter: "onebot_v11"
     connection:
       type: "正向WebSocket"
-      host: "0.0.0.0"
+      host: "127.0.0.1"
       port: 8080
+      suffix: "/"
     access_token: ""
     allowed_groups: []
     allowed_users: []

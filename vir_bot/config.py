@@ -87,6 +87,7 @@ class QQConnectionConfig(BaseModel):
     type: str = "正向WebSocket"
     host: str = "0.0.0.0"
     port: int = 8080
+    suffix: str = "/onebot/v11/ws"
 
 
 class QQRateLimitConfig(BaseModel):
