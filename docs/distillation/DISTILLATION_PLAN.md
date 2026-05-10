@@ -350,28 +350,28 @@ class DistillationPipeline:
 # 标准蒸馏
 python -m vir_bot.core.distillation.cli \
     --input ./data/chat_records/myfriend.json \
-    --name "小雅" \
+    --name "陈暖树" \
     --output ./data/wiki/characters/
 
 # 完整蒸馏（含评估）
 python -m vir_bot.core.distillation.cli \
     --input ./data/chat_records/myfriend.json \
-    --name "小雅" \
+    --name "陈暖树" \
     --output ./data/wiki/characters/ \
     --evaluate
 
 # 仅解析 + 预览（不生成文件）
 python -m vir_bot.core.distillation.cli \
     --input ./data/chat_records/myfriend.json \
-    --name "小雅" \
+    --name "陈暖树" \
     --dry-run
 
 # 增量更新（基于已有角色卡 + 新对话）
 python -m vir_bot.core.distillation.cli \
     --input ./data/chat_records/new_chats.json \
-    --name "小雅" \
+    --name "陈暖树" \
     --incremental \
-    --existing ./data/wiki/characters/小雅.md
+    --existing ./data/wiki/characters/陈暖树.md
 ```
 
 ---
@@ -645,4 +645,4 @@ L4 高度还原：Turing Test 通过率 > 70%（盲测）
 - [MEMORY_ARCHITECTURE.md](./MEMORY_ARCHITECTURE.md) — 三层记忆系统设计
 - [data/wiki/README.md](./data/wiki/README.md) — Wiki 知识库使用指南
 - [data/wiki/characters/template.md](./data/wiki/characters/template.md) — 人设卡编辑模板
-- [data/wiki/characters/小雅.md](./data/wiki/characters/小雅.md) — 示例人设卡
+- [data/wiki/characters/陈暖树.md](./data/wiki/characters/陈暖树.md) — 示例人设卡

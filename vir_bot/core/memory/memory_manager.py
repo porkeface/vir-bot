@@ -823,7 +823,7 @@ class MemoryManager:
             if recent_msgs:
                 history_lines = ['【最近对话】（仅当与当前问题相关时使用）']
                 for msg in recent_msgs:
-                    role = "用户" if msg["role"] == "user" else "小雅"
+                    role = "用户" if msg["role"] == "user" else "陈暖树"
                     history_lines.append(f"- {role}: {msg['content'][:80]}")
                 sections.append("\n".join(history_lines))
 

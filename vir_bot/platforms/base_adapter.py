@@ -62,9 +62,13 @@ class PlatformAdapter(ABC):
         """收发循环"""
         try:
             async for msg in self._receive_loop():
+                logger.info(f"[{self.platform.value}] 收到消息: {msg.content[:50]} from {msg.user_id}")
                 response = await self.pipeline.process(msg)
-                if response:
+                if response and response.content:
+                    logger.info(f"[{self.platform.value}] AI 回复: {response.content[:50]}")
                     await self.send_message(response)
+                else:
+                    logger.warning(f"[{self.platform.value}] Pipeline 返回空响应")
         except Exception as e:
             logger.error(f"[{self.platform.value}] 接收循环异常: {e}")
         finally:

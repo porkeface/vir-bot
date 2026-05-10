@@ -120,6 +120,7 @@ class MessagePipeline:
     async def process(self, msg: PlatformMessage) -> PlatformResponse | None:
         """主入口：处理一条消息"""
         if not self._pre_filter(msg):
+            logger.info(f"[Pipeline] 消息被过滤: {msg.content[:30]}")
             return None
 
         if not await self._rate_limiter.check(msg):
@@ -129,8 +130,17 @@ class MessagePipeline:
                 reply=True,
             )
 
-        system_prompt, conversation = await self._build_context(msg)
+        try:
+            system_prompt, conversation = await self._build_context(msg)
+        except Exception as e:
+            logger.error(f"[Pipeline] 构建上下文失败: {e}")
+            return None
+
         tools_schema = self.mcp.get_tools_schemas()
+        logger.info(f"[Pipeline] 开始 AI 调用, 消息: {msg.content[:30]}, 上下文轮数: {len(conversation)}")
+        logger.debug(f"[Pipeline] System prompt 长度: {len(system_prompt)}")
+        if conversation:
+            logger.debug(f"[Pipeline] 最后一条消息: {conversation[-1]}")
 
         response: "AIResponse" | None = None
         for attempt in range(3):
@@ -140,7 +150,20 @@ class MessagePipeline:
                     system=system_prompt,
                     tools=tools_schema if tools_schema else None,
                 )
-                break
+                logger.info(f"[Pipeline] AI 调用成功, 内容长度: {len(response.content) if response else 0}")
+
+                # 如果内容为空，用简化消息重试（不带工具）
+                if response and not response.content and attempt < 2:
+                    logger.warning(f"[Pipeline] AI 返回空内容，用简化消息重试 (attempt {attempt + 1})")
+                    response = await self.ai.chat(
+                        messages=conversation,
+                        system=system_prompt,
+                        tools=None,
+                    )
+                    logger.info(f"[Pipeline] 重试成功, 内容长度: {len(response.content) if response else 0}")
+
+                if response and response.content:
+                    break
             except Exception as e:
                 logger.error(f"AI 调用失败 (attempt {attempt + 1}): {e}")
                 if attempt == 2:
@@ -152,6 +175,11 @@ class MessagePipeline:
                 await asyncio.sleep(2**attempt)
 
         if response is None:
+            logger.warning("[Pipeline] AI 响应为 None")
+            return None
+
+        if not response.content:
+            logger.warning("[Pipeline] AI 响应内容为空")
             return None
 
         response = await self._handle_tool_calls(response, system_prompt, tools_schema, depth=0)

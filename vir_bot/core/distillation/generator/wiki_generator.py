@@ -81,8 +81,8 @@ class WikiGenerator:
 
     Usage:
         gen = WikiGenerator()
-        md = gen.generate(profile, name="小雅")
-        gen.save(profile, name="小雅", output_dir="./data/wiki/characters")
+        md = gen.generate(profile, name="陈暖树")
+        gen.save(profile, name="陈暖树", output_dir="./data/wiki/characters")
 
     Options (constructor):
         - author: optional string to include in front-matter/footer

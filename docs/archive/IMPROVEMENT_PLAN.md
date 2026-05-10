@@ -39,7 +39,7 @@
 | 子任务 | 预计时间 | 状态 | 完成日期 |
 |-------|---------|------|---------|
 | 创建 Wiki 目录结构 | 1 天 | ⬜ 待做 | - |
-| 编写示例人设卡 (xiaoya.md) | 1 天 | ⬜ 待做 | - |
+| 编写示例人设卡 (陈暖树.md) | 1 天 | ⬜ 待做 | - |
 | 改进 ChromaDB 数据结构 | 1 天 | ⬜ 待做 | - |
 | 实现记忆类型过滤检索 | 1 天 | ⬜ 待做 | - |
 | 实现人设提取器 | 1 天 | ⬜ 待做 | - |
@@ -115,7 +115,7 @@
 data/wiki/
 ├── README.md                          # Wiki 说明文档
 ├── characters/
-│   ├── xiaoya.md                      # 小雅人设卡 (示例)
+│   ├── 陈暖树.md                      # 陈暖树人设卡 (示例)
 │   ├── template.md                    # 人设卡模板
 │   └── _index.md                      # 角色索引
 ├── relationships/
@@ -135,7 +135,7 @@ data/wiki/
 
 #### 任务 1.2: 编写人设卡示例 (完成时间: 第 1-2 天)
 
-**文件**: `data/wiki/characters/xiaoya.md`
+**文件**: `data/wiki/characters/陈暖树.md`
 
 内容包括:
 - ✅ 基本信息
@@ -402,7 +402,7 @@ async def build_enhanced_context(
 | 文件路径 | 说明 | 优先级 |
 |---------|------|-------|
 | `data/wiki/README.md` | Wiki 使用说明 | P0 |
-| `data/wiki/characters/xiaoya.md` | 小雅人设卡 | P0 |
+| `data/wiki/characters/陈暖树.md` | 陈暖树人设卡 | P0 |
 | `data/wiki/characters/template.md` | 人设卡模板 | P1 |
 | `data/wiki/characters/_index.md` | 角色索引 | P2 |
 | `data/wiki/relationships/users.md` | 用户关系 | P2 |

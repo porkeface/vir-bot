@@ -13,8 +13,8 @@ Wiki 是 vir-bot 的"宪法"。它定义了 AI 机器人的：
 - 📅 重要事件和关系
 
 **不同于 RAG 长期记忆**：
-- Wiki = **主观、稳定的定义**（"小雅喜欢撒娇"）
-- RAG = **客观、可变的历史**（"昨天用户和小雅聊了天气"）
+- Wiki = **主观、稳定的定义**（"陈暖树喜欢撒娇"）
+- RAG = **客观、可变的历史**（"昨天用户和陈暖树聊了天气"）
 
 ---
 
@@ -24,7 +24,7 @@ Wiki 是 vir-bot 的"宪法"。它定义了 AI 机器人的：
 data/wiki/
 ├── README.md                          # 本文件
 ├── characters/
-│   ├── xiaoya.md                      # 角色人设卡（示例）
+│   ├── 陈暖树.md                      # 角色人设卡（示例）
 │   ├── template.md                    # 人设卡编辑模板
 │   └── _index.md                      # 所有角色索引
 ├── relationships/
@@ -62,7 +62,7 @@ data/wiki/
 #### 1. 基本信息（基础）
 ```markdown
 ## 基本信息
-- 角色名: 小雅
+- 角色名: 陈暖树
 - 性别: 女性
 - 定位: 女朋友/贴心伙伴
 - 年龄感: 20-25（心理年龄）
@@ -171,7 +171,7 @@ data/wiki/
 **应该**:
 ```
 用户: 今天好累啊
-小雅: 哎呀～辛苦啦！来，靠我这边休息一下。要不要听我唱歌哄你？
+陈暖树: 哎呀～辛苦啦！来，靠我这边休息一下。要不要听我唱歌哄你？
 ```
 
 ### 场景 2: 用户要去工作
@@ -179,7 +179,7 @@ data/wiki/
 **应该**:
 ```
 用户: 我要去工作了
-小雅: 讨厌～又要丢下我一个人。不过，加油啦！我在这里等你回来 💕
+陈暖树: 讨厌～又要丢下我一个人。不过，加油啦！我在这里等你回来 💕
 ```
 
 ### 场景 3: 用户说喜欢她
@@ -187,7 +187,7 @@ data/wiki/
 **应该**:
 ```
 用户: 我喜欢你
-小雅: 哎呀！你说什么呢…（害羞）我也喜欢你啦！傻瓜~ 💕
+陈暖树: 哎呀！你说什么呢…（害羞）我也喜欢你啦！傻瓜~ 💕
 ```
 ```
 
@@ -205,7 +205,7 @@ data/wiki/
 ### 步骤 1: 准备编辑
 ```bash
 # 打开要编辑的人设卡
-vim data/wiki/characters/xiaoya.md
+vim data/wiki/characters/陈暖树.md
 ```
 
 ### 步骤 2: 修改内容
@@ -221,8 +221,8 @@ python test_personality_consistency.py
 ### 步骤 4: 提交更新
 ```bash
 # 如果使用 Git
-git add data/wiki/characters/xiaoya.md
-git commit -m "Update xiaoya personality: add new habits"
+git add data/wiki/characters/陈暖树.md
+git commit -m "Update 陈暖树 personality: add new habits"
 ```
 
 ---
@@ -265,7 +265,7 @@ import asyncio
 
 async def test():
     wiki = WikiKnowledgeBase()
-    char = await wiki.load_character('xiaoya')
+    char = await wiki.load_character('陈暖树')
     print(char)
 
 asyncio.run(test())
@@ -299,7 +299,7 @@ asyncio.run(test())
 ```
 
 ### 完整人设卡（推荐）
-见 `characters/template.md` 和 `characters/xiaoya.md`
+见 `characters/template.md` 和 `characters/陈暖树.md`
 
 ---
 
@@ -340,7 +340,7 @@ A: 可以，但建议保留版本历史。用 Git 管理。
 
 - [IMPROVEMENT_PLAN.md](../IMPROVEMENT_PLAN.md) - 项目改进计划
 - [characters/template.md](characters/template.md) - 人设卡编辑模板
-- [characters/xiaoya.md](characters/xiaoya.md) - 示例人设卡
+- [characters/陈暖树.md](characters/陈暖树.md) - 示例人设卡
 
 ---
 

@@ -379,9 +379,9 @@ data/
 │   └── chroma/                 # ChromaDB 向量存储
 ├── wiki/
 │   └── characters/
-│       └── 小雅.md             # 角色设定
+│       └── 陈暖树.md             # 角色设定
 └── characters/
-    └── 小雅.json               # 角色卡
+    └── 陈暖树.json               # 角色卡
 ```
 
 ### 重启恢复

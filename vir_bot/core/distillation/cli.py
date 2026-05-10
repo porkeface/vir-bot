@@ -12,18 +12,18 @@ Provides a lightweight CLI that:
 Example usages (see DISTILLATION_PLAN.md):
   python -m vir_bot.core.distillation.cli \
       --input ./data/chat_records/myfriend.json \
-      --name "小雅" \
+      --name "陈暖树" \
       --output ./data/wiki/characters/
 
   python -m vir_bot.core.distillation.cli \
       --input ./data/chat_records/myfriend.json \
-      --name "小雅" \
+      --name "陈暖树" \
       --output ./data/wiki/characters/ \
       --evaluate
 
   python -m vir_bot.core.distillation.cli \
       --input ./data/chat_records/myfriend.json \
-      --name "小雅" \
+      --name "陈暖树" \
       --dry-run
 """
 

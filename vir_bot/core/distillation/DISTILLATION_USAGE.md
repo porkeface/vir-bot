@@ -39,7 +39,7 @@
 ```vir-bot/vir_bot/core/distillation/cli.py#L1-255
 python -m vir_bot.core.distillation.cli \
   --input ./data/chat_records/myfriend.json \
-  --name "小雅" \
+  --name "陈暖树" \
   --output ./data/wiki/characters/ \
   --evaluate
 ```
@@ -48,7 +48,7 @@ python -m vir_bot.core.distillation.cli \
 ```vir-bot/vir_bot/core/distillation/cli.py#L1-255
 python -m vir_bot.core.distillation.cli \
   --input ./data/chat_records/myfriend.json \
-  --name "小雅" \
+  --name "陈暖树" \
   --dry-run
 ```
 
@@ -93,7 +93,7 @@ python -m vir_bot.core.distillation.cli --help
 - 评估指标（如果使用 `--evaluate`），例如 `overlap_similarity`（0.0-1.0）
 
 路径示例：
-- 输出 Markdown：`./data/wiki/characters/小雅.md`
+- 输出 Markdown：`./data/wiki/characters/陈暖树.md`
 
 ## 7. 结果解读与合格标准
 - 角色卡为 LLM 基于对话推断的结构化画像，存在不确定性与可能的幻觉（hallucination）。

@@ -43,7 +43,7 @@ uv run python -m vir_bot.main
 === vir-bot 0.1.0 启动 ===
 AI Provider: openai/deepseek-v4-flash (健康: True)
 记忆系统就绪
-Wiki 系统已初始化，当前角色: 小雅
+Wiki 系统已初始化，当前角色: 陈暖树
 Web 控制台: http://0.0.0.0:7860
 API 文档: http://0.0.0.0:7860/docs
 ```
@@ -192,7 +192,7 @@ curl http://localhost:7860/api/memory/
   "semantic_count": 4,
   "episodic_count": 7,
   "question_count": 7,
-  "character": "小雅"
+  "character": "陈暖树"
 }
 ```
 

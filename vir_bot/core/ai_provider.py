@@ -211,6 +211,8 @@ class OpenAIProvider(AIProvider):
             "model": self.config.openai.model,
             "messages": all_messages,
             "stream": False,
+            "max_tokens": 2000,
+            "temperature": 0.8,
             **kwargs,
         }
         if tools:
@@ -241,8 +243,11 @@ class OpenAIProvider(AIProvider):
         choice = data["choices"][0]
         msg = choice["message"]
 
+        content = msg.get("content") or ""
+        logger.info(f"[AI] 原始响应: content={repr(content)[:100]}, finish_reason={choice.get('finish_reason')}, tool_calls={bool(msg.get('tool_calls'))}")
+
         return AIResponse(
-            content=msg.get("content", ""),
+            content=content,
             model=self.config.openai.model,
             usage=data.get("usage", {}),
             finish_reason=choice.get("finish_reason", "stop"),

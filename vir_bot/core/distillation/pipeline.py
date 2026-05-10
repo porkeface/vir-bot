@@ -15,7 +15,7 @@ Usage example:
     from vir_bot.core.ai_provider import AIProvider
     from vir_bot.core.distillation import create_pipeline
     pipeline = create_pipeline(ai_provider, config=some_config)
-    result = await pipeline.run("./data/chat_records/sample.json", name="小雅", evaluate=True)
+    result = await pipeline.run("./data/chat_records/sample.json", name="陈暖树", evaluate=True)
 
 This module avoids heavy external dependencies and provides reasonable defaults.
 """

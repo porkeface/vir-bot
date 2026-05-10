@@ -120,24 +120,37 @@ class QQAdapter(PlatformAdapter):
     async def send_message(self, response: PlatformResponse) -> None:
         """通过 OneBot 发送消息"""
         if not self.ws:
+            logger.warning("[QQ] WebSocket 未连接，无法发送")
+            return
+
+        if not response.content:
+            logger.warning("[QQ] 响应内容为空，跳过发送")
             return
 
         # 查找原始消息的会话信息，metadata 优先（主动消息场景）
         data = self._pending_messages.get(response.msg_id, {})
         user_id = response.metadata.get("user_id") or data.get("user_id")
         group_id = response.metadata.get("group_id") or data.get("group_id")
+
+        message_type = "group" if group_id else "private"
+
+        # OneBot v11 段格式
         message = [{"type": "text", "data": {"text": response.content}}]
 
         payload = {
             "action": "send_msg",
             "params": {
-                "message": message,
+                "message_type": message_type,
                 "user_id": user_id,
                 "group_id": group_id,
+                "message": message,
             },
         }
 
         try:
-            await self.ws.send(json.dumps(payload))
+            raw = json.dumps(payload, ensure_ascii=False)
+            logger.info(f"[QQ] 发送消息 -> {message_type} ({user_id or group_id}): {response.content[:100]}")
+            await self.ws.send(raw)
+            logger.info("[QQ] 消息已发送")
         except Exception as e:
             logger.error(f"[QQ] 发送失败: {e}")
