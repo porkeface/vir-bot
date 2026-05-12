@@ -78,10 +78,13 @@ class PlatformAdapter(ABC):
         try:
             async for msg in self._receive_loop():
                 logger.info(f"[{self.platform.value}] 收到消息: {msg.content[:50]} from {msg.user_id}")
-                response = await self.pipeline.process(msg)
+                response = await self.pipeline.process(msg, send_callback=self.send_message)
+                if response and response.metadata.get("already_streamed"):
+                    # 流式输出已通过回调逐句发送，无需再发
+                    continue
                 if response and response.content:
                     await self._send_split(response)
-                else:
+                elif not response:
                     logger.warning(f"[{self.platform.value}] Pipeline 返回空响应")
         except Exception as e:
             logger.error(f"[{self.platform.value}] 接收循环异常: {e}")

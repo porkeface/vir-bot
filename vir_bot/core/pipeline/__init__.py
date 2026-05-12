@@ -6,7 +6,7 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from vir_bot.config import PipelineConfig
@@ -118,8 +118,17 @@ class MessagePipeline:
         self.config = config
         self._rate_limiter = RateLimiter()
 
-    async def process(self, msg: PlatformMessage) -> PlatformResponse | None:
-        """主入口：处理一条消息"""
+    async def process(
+        self,
+        msg: PlatformMessage,
+        send_callback: "Any | None" = None,
+    ) -> PlatformResponse | None:
+        """主入口：处理一条消息。
+
+        Args:
+            send_callback: 可选的发送回调 (async callable)。
+                          提供时启用流式输出，每生成一句就发送。
+        """
         if not self._pre_filter(msg):
             logger.info(f"[Pipeline] 消息被过滤: {msg.content[:30]}")
             return None
@@ -142,6 +151,19 @@ class MessagePipeline:
         logger.debug(f"[Pipeline] System prompt 长度: {len(system_prompt)}")
         if conversation:
             logger.debug(f"[Pipeline] 最后一条消息: {conversation[-1]}")
+
+        # 流式输出：有回调时启用
+        if send_callback is not None:
+            logger.info("[Pipeline] 尝试流式输出...")
+            result = await self._process_streaming(
+                msg, conversation, system_prompt, tools_schema, send_callback,
+            )
+            if result is not None:
+                logger.info("[Pipeline] 流式输出成功，异步更新记忆")
+                asyncio.create_task(self._update_memory_from_content(msg, result.content))
+                return result
+            # 流式失败，回退到普通模式
+            logger.warning("[Pipeline] 流式输出失败，回退到普通模式")
 
         response: "AIResponse" | None = None
         for attempt in range(3):
@@ -186,6 +208,83 @@ class MessagePipeline:
         response = await self._handle_tool_calls(response, system_prompt, tools_schema, depth=0)
         asyncio.create_task(self._update_memory(msg, response))
         return PlatformResponse(msg_id=msg.msg_id, content=response.content, reply=True)
+
+    async def _process_streaming(
+        self,
+        msg: PlatformMessage,
+        conversation: list[dict],
+        system_prompt: str,
+        tools_schema: list[dict],
+        send_callback: Any,
+    ) -> PlatformResponse | None:
+        """流式处理：逐句生成并发送。返回 None 表示回退到普通模式。"""
+        import re
+
+        try:
+            buffer = ""
+            full_content = ""
+            chunk_count = 0
+
+            logger.info("[Pipeline] 开始流式 AI 调用...")
+            async for chunk in self.ai.chat_stream(
+                messages=conversation,
+                system=system_prompt,
+            ):
+                if chunk.finish_reason == "stop":
+                    break
+                if not chunk.delta:
+                    continue
+
+                chunk_count += 1
+                buffer += chunk.delta
+                full_content += chunk.delta
+
+                # 遇到换行或句末标点 → 发送
+                while True:
+                    nl_pos = buffer.find("\n")
+                    match = re.search(r'[。！？…~]+', buffer)
+
+                    send_pos = -1
+                    if nl_pos >= 0 and match:
+                        send_pos = min(nl_pos, match.start())
+                    elif nl_pos >= 0:
+                        send_pos = nl_pos
+                    elif match:
+                        send_pos = match.end()
+
+                    if send_pos < 0:
+                        break
+
+                    line = buffer[:send_pos].strip()
+                    buffer = buffer[send_pos + (1 if nl_pos >= 0 and send_pos == nl_pos else 0):]
+
+                    if line:
+                        await send_callback(
+                            PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
+                        )
+
+            # 发送剩余内容
+            if buffer.strip():
+                await send_callback(
+                    PlatformResponse(msg_id=msg.msg_id, content=buffer.strip(), reply=True)
+                )
+
+            logger.info(f"[Pipeline] 流式循环结束, chunks={chunk_count}, 总长度={len(full_content)}")
+
+            if not full_content.strip():
+                return None
+
+            logger.info(f"[Pipeline] 流式输出完成, 总长度: {len(full_content)}")
+            return PlatformResponse(
+                msg_id=msg.msg_id,
+                content=full_content.strip(),
+                reply=True,
+                metadata={"already_streamed": True},
+            )
+
+        except Exception as e:
+            logger.warning(f"[Pipeline] 流式输出异常: {e}")
+            return None
 
     def _pre_filter(self, msg: PlatformMessage) -> bool:
         """前置过滤器"""
@@ -278,6 +377,21 @@ class MessagePipeline:
             await self.memory.add_interaction(
                 user_msg=msg.content,
                 assistant_msg=response.content,
+                metadata={
+                    "platform": msg.platform.value,
+                    "user_id": msg.user_id,
+                    "msg_id": msg.msg_id,
+                },
+            )
+        except Exception as e:
+            logger.error(f"记忆更新失败: {e}")
+
+    async def _update_memory_from_content(self, msg: PlatformMessage, content: str) -> None:
+        """从字符串内容更新记忆（流式输出完成后调用）。"""
+        try:
+            await self.memory.add_interaction(
+                user_msg=msg.content,
+                assistant_msg=content,
                 metadata={
                     "platform": msg.platform.value,
                     "user_id": msg.user_id,
