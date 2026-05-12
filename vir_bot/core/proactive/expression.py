@@ -119,7 +119,8 @@ class ExpressionLayer:
                 logger.debug(f"获取语义记忆失败: {e}")
 
         # 当前状态
-        hour = state.hour_of_day
+        from datetime import datetime
+        hour = datetime.now().hour
         if 0 <= hour < 6:
             time_hint = "现在是深夜"
         elif 6 <= hour < 12:

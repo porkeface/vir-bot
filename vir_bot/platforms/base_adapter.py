@@ -35,7 +35,6 @@ class PlatformAdapter(ABC):
             return SplitConfig(
                 enabled=s.enabled,
                 max_chunk_chars=s.max_chunk_chars,
-                min_chunk_chars=s.min_chunk_chars,
                 delay_min_ms=s.delay_min_ms,
                 delay_max_ms=s.delay_max_ms,
             )
