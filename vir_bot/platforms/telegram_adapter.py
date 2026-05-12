@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from pathlib import Path
 from typing import AsyncIterator
 
 from telegram import Update
@@ -23,6 +24,8 @@ class TelegramAdapter(PlatformAdapter):
         self._queue: asyncio.Queue[PlatformMessage] = asyncio.Queue()
         self._pending_messages: dict[str, dict] = {}
         self._rate_limiter: dict[str, list[float]] = {}
+        self._temp_dir = Path("./data/temp/telegram")
+        self._temp_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def platform(self) -> Platform:
@@ -32,12 +35,19 @@ class TelegramAdapter(PlatformAdapter):
         builder = ApplicationBuilder().token(self.config.bot_token)
         self._app = builder.build()
 
-        # 注册消息处理器
-        handler = MessageHandler(
+        # 注册文字消息处理器
+        text_handler = MessageHandler(
             filters.TEXT & ~filters.COMMAND,
             self._handle_message,
         )
-        self._app.add_handler(handler)
+        self._app.add_handler(text_handler)
+
+        # 注册图片/表情包消息处理器
+        photo_handler = MessageHandler(
+            filters.PHOTO | filters.Sticker.ALL,
+            self._handle_media,
+        )
+        self._app.add_handler(photo_handler)
 
         logger.info("[Telegram] 正在启动 polling...")
 
@@ -86,6 +96,88 @@ class TelegramAdapter(PlatformAdapter):
         )
 
         await self._queue.put(platform_msg)
+
+    async def _handle_media(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """处理收到的图片/表情包消息"""
+        message = update.effective_message
+        if not message:
+            return
+
+        user = message.from_user
+        if not user:
+            return
+
+        user_id = str(user.id)
+        chat_id = str(message.chat_id)
+
+        # 过滤
+        if self.config.block_list and user_id in self.config.block_list:
+            return
+        if self.config.allowed_users and user_id not in self.config.allowed_users:
+            return
+        if self.config.allowed_chats and chat_id not in self.config.allowed_chats:
+            return
+
+        # 速率限制
+        if not self._check_rate_limit(user_id):
+            return
+
+        # 下载图片
+        file_id = None
+        file_ext = ".jpg"
+        if message.photo:
+            # 取最大尺寸的图片
+            file_id = message.photo[-1].file_id
+        elif message.sticker:
+            file_id = message.sticker.file_id
+            if message.sticker.is_animated:
+                file_ext = ".tgs"
+            elif message.sticker.is_video:
+                file_ext = ".webm"
+            else:
+                file_ext = ".webp"
+
+        if not file_id:
+            return
+
+        try:
+            # 下载文件
+            file = await context.bot.get_file(file_id)
+            file_name = f"{user_id}_{int(time.time())}{file_ext}"
+            file_path = self._temp_dir / file_name
+            await file.download_to_drive(file_path)
+
+            msg_id = str(message.message_id)
+            self._pending_messages[msg_id] = {"chat_id": chat_id}
+
+            # 判断是否群聊
+            is_group = message.chat.type in ("group", "supergroup")
+            group_id = chat_id if is_group else None
+
+            # 构建消息
+            caption = message.caption or ""
+            platform_msg = PlatformMessage(
+                platform=Platform.TELEGRAM,
+                msg_id=msg_id,
+                user_id=user_id,
+                user_name=user.full_name or user.username or user_id,
+                group_id=group_id,
+                content=caption,
+                msg_type=MessageType.IMAGE,
+                raw_data={
+                    "chat_id": chat_id,
+                    "file_path": str(file_path),
+                    "file_id": file_id,
+                    "is_sticker": bool(message.sticker),
+                },
+                timestamp=time.time(),
+            )
+
+            await self._queue.put(platform_msg)
+            logger.info(f"[Telegram] 收到图片/表情包: {file_name}")
+
+        except Exception as e:
+            logger.error(f"[Telegram] 下载图片失败: {e}")
 
     def _check_rate_limit(self, key: str) -> bool:
         now = time.time()

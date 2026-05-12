@@ -131,6 +131,10 @@ class MessagePipeline:
             send_callback: 可选的发送回调 (async callable)。
                           提供时启用流式输出，每生成一句就发送。
         """
+        # 处理图片/表情包消息（自动收藏）
+        if msg.msg_type == MessageType.IMAGE and self.expressions:
+            return await self._handle_image_message(msg)
+
         if not self._pre_filter(msg):
             logger.info(f"[Pipeline] 消息被过滤: {msg.content[:30]}")
             return None
@@ -300,6 +304,55 @@ class MessagePipeline:
         except Exception as e:
             logger.warning(f"[Pipeline] 流式输出异常: {e}")
             return None
+
+    async def _handle_image_message(self, msg: PlatformMessage) -> PlatformResponse | None:
+        """处理图片/表情包消息，自动收藏到表情库"""
+        file_path = msg.raw_data.get("file_path")
+        if not file_path or not Path(file_path).exists():
+            return None
+
+        # 根据上下文推断情绪分类
+        emotion = await self._detect_emotion_from_context(msg)
+
+        # 保存到表情库
+        try:
+            file_data = Path(file_path).read_bytes()
+            filename = Path(file_path).name
+            saved_path = await self.expressions.save_user_expression(
+                file_data=file_data,
+                emotion=emotion,
+                filename=filename,
+            )
+            if saved_path:
+                logger.info(f"[Pipeline] 表情包已收藏: {emotion}/{saved_path.name}")
+                return PlatformResponse(
+                    msg_id=msg.msg_id,
+                    content=f"已收藏到「{emotion}」表情包～",
+                    reply=True,
+                )
+        except Exception as e:
+            logger.error(f"[Pipeline] 收藏表情包失败: {e}")
+
+        return None
+
+    async def _detect_emotion_from_context(self, msg: PlatformMessage) -> str:
+        """根据上下文推断表情包的情绪分类"""
+        # 如果有文字描述，用文字检测
+        if msg.content:
+            emotion = self.expressions.detect_emotion(msg.content)
+            if emotion:
+                return emotion
+
+        # 根据最近的对话上下文推断
+        recent_messages = self.memory.get_context_messages(n=3)
+        for recent_msg in reversed(recent_messages):
+            if recent_msg.get("role") == "assistant":
+                emotion = self.expressions.detect_emotion(recent_msg.get("content", ""))
+                if emotion:
+                    return emotion
+
+        # 默认分类
+        return "neutral"
 
     def _pre_filter(self, msg: PlatformMessage) -> bool:
         """前置过滤器"""
