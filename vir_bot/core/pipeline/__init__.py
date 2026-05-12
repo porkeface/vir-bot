@@ -210,10 +210,10 @@ class MessagePipeline:
         response = await self._handle_tool_calls(response, system_prompt, tools_schema, depth=0)
         asyncio.create_task(self._update_memory(msg, response))
 
-        # 检测情绪并获取表情
+        # 检测情绪并获取表情（支持在线搜索）
         metadata = {}
         if self.expressions:
-            expression_path = self.expressions.get_expression(text=response.content)
+            expression_path = await self.expressions.get_expression_async(text=response.content)
             if expression_path:
                 metadata["expression"] = str(expression_path)
                 logger.debug(f"[Pipeline] 检测到表情: {expression_path.name}")
@@ -282,10 +282,10 @@ class MessagePipeline:
 
             logger.info(f"[Pipeline] 流式输出完成, 总长度: {len(full_content)}")
 
-            # 检测情绪并获取表情
+            # 检测情绪并获取表情（支持在线搜索）
             metadata = {"already_streamed": True}
             if self.expressions:
-                expression_path = self.expressions.get_expression(text=full_content)
+                expression_path = await self.expressions.get_expression_async(text=full_content)
                 if expression_path:
                     metadata["expression"] = str(expression_path)
                     logger.debug(f"[Pipeline] 流式输出检测到表情: {expression_path.name}")

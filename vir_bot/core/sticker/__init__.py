@@ -11,13 +11,23 @@ from vir_bot.utils.logger import logger
 
 
 class ExpressionManager:
-    """角色表情管理器（文件夹 + metadata 方案）"""
+    """角色表情管理器（文件夹 + metadata + 动态搜索）"""
 
-    def __init__(self, character_dir: str | Path):
+    def __init__(self, character_dir: str | Path, tenor_api_key: str = ""):
         self.base_path = Path(character_dir) / "expressions"
         self.metadata: dict[str, dict[str, Any]] = {}
         self.emotions: dict[str, list[Path]] = {}
         self._loaded = False
+        self._downloader = None
+        self._tenor_api_key = tenor_api_key
+
+    @property
+    def downloader(self):
+        """延迟加载下载器"""
+        if self._downloader is None:
+            from vir_bot.core.sticker.downloader import ExpressionDownloader
+            self._downloader = ExpressionDownloader(self.base_path, self._tenor_api_key)
+        return self._downloader
 
     def load(self) -> None:
         """加载 metadata 和表情图片"""
@@ -58,7 +68,7 @@ class ExpressionManager:
         return None
 
     def get_expression(self, emotion: str | None = None, text: str | None = None) -> Path | None:
-        """获取表情图片路径（随机选择）"""
+        """获取表情图片路径（随机选择）- 同步版本"""
         if not self._loaded:
             self.load()
 
@@ -86,6 +96,100 @@ class ExpressionManager:
                 images = neutral_images
 
         return random.choice(images)
+
+    async def get_expression_async(
+        self,
+        emotion: str | None = None,
+        text: str | None = None,
+        search_online: bool = True,
+    ) -> Path | None:
+        """获取表情图片路径（支持在线搜索）- 异步版本"""
+        if not self._loaded:
+            self.load()
+
+        # 从文本检测情绪
+        if emotion is None and text:
+            emotion = self.detect_emotion(text)
+
+        if emotion is None:
+            emotion = "neutral"
+
+        # 先从本地获取
+        local_result = self.get_expression(emotion=emotion)
+        if local_result and self.get_expression_count(emotion) >= 3:
+            # 本地有足够图片，直接返回
+            return local_result
+
+        # 本地不足，尝试在线搜索
+        if search_online and self._tenor_api_key and text:
+            keyword = self._get_search_keyword(emotion, text)
+            downloaded = await self.downloader.search_and_download(
+                keyword=keyword,
+                emotion=emotion,
+                limit=3,
+            )
+            if downloaded:
+                # 刷新本地缓存
+                self._refresh_emotion(emotion)
+                return random.choice(downloaded)
+
+        # 返回本地有的（可能为None）
+        return local_result
+
+    def _get_search_keyword(self, emotion: str, text: str) -> str:
+        """根据情绪生成搜索关键词"""
+        # 情绪到搜索关键词的映射
+        keyword_map = {
+            "hug": "anime hug",
+            "pat": "anime headpat",
+            "kiss": "anime kiss",
+            "hold_hands": "anime hold hands",
+            "lean": "anime lean",
+            "good_morning": "good morning anime",
+            "good_night": "good night anime",
+            "eat": "anime eating",
+            "work": "anime working",
+            "miss_you": "anime miss you",
+            "angry_action": "anime angry",
+            "joy": "anime happy",
+            "anger": "anime angry",
+            "sadness": "anime sad",
+            "surprise": "anime surprised",
+            "fear": "anime scared",
+            "embarrassment": "anime embarrassed",
+            "blush": "anime blush",
+            "neutral": "anime cute",
+        }
+        return keyword_map.get(emotion, f"anime {emotion}")
+
+    def _refresh_emotion(self, emotion: str) -> None:
+        """刷新指定情绪的图片列表"""
+        valid_suffixes = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+        emotion_dir = self.base_path / emotion
+        if emotion_dir.exists():
+            images = [
+                f for f in emotion_dir.iterdir()
+                if f.is_file() and f.suffix.lower() in valid_suffixes
+            ]
+            if images:
+                self.emotions[emotion] = images
+
+    async def save_user_expression(
+        self,
+        file_data: bytes,
+        emotion: str,
+        filename: str = "",
+    ) -> Path | None:
+        """保存用户上传的表情包"""
+        path = await self.downloader.save_user_upload(file_data, emotion, filename)
+        if path:
+            self._refresh_emotion(emotion)
+        return path
+
+    async def close(self) -> None:
+        """清理资源"""
+        if self._downloader:
+            await self._downloader.close()
 
     def get_available_emotions(self) -> list[str]:
         """获取所有可用的情绪类型"""

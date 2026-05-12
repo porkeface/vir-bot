@@ -318,6 +318,14 @@ class SecurityConfig(BaseModel):
     http_timeout: int = 30
 
 
+class ExpressionConfig(BaseModel):
+    """表情包系统配置"""
+    enabled: bool = True
+    tenor_api_key: str = ""
+    search_online: bool = True
+    search_limit: int = 3
+
+
 # =============================================================================
 # 完整配置（根对象）
 # =============================================================================
@@ -327,6 +335,7 @@ class Config(BaseModel):
     app: AppConfig = Field(default_factory=AppConfig)
     ai: AIConfig = Field(default_factory=AIConfig)
     character: CharacterConfig = Field(default_factory=CharacterConfig)
+    expression: ExpressionConfig = Field(default_factory=ExpressionConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     platforms: PlatformsConfig = Field(default_factory=PlatformsConfig)
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
