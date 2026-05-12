@@ -38,6 +38,9 @@ def split_message(text: str, config: SplitConfig | None = None) -> list[str]:
     if not text:
         return []
 
+    # 清理多余的空行（Telegram 等平台双换行显示过大）
+    text = re.sub(r'\n{2,}', '\n', text)
+
     # 如果已经够短，直接返回
     if len(text) <= config.max_chunk_chars:
         return [text]

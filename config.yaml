@@ -169,7 +169,7 @@ pipeline:
   # 消息拆分：将长回复拆成多条短消息逐条发送
   split:
     enabled: true
-    max_chunk_chars: 120    # 单条最大字符数
+    max_chunk_chars: 50     # 单条最大字符数
     min_chunk_chars: 10     # 太短的块会合并
     delay_min_ms: 500       # 两条之间最小延迟
     delay_max_ms: 2000      # 两条之间最大延迟
