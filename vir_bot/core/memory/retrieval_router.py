@@ -256,6 +256,12 @@ class RetrievalRouter:
             if time.time() - cached.get("_timestamp", 0) < self._cache_ttl:
                 return cached
 
+        # 先用规则分类，短消息直接返回（避免 LLM 调用）
+        rule_result = self._classify_with_rules(query)
+        if len(query.strip()) < 15 and rule_result.get("query_type") == "general":
+            return rule_result
+
+        # 较长或复杂的消息才调 AI 分类
         if self.ai_provider:
             try:
                 result = await self._classify_with_ai(query)
@@ -268,7 +274,7 @@ class RetrievalRouter:
             except Exception as e:
                 logger.warning(f"AI classification failed, fallback to rules: {e}")
 
-        return self._classify_with_rules(query)
+        return rule_result
 
     async def _classify_with_ai(self, query: str) -> dict | None:
         if not self.ai_provider:
@@ -303,14 +309,45 @@ class RetrievalRouter:
             logger.warning(f"AI classification error: {e}")
             return None
 
+    # 记忆相关关键词（命中则需要检索）
+    _MEMORY_KEYWORDS = (
+        "记得", "记不记得", "之前", "上次", "以前", "我说过", "你记得",
+        "什么时候", "哪天", "什么时候", "几天前", "昨天", "前天",
+        "喜欢", "讨厌", "偏好", "最爱", "最讨厌",
+        "名字", "叫什么", "我是谁", "我在哪",
+        "说过", "提到过", "告诉过", "聊过",
+    )
+
     def _classify_with_rules(self, query: str) -> dict:
-        """AI 分类失败时的保守回退。
-        尽量保守：不添加人类定义的关键词列表，让后续的并行检索处理。
-        只处理空查询这种明确情况。"""
+        """基于规则的快速分类，避免每条消息都调 LLM。"""
         if not query.strip():
             return {"query_type": "general", "needs_memory_lookup": False}
-        # 保守回退：交给并行检索处理
-        return {"query_type": "general", "needs_memory_lookup": False}
+
+        q = query.strip()
+        q_lower = q.lower()
+
+        # 短消息（< 15 字）且无记忆关键词 → 普通对话，跳过检索
+        if len(q) < 15 and not any(kw in q for kw in self._MEMORY_KEYWORDS):
+            return {"query_type": "general", "needs_memory_lookup": False}
+
+        # 时间查询
+        time_words = ("几点", "现在时间", "今天几号", "什么日期", "现在几点")
+        if any(w in q for w in time_words):
+            return {"query_type": "time_query", "needs_memory_lookup": False}
+
+        # 记忆相关关键词 → 需要检索
+        if any(kw in q for kw in self._MEMORY_KEYWORDS):
+            # 粗略分类
+            if any(w in q for w in ("喜欢", "讨厌", "偏好", "最爱")):
+                return {"query_type": "preference", "needs_memory_lookup": True}
+            if any(w in q for w in ("名字", "叫什么", "我是谁")):
+                return {"query_type": "identity", "needs_memory_lookup": True}
+            if any(w in q for w in ("昨天", "前天", "上次", "之前", "几天前")):
+                return {"query_type": "episodic", "needs_memory_lookup": True}
+            return {"query_type": "conversation", "needs_memory_lookup": True}
+
+        # 其他较长的消息 → 交给 AI 分类
+        return {"query_type": "general", "needs_memory_lookup": True}
     def classify_query(self, query: str) -> str:
         result = self._classify_with_rules(query)
         return result.get("query_type", "general")
