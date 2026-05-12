@@ -150,4 +150,11 @@ def build_system_prompt(
         if style_parts:
             parts.append("说话方式：" + "；".join(style_parts))
 
+    # 通用消息格式指令（所有角色统一，不写在角色卡里）
+    parts.append(
+        "回复格式：用2-4条短消息回复，每条10-40字，用换行分隔。"
+        "不要把一句话拆太碎，叙事时可以稍长但不超过80字。"
+        "不要超过5条消息。"
+    )
+
     return "\n\n".join(parts)
