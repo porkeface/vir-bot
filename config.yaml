@@ -97,7 +97,7 @@ memory:
 platforms:
   # QQ（OneBot v11/v12）
   qq:
-    enabled: true
+    enabled: false
     adapter: "onebot_v11"
     connection:
       type: "正向WebSocket"
@@ -144,8 +144,8 @@ platforms:
 
   # Telegram
   telegram:
-    enabled: false
-    bot_token: ""
+    enabled: true
+    bot_token: "***REMOVED***"
     allowed_users: []    # 留空则允许所有用户
     allowed_chats: []    # 留空则允许所有聊天
     block_list: []
