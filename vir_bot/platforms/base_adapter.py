@@ -80,7 +80,10 @@ class PlatformAdapter(ABC):
                 logger.info(f"[{self.platform.value}] 收到消息: {msg.content[:50]} from {msg.user_id}")
                 response = await self.pipeline.process(msg, send_callback=self.send_message)
                 if response and response.metadata.get("already_streamed"):
-                    # 流式输出已通过回调逐句发送，无需再发
+                    # 流式输出已通过回调逐句发送，但需要发送表情
+                    expression_path = response.metadata.get("expression")
+                    if expression_path:
+                        await self._send_expression(response.msg_id, expression_path)
                     continue
                 if response and response.content:
                     await self._send_split(response)
@@ -129,3 +132,14 @@ class PlatformAdapter(ABC):
     async def stop(self) -> None:
         self._running = False
         await self.disconnect()
+
+    async def _send_expression(self, msg_id: str, expression_path: str) -> None:
+        """发送表情图片（子类可重写以适配不同平台）"""
+        # 默认实现：通过 send_message 发送带有表情元数据的空消息
+        response = PlatformResponse(
+            msg_id=msg_id,
+            content="",
+            reply=True,
+            metadata={"expression": expression_path},
+        )
+        await self.send_message(response)

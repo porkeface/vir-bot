@@ -110,12 +110,14 @@ class MessagePipeline:
         character_card: "CharacterCard",
         mcp_registry: "ToolRegistry",
         config: "PipelineConfig",
+        expression_manager: Any | None = None,
     ):
         self.ai = ai_provider
         self.memory = memory_manager
         self.character = character_card
         self.mcp = mcp_registry
         self.config = config
+        self.expressions = expression_manager
         self._rate_limiter = RateLimiter()
 
     async def process(
@@ -207,7 +209,21 @@ class MessagePipeline:
 
         response = await self._handle_tool_calls(response, system_prompt, tools_schema, depth=0)
         asyncio.create_task(self._update_memory(msg, response))
-        return PlatformResponse(msg_id=msg.msg_id, content=response.content, reply=True)
+
+        # 检测情绪并获取表情
+        metadata = {}
+        if self.expressions:
+            expression_path = self.expressions.get_expression(text=response.content)
+            if expression_path:
+                metadata["expression"] = str(expression_path)
+                logger.debug(f"[Pipeline] 检测到表情: {expression_path.name}")
+
+        return PlatformResponse(
+            msg_id=msg.msg_id,
+            content=response.content,
+            reply=True,
+            metadata=metadata,
+        )
 
     async def _process_streaming(
         self,
@@ -265,11 +281,20 @@ class MessagePipeline:
                 return None
 
             logger.info(f"[Pipeline] 流式输出完成, 总长度: {len(full_content)}")
+
+            # 检测情绪并获取表情
+            metadata = {"already_streamed": True}
+            if self.expressions:
+                expression_path = self.expressions.get_expression(text=full_content)
+                if expression_path:
+                    metadata["expression"] = str(expression_path)
+                    logger.debug(f"[Pipeline] 流式输出检测到表情: {expression_path.name}")
+
             return PlatformResponse(
                 msg_id=msg.msg_id,
                 content=full_content.strip(),
                 reply=True,
-                metadata={"already_streamed": True},
+                metadata=metadata,
             )
 
         except Exception as e:

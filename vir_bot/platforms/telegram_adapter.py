@@ -150,14 +150,39 @@ class TelegramAdapter(PlatformAdapter):
             return
 
         try:
-            kwargs = {
-                "chat_id": int(chat_id),
-                "text": response.content,
-            }
-            if self.config.parse_mode:
-                kwargs["parse_mode"] = self.config.parse_mode
+            # 检查是否需要发送表情
+            expression_path = response.metadata.get("expression")
+            if expression_path:
+                await self._send_photo(chat_id, expression_path)
 
-            await self._app.bot.send_message(**kwargs)
-            logger.info(f"[Telegram] 发送消息 -> {chat_id}: {response.content[:100]}")
+            # 发送文字消息
+            if response.content:
+                kwargs = {
+                    "chat_id": int(chat_id),
+                    "text": response.content,
+                }
+                if self.config.parse_mode:
+                    kwargs["parse_mode"] = self.config.parse_mode
+
+                await self._app.bot.send_message(**kwargs)
+                logger.info(f"[Telegram] 发送消息 -> {chat_id}: {response.content[:100]}")
         except Exception as e:
             logger.error(f"[Telegram] 发送失败: {e}")
+
+    async def _send_photo(self, chat_id: str, photo_path: str) -> None:
+        """发送图片消息"""
+        try:
+            from pathlib import Path
+            path = Path(photo_path)
+            if not path.exists():
+                logger.warning(f"[Telegram] 表情文件不存在: {photo_path}")
+                return
+
+            with open(path, "rb") as photo:
+                await self._app.bot.send_photo(
+                    chat_id=int(chat_id),
+                    photo=photo,
+                )
+            logger.info(f"[Telegram] 发送表情 -> {chat_id}: {path.name}")
+        except Exception as e:
+            logger.error(f"[Telegram] 发送表情失败: {e}")

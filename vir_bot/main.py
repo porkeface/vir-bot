@@ -64,6 +64,7 @@ async def _init_core(config):
         ShortTermMemory,
     )
     from vir_bot.core.pipeline import MessagePipeline
+    from vir_bot.core.sticker import ExpressionManager
 
     logger.info("=" * 60)
     logger.info("初始化核心组件...")
@@ -76,6 +77,12 @@ async def _init_core(config):
 
         character_card = load_character_card(config.character.card_path)
         logger.info(f"角色卡已加载: {character_card.name}")
+
+        # 初始化表情管理器
+        character_dir = str(config.app.data_dir) + "/characters/" + character_card.name
+        expression_manager = ExpressionManager(character_dir)
+        expression_manager.load()
+        logger.info(f"表情系统就绪: {expression_manager.get_expression_count()} 张表情")
 
         short_term = ShortTermMemory(max_turns=config.memory.short_term.max_turns)
         long_term = (
@@ -121,6 +128,7 @@ async def _init_core(config):
             character_card=character_card,
             mcp_registry=mcp_registry,
             config=config.pipeline,
+            expression_manager=expression_manager,
         )
         logger.info("消息管道就绪")
     except Exception:
@@ -133,6 +141,7 @@ async def _init_core(config):
         "character_card": character_card,
         "mcp_registry": mcp_registry,
         "pipeline": pipeline,
+        "expression_manager": expression_manager,
     }
 
 
