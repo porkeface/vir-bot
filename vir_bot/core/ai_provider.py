@@ -276,7 +276,12 @@ class OpenAIProvider(AIProvider):
         base = self.config.openai.base_url.rstrip("/")
         url = f"{base}/chat/completions"
 
-        async with client.post(url, json=body, headers=headers, timeout=aiohttp.ClientTimeout(self.config.openai.timeout)) as resp:
+        # sock_read 超时：单次读取超过 15 秒无数据则断开
+        timeout = aiohttp.ClientTimeout(
+            total=self.config.openai.timeout,
+            sock_read=15,
+        )
+        async with client.post(url, json=body, headers=headers, timeout=timeout) as resp:
             resp.raise_for_status()
             async for line in resp.content:
                 if line:

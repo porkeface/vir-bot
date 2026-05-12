@@ -218,50 +218,40 @@ class MessagePipeline:
         send_callback: Any,
     ) -> PlatformResponse | None:
         """流式处理：逐句生成并发送。返回 None 表示回退到普通模式。"""
-        import re
-
         try:
             buffer = ""
             full_content = ""
             chunk_count = 0
+            timeout_seconds = 20  # 单个 chunk 超时
 
             logger.info("[Pipeline] 开始流式 AI 调用...")
-            async for chunk in self.ai.chat_stream(
+            stream = self.ai.chat_stream(
                 messages=conversation,
                 system=system_prompt,
-            ):
-                if chunk.finish_reason == "stop":
-                    break
-                if not chunk.delta:
-                    continue
+            )
 
-                chunk_count += 1
-                buffer += chunk.delta
-                full_content += chunk.delta
-
-                # 遇到换行或句末标点 → 发送
-                while True:
-                    nl_pos = buffer.find("\n")
-                    match = re.search(r'[。！？…~]+', buffer)
-
-                    send_pos = -1
-                    if nl_pos >= 0 and match:
-                        send_pos = min(nl_pos, match.start())
-                    elif nl_pos >= 0:
-                        send_pos = nl_pos
-                    elif match:
-                        send_pos = match.end()
-
-                    if send_pos < 0:
+            try:
+                async for chunk in stream:
+                    if chunk.finish_reason == "stop":
                         break
+                    if not chunk.delta:
+                        continue
 
-                    line = buffer[:send_pos].strip()
-                    buffer = buffer[send_pos + (1 if nl_pos >= 0 and send_pos == nl_pos else 0):]
+                    chunk_count += 1
+                    buffer += chunk.delta
+                    full_content += chunk.delta
 
-                    if line:
-                        await send_callback(
-                            PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
-                        )
+                    # 只按换行拆分（AI 被引导用换行分隔消息）
+                    while "\n" in buffer:
+                        nl_pos = buffer.find("\n")
+                        line = buffer[:nl_pos].strip()
+                        buffer = buffer[nl_pos + 1:]
+                        if line:
+                            await send_callback(
+                                PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
+                            )
+            except Exception as e:
+                logger.warning(f"[Pipeline] 流式读取异常: {e}")
 
             # 发送剩余内容
             if buffer.strip():
