@@ -145,11 +145,27 @@ class DiscordConfig(BaseModel):
     rate_limit: DiscordRateLimitConfig = Field(default_factory=DiscordRateLimitConfig)
 
 
+class TelegramRateLimitConfig(BaseModel):
+    per_user: int = 20
+    per_chat: int = 60
+
+
+class TelegramConfig(BaseModel):
+    enabled: bool = False
+    bot_token: str = ""
+    allowed_users: list[str] = Field(default_factory=list)
+    allowed_chats: list[str] = Field(default_factory=list)
+    block_list: list[str] = Field(default_factory=list)
+    rate_limit: TelegramRateLimitConfig = Field(default_factory=TelegramRateLimitConfig)
+    parse_mode: str = ""  # "HTML" or "Markdown" or ""
+
+
 class PlatformsConfig(BaseModel):
     qq: QQConfig = Field(default_factory=QQConfig)
     qq_official: QQOfficialConfig = Field(default_factory=QQOfficialConfig)
     wechat: WeChatConfig = Field(default_factory=WeChatConfig)
     discord: DiscordConfig = Field(default_factory=DiscordConfig)
+    telegram: TelegramConfig = Field(default_factory=TelegramConfig)
 
 
 class PipelineFiltersConfig(BaseModel):

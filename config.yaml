@@ -142,6 +142,18 @@ platforms:
     rate_limit:
       per_channel: 10
 
+  # Telegram
+  telegram:
+    enabled: false
+    bot_token: ""
+    allowed_users: []    # 留空则允许所有用户
+    allowed_chats: []    # 留空则允许所有聊天
+    block_list: []
+    rate_limit:
+      per_user: 20
+      per_chat: 60
+    parse_mode: ""       # "HTML" 或 "Markdown" 或留空
+
 # -----------------------------------------------------------------------------
 # 消息处理管道配置
 # -----------------------------------------------------------------------------
@@ -263,3 +275,5 @@ proactive:
       channel_id: "" # Discord频道ID
     wechat:
       touser: "" # 企业微信用户ID
+    telegram:
+      chat_id: "" # Telegram 聊天ID，留空则使用最后交互的聊天

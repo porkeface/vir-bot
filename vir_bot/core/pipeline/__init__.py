@@ -29,6 +29,7 @@ class Platform(Enum):
     QQ = "qq"
     WECHAT = "wechat"
     DISCORD = "discord"
+    TELEGRAM = "telegram"
     API = "api"
 
 

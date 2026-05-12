@@ -140,6 +140,7 @@ async def _init_platforms(config, pipeline):
     from vir_bot.platforms.discord_adapter import DiscordAdapter
     from vir_bot.platforms.qq_adapter import QQAdapter
     from vir_bot.platforms.qq_official_adapter import QQOfficialAdapter
+    from vir_bot.platforms.telegram_adapter import TelegramAdapter
 
     adapters = {}
     if config.platforms.qq.enabled:
@@ -165,6 +166,16 @@ async def _init_platforms(config, pipeline):
                 logger.info("Discord 适配器已创建")
             except Exception as e:
                 logger.error(f"Discord 适配器失败: {e}")
+
+    if config.platforms.telegram.enabled:
+        if not config.platforms.telegram.bot_token:
+            logger.warning("Telegram bot_token 未配置")
+        else:
+            try:
+                adapters["telegram"] = TelegramAdapter(pipeline, config.platforms.telegram)
+                logger.info("Telegram 适配器已创建")
+            except Exception as e:
+                logger.error(f"Telegram 适配器失败: {e}")
 
     return adapters
 
