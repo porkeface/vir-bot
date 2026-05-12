@@ -821,9 +821,10 @@ class MemoryManager:
         if user_id:
             recent_msgs = self.get_context_messages(n=8)
             if recent_msgs:
+                char_display_name = character_name or getattr(self.current_character, "name", "助手")
                 history_lines = ['【最近对话】（仅当与当前问题相关时使用）']
                 for msg in recent_msgs:
-                    role = "用户" if msg["role"] == "user" else "陈暖树"
+                    role = "用户" if msg["role"] == "user" else char_display_name
                     history_lines.append(f"- {role}: {msg['content'][:80]}")
                 sections.append("\n".join(history_lines))
 

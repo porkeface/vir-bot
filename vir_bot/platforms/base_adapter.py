@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from vir_bot.core.pipeline import PlatformMessage, PlatformResponse, MessagePipeline, Platform, MessageType
+from vir_bot.core.pipeline.message_splitter import SplitConfig, split_message, get_split_delay_ms
 from vir_bot.utils.logger import logger
 
 if TYPE_CHECKING:
@@ -24,6 +25,21 @@ class PlatformAdapter(ABC):
         self.pipeline = pipeline
         self._running = False
         self._send_queue: asyncio.Queue[PlatformResponse] = asyncio.Queue()
+        self._split_config = self._build_split_config()
+
+    def _build_split_config(self) -> SplitConfig:
+        """从 pipeline 配置构建拆分配置"""
+        cfg = getattr(self.pipeline, "config", None)
+        if cfg and hasattr(cfg, "split"):
+            s = cfg.split
+            return SplitConfig(
+                enabled=s.enabled,
+                max_chunk_chars=s.max_chunk_chars,
+                min_chunk_chars=s.min_chunk_chars,
+                delay_min_ms=s.delay_min_ms,
+                delay_max_ms=s.delay_max_ms,
+            )
+        return SplitConfig()
 
     @property
     @abstractmethod
@@ -65,14 +81,37 @@ class PlatformAdapter(ABC):
                 logger.info(f"[{self.platform.value}] 收到消息: {msg.content[:50]} from {msg.user_id}")
                 response = await self.pipeline.process(msg)
                 if response and response.content:
-                    logger.info(f"[{self.platform.value}] AI 回复: {response.content[:50]}")
-                    await self.send_message(response)
+                    await self._send_split(response)
                 else:
                     logger.warning(f"[{self.platform.value}] Pipeline 返回空响应")
         except Exception as e:
             logger.error(f"[{self.platform.value}] 接收循环异常: {e}")
         finally:
             await self.disconnect()
+
+    async def _send_split(self, response: PlatformResponse) -> None:
+        """拆分长消息并逐条发送"""
+        chunks = split_message(response.content, self._split_config)
+
+        if len(chunks) <= 1:
+            logger.info(f"[{self.platform.value}] AI 回复: {response.content[:80]}")
+            await self.send_message(response)
+            return
+
+        logger.info(f"[{self.platform.value}] AI 回复拆分为 {len(chunks)} 条")
+        for i, chunk in enumerate(chunks):
+            chunk_response = PlatformResponse(
+                msg_id=response.msg_id,
+                content=chunk,
+                reply=response.reply,
+                quote=response.quote and i == 0,
+                metadata=response.metadata,
+            )
+            logger.info(f"[{self.platform.value}] [{i+1}/{len(chunks)}] {chunk[:80]}")
+            await self.send_message(chunk_response)
+            if i < len(chunks) - 1:
+                delay = get_split_delay_ms(self._split_config)
+                await asyncio.sleep(delay / 1000.0)
 
     async def _send_loop(self) -> None:
         """发送循环"""

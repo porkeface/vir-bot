@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 import time
 from typing import Any, Optional
 
@@ -26,7 +27,7 @@ class ExpressionLayer:
 
         try:
             prompt = self._build_prompt(thought, user_id, state)
-            system = self._build_system_prompt(thought)
+            system = self._build_system_prompt()
 
             response = await self.ai.chat(
                 messages=[{"role": "user", "content": prompt}],
@@ -42,46 +43,62 @@ class ExpressionLayer:
         except Exception as e:
             logger.warning(f"表达层生成消息失败: {e}")
 
-        # 回退：基于规则的简单消息
-        return self._fallback_message(thought, state)
+        return self._fallback_message()
 
-    def _build_system_prompt(self, thought: Any) -> str:
-        """构建系统提示词，注入角色人设。"""
+    def _build_system_prompt(self) -> str:
+        """构建系统提示词，完全从角色卡读取，不硬编码行为。"""
         parts = []
 
         if self.character:
-            # 核心人设
+            if self.character.name:
+                parts.append(f"你是{self.character.name}。")
             if self.character.personality:
                 parts.append(f"你的性格：{self.character.personality}")
             if self.character.description:
-                parts.append(f"你的描述：{self.character.description}")
-            # 风格要求
-            parts.append(
-                "你是用户的AI伴侣，现在要主动发一条关心的消息。"
-                "语气要符合你的人设，自然、不突兀。"
-                "不要说'系统通知'之类的话，就用你平时的说话方式。"
-            )
-        else:
-            parts.append("你是一个关心用户的AI伴侣，现在要主动发一条关心的消息。")
+                parts.append(f"关于你：{self.character.description}")
 
-        # 牵挂类型约束
-        type_hints = {
-            "care": "表达关心和在意，不要显得太正式。",
-            "reminder": "温和地提醒，不要像闹钟那样生硬。",
-            "curiosity": "带着好奇和兴趣询问，不要像审问。",
-            "greeting": "轻松打个招呼，不要长篇大论。",
-        }
-        hint = type_hints.get(thought.concern_type, "自然表达你的牵挂。")
-        parts.append(hint)
+            # 从角色卡读取主动行为指引
+            proactive = self.character.extensions.get("proactive_behavior", {})
+            tone = proactive.get("说话的语气", "")
+            if tone:
+                parts.append(f"说话方式：{tone}")
+
+            ways = proactive.get("关心的方式", [])
+            if ways:
+                parts.append(f"你可以这样表达关心：{'、'.join(ways)}")
+
+            # 从角色卡读取要避免的表达
+            avoid = proactive.get("避免的表达", [])
+            if avoid:
+                parts.append(f"绝不要说：{'、'.join(avoid)}")
+
+            # 从角色卡读取情绪模式
+            emotions = self.character.extensions.get("emotional_patterns", {})
+            if emotions:
+                emotion_examples = []
+                for emotion, phrases in emotions.items():
+                    emotion_examples.append(f"{emotion}时用：{'、'.join(phrases[:3])}")
+                parts.append("情绪表达参考：" + "；".join(emotion_examples))
+
+            # 从角色卡读取说话风格
+            style = self.character.extensions.get("response_style", {})
+            if style:
+                for k, v in style.items():
+                    if isinstance(v, str):
+                        parts.append(f"{k}：{v}")
+
+        else:
+            parts.append("你是一个关心对方的人，现在想主动发一条消息。")
+
+        parts.append("直接用你平时的说话方式发消息，不要解释，不要用系统通知的语气。")
 
         return "\n".join(parts)
 
     def _build_prompt(self, thought: Any, user_id: str, state: Any) -> str:
         """构建用户消息部分。"""
         lines = [
-            f"牵挂类型：{thought.concern_type}",
-            f"牵挂内容：{thought.content}",
-            f"动机：{thought.motivation}",
+            f"你想到了：{thought.content}",
+            f"为什么想到这个：{thought.motivation}",
             "",
         ]
 
@@ -94,46 +111,46 @@ class ExpressionLayer:
                     top_k=3,
                 )
                 if records:
-                    lines.append("相关记忆：")
+                    lines.append("你记得关于对方的事：")
                     for r in records:
                         lines.append(f"- {r.predicate}: {r.object}")
                     lines.append("")
             except Exception as e:
                 logger.debug(f"获取语义记忆失败: {e}")
 
-        # 当前状态信息
-        lines.extend([
-            f"当前时间：{state.hour_of_day}:00",
-            f"是否深夜：{state.is_late_night}",
-            f"交互频率：{state.interaction_frequency}",
-            "",
-            "请生成一条简短自然的主动消息（30字以内），直接输出消息内容，不要解释。",
-        ])
+        # 当前状态
+        hour = state.hour_of_day
+        if 0 <= hour < 6:
+            time_hint = "现在是深夜"
+        elif 6 <= hour < 12:
+            time_hint = "现在是上午"
+        elif 12 <= hour < 14:
+            time_hint = "现在是中午"
+        elif 14 <= hour < 18:
+            time_hint = "现在是下午"
+        elif 18 <= hour < 22:
+            time_hint = "现在是晚上"
+        else:
+            time_hint = "现在是深夜"
+
+        lines.append(f"{time_hint}，距离上次聊天已经过了很久。")
+        lines.append("")
+        lines.append("现在发一条消息给对方，30字以内，直接输出消息内容：")
 
         return "\n".join(lines)
 
-    def _fallback_message(self, thought: Any, state: Any) -> str:
-        """规则回退的简单消息。"""
-        type_messages = {
-            "care": [
-                "还没睡呢？注意休息哦～",
-                "最近怎么样？有空聊聊吗？",
-                "刚刚想到你啦，最近还好吗？",
-            ],
-            "reminder": [
-                "提醒一下，你之前说要做的那件事～",
-                "别忘了之前提到的事情哦～",
-            ],
-            "curiosity": [
-                "好奇你最近在忙什么～",
-                "突然想起你啦，最近有什么新鲜事吗？",
-            ],
-            "greeting": [
-                "嗨～好久不见啦！",
-                "嘿，最近怎么样？",
-            ],
-        }
+    def _fallback_message(self) -> str:
+        """从角色卡读取 fallback 消息，没有则用通用的。"""
+        if self.character:
+            # 从情绪模式中组合自然的 fallback
+            emotions = self.character.extensions.get("emotional_patterns", {})
+            care_phrases = emotions.get("关心", [])
+            if care_phrases:
+                return random.choice(care_phrases)
 
-        import random
-        messages = type_messages.get(thought.concern_type, ["想你啦～"])
-        return random.choice(messages)
+            # 用角色卡的 greeting
+            greeting = self.character.extensions.get("greeting", "")
+            if greeting:
+                return greeting
+
+        return "想你啦～"

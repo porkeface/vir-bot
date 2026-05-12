@@ -96,19 +96,39 @@ class ConcernEngine:
             return ConcernThought(content="", reason=f"生成失败: {e}")
 
     def _build_concern_system_prompt(self) -> str:
-        char_name = self._character.name if self._character else "助手"
-        return (
-            f"你是{char_name}的内在牵挂系统。基于用户的最近记忆和状态，生成一个牵挂念头。\n\n"
-            f"牵挂念头是你「想起用户」时的内心想法，例如：\n"
-            f"- 「他昨晚说今天要面试，现在应该结束了吧？不知道结果怎么样。」\n"
-            f"- 「她最近总提到加班，今天是不是又熬夜了？」\n"
-            f"- 「他之前说想去看那部电影，周末到了，会不会去了？」\n\n"
-            f"规则：\n"
-            f"1. 只输出牵挂念头本身，不要额外解释\n"
-            f"2. 念头要基于已有记忆，不要编造\n"
-            f"3. 如果没有值得牵挂的内容，输出空字符串\n"
-            f"4. 语气要符合{char_name}的角色人设"
-        )
+        char_name = self._character.name if self._character else "对方"
+        parts = [
+            f"你是{char_name}。",
+        ]
+
+        # 从角色卡读取性格
+        if self._character:
+            if self._character.personality:
+                parts.append(f"你的性格：{self._character.personality}")
+
+            # 从情绪模式中提取关心方式
+            emotions = self._character.extensions.get("emotional_patterns", {})
+            care_phrases = emotions.get("关心", [])
+            if care_phrases:
+                parts.append(f"你关心人时会说：{'、'.join(care_phrases[:5])}")
+
+            # 从主动行为中读取关心方式
+            proactive = self._character.extensions.get("proactive_behavior", {})
+            ways = proactive.get("关心的方式", [])
+            if ways:
+                parts.append(f"你表达关心的方式：{'、'.join(ways)}")
+
+        parts.extend([
+            "",
+            f"你刚才想起了{char_name}的对方。基于你记得的事情，用你自己的语气说出这个念头。",
+            "",
+            "规则：",
+            "1. 只输出念头本身，用你平时的内心独白语气",
+            "2. 基于已有记忆，不要编造",
+            "3. 如果没什么值得牵挂的，输出空字符串",
+        ])
+
+        return "\n".join(parts)
 
     def _build_concern_user_prompt(self, context: dict) -> str:
         parts = ["## 用户当前状态"]

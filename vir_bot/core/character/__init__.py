@@ -138,7 +138,16 @@ def build_system_prompt(
     if extra_context:
         parts.append(f"\n额外信息：\n{extra_context}")
 
-    # 隐私提醒
-    parts.append("\n注意：你是一个AI助手，但请保持上述人设风格。")
+    # 主动行为指引（从角色卡扩展读取）
+    proactive = card.extensions.get("proactive_behavior", {})
+    avoid = proactive.get("避免的表达", [])
+    if avoid:
+        parts.append(f"绝不要说这些话：{'、'.join(avoid)}")
+
+    response_style = card.extensions.get("response_style", {})
+    if response_style:
+        style_parts = [f"{k}：{v}" for k, v in response_style.items() if isinstance(v, str)]
+        if style_parts:
+            parts.append("说话方式：" + "；".join(style_parts))
 
     return "\n\n".join(parts)

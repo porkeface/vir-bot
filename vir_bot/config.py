@@ -159,10 +159,19 @@ class PipelineFiltersConfig(BaseModel):
     max_content_length: int = 4096
 
 
+class MessageSplitConfig(BaseModel):
+    enabled: bool = True
+    max_chunk_chars: int = 120
+    min_chunk_chars: int = 10
+    delay_min_ms: int = 500
+    delay_max_ms: int = 2000
+
+
 class PipelineConfig(BaseModel):
     max_context_turns: int = 20
     handlers: list[str] = Field(default_factory=lambda: ["text"])
     filters: PipelineFiltersConfig = Field(default_factory=PipelineFiltersConfig)
+    split: MessageSplitConfig = Field(default_factory=MessageSplitConfig)
 
 
 class MCPToolDiscoveryConfig(BaseModel):
