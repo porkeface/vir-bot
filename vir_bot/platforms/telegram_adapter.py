@@ -351,6 +351,29 @@ class TelegramAdapter(PlatformAdapter):
         except Exception as e:
             logger.error(f"[Telegram] 发送失败: {e}")
 
+    async def send_proactive_message(self, message: str, target: dict) -> None:
+        """发送主动消息（不依赖 _pending_messages）"""
+        if not self._app:
+            return
+
+        chat_id = target.get("chat_id")
+        if not chat_id:
+            logger.warning("[Telegram] 主动消息缺少 chat_id，跳过发送")
+            return
+
+        try:
+            kwargs = {
+                "chat_id": int(chat_id),
+                "text": message,
+            }
+            if self.config.parse_mode:
+                kwargs["parse_mode"] = self.config.parse_mode
+
+            await self._app.bot.send_message(**kwargs)
+            logger.info(f"[Telegram] 主动消息已发送 -> {chat_id}: {message[:100]}")
+        except Exception as e:
+            logger.error(f"[Telegram] 主动消息发送失败: {e}")
+
     async def _send_photo(self, chat_id: str, photo_path: str) -> None:
         """发送图片消息"""
         try:

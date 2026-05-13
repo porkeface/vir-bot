@@ -292,4 +292,4 @@ proactive:
     wechat:
       touser: "" # 企业微信用户ID
     telegram:
-      chat_id: "" # Telegram 聊天ID，留空则使用最后交互的聊天
+      chat_id: "8346601727" # Telegram 聊天ID

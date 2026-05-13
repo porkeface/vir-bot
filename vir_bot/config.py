@@ -310,6 +310,10 @@ class ProactiveTargetsWeChatConfig(BaseModel):
     touser: str = ""
 
 
+class ProactiveTargetsTelegramConfig(BaseModel):
+    chat_id: str = ""
+
+
 class ProactiveConfig(BaseModel):
     enabled: bool = False
     check_interval_seconds: int = 60
