@@ -88,7 +88,14 @@ class PlatformAdapter(ABC):
                     voice_file = response.metadata.get("voice_file")
                     if voice_file:
                         logger.info(f"[{self.platform.value}] 流式后发送语音: msg_id={response.msg_id}, file={voice_file}")
-                        await self._send_voice(response.msg_id, voice_file)
+                        # 通过 send_message 发送（会正确查找 chat_id），不调 _send_voice（可能被子类覆盖）
+                        voice_response = PlatformResponse(
+                            msg_id=response.msg_id,
+                            content="",
+                            reply=True,
+                            metadata={"voice_file": voice_file, "chat_id": response.metadata.get("chat_id")},
+                        )
+                        await self.send_message(voice_response)
                     continue
                 if response and response.content:
                     await self._send_split(response)
@@ -156,4 +163,5 @@ class PlatformAdapter(ABC):
             reply=True,
             metadata={"voice_file": voice_path},
         )
+        logger.info(f"[{self.platform.value}] base._send_voice 调用 send_message: msg_id={msg_id}")
         await self.send_message(response)
