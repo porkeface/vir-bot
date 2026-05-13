@@ -6,6 +6,7 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -111,6 +112,9 @@ class MessagePipeline:
         mcp_registry: "ToolRegistry",
         config: "PipelineConfig",
         expression_manager: Any | None = None,
+        tts_provider: Any | None = None,
+        asr_provider: Any | None = None,
+        voice_config: Any | None = None,
     ):
         self.ai = ai_provider
         self.memory = memory_manager
@@ -118,6 +122,9 @@ class MessagePipeline:
         self.mcp = mcp_registry
         self.config = config
         self.expressions = expression_manager
+        self.tts = tts_provider
+        self.asr = asr_provider
+        self.voice_config = voice_config
         self._rate_limiter = RateLimiter()
 
     async def process(
@@ -125,16 +132,23 @@ class MessagePipeline:
         msg: PlatformMessage,
         send_callback: "Any | None" = None,
     ) -> PlatformResponse | None:
-        """主入口：处理一条消息。
-
-        Args:
-            send_callback: 可选的发送回调 (async callable)。
-                          提供时启用流式输出，每生成一句就发送。
-        """
+        """主入口：处理一条消息。"""
         # 处理图片/表情包消息（自动收藏）
         if msg.msg_type == MessageType.IMAGE and self.expressions:
             return await self._handle_image_message(msg)
 
+        # 处理语音消息（ASR 转文字后走正常流程）
+        if msg.msg_type == MessageType.VOICE:
+            return await self._handle_voice_message(msg, send_callback)
+
+        return await self._process_text_message(msg, send_callback)
+
+    async def _process_text_message(
+        self,
+        msg: PlatformMessage,
+        send_callback: "Any | None" = None,
+    ) -> PlatformResponse | None:
+        """标准文本消息处理（TEXT 和转录后的 VOICE 共用）。"""
         if not self._pre_filter(msg):
             logger.info(f"[Pipeline] 消息被过滤: {msg.content[:30]}")
             return None
@@ -214,13 +228,19 @@ class MessagePipeline:
         response = await self._handle_tool_calls(response, system_prompt, tools_schema, depth=0)
         asyncio.create_task(self._update_memory(msg, response))
 
-        # 检测情绪并获取表情（支持在线搜索）
+        # 检测情绪并获取表情
         metadata = {}
         if self.expressions:
             expression_path = await self.expressions.get_expression_async(text=response.content)
             if expression_path:
                 metadata["expression"] = str(expression_path)
                 logger.debug(f"[Pipeline] 检测到表情: {expression_path.name}")
+
+        # TTS 合成语音回复
+        if self.tts and self.voice_config and getattr(self.voice_config, "voice_response", False):
+            voice_file = await self._synthesize_tts(response.content)
+            if voice_file:
+                metadata["voice_file"] = voice_file
 
         return PlatformResponse(
             msg_id=msg.msg_id,
@@ -286,13 +306,19 @@ class MessagePipeline:
 
             logger.info(f"[Pipeline] 流式输出完成, 总长度: {len(full_content)}")
 
-            # 检测情绪并获取表情（支持在线搜索）
+            # 检测情绪并获取表情
             metadata = {"already_streamed": True}
             if self.expressions:
                 expression_path = await self.expressions.get_expression_async(text=full_content)
                 if expression_path:
                     metadata["expression"] = str(expression_path)
                     logger.debug(f"[Pipeline] 流式输出检测到表情: {expression_path.name}")
+
+            # TTS 合成语音回复
+            if self.tts and self.voice_config and getattr(self.voice_config, "voice_response", False):
+                voice_file = await self._synthesize_tts(full_content)
+                if voice_file:
+                    metadata["voice_file"] = voice_file
 
             return PlatformResponse(
                 msg_id=msg.msg_id,
@@ -333,6 +359,80 @@ class MessagePipeline:
         except Exception as e:
             logger.error(f"[Pipeline] 收藏表情包失败: {e}")
 
+        return None
+
+    async def _handle_voice_message(
+        self,
+        msg: PlatformMessage,
+        send_callback: "Any | None" = None,
+    ) -> PlatformResponse | None:
+        """处理语音消息：ASR 转文字 → 正常 pipeline 流程。"""
+        audio_path = msg.raw_data.get("file_path") or msg.raw_data.get("voice_file")
+        if not audio_path:
+            logger.warning("[Pipeline] 语音消息缺少音频文件路径")
+            return PlatformResponse(
+                msg_id=msg.msg_id,
+                content="语音消息缺少音频文件。",
+                reply=True,
+            )
+
+        if not self.asr:
+            logger.warning("[Pipeline] ASR 未配置")
+            return PlatformResponse(
+                msg_id=msg.msg_id,
+                content="语音识别服务未启用。",
+                reply=True,
+            )
+
+        # ASR 转录（支持情绪检测）
+        try:
+            if hasattr(self.asr, "recognize_with_emotion"):
+                asr_result = await self.asr.recognize_with_emotion(audio_path)
+                transcription = asr_result.get("text", "")
+                emotion = asr_result.get("emotion", "neutral")
+                msg.metadata["voice_emotion"] = emotion
+                logger.info(f"[Pipeline] 语音情绪: {emotion}")
+            else:
+                transcription = await self.asr.recognize(audio_path)
+        except Exception as e:
+            logger.error(f"[Pipeline] ASR 失败: {e}")
+            return PlatformResponse(
+                msg_id=msg.msg_id,
+                content="语音识别服务暂时不可用，请稍后再试。",
+                reply=True,
+            )
+
+        if not transcription or not transcription.strip():
+            logger.info("[Pipeline] ASR 转录为空")
+            return PlatformResponse(
+                msg_id=msg.msg_id,
+                content="抱歉，没有听清你说的话。",
+                reply=True,
+            )
+
+        # 用转录文本替换内容，降级为 TEXT 走正常流程
+        logger.info(f"[Pipeline] 语音已转录: {transcription[:50]}")
+        msg.metadata["transcription"] = transcription
+        msg.content = transcription.strip()
+        msg.msg_type = MessageType.TEXT
+
+        return await self._process_text_message(msg, send_callback)
+
+    async def _synthesize_tts(self, text: str) -> str | None:
+        """将文字合成为语音文件，返回文件路径。"""
+        import time as _time
+
+        try:
+            cache_dir = Path("./data/cache")
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            output_path = str(cache_dir / f"voice_{int(_time.time())}_{id(text) % 10000}.mp3")
+
+            result = await self.tts.synthesize(text, output_path)
+            if result and Path(result).exists():
+                logger.debug(f"[Pipeline] TTS 合成完成: {result}")
+                return result
+        except Exception as e:
+            logger.error(f"[Pipeline] TTS 合成失败: {e}")
         return None
 
     async def _detect_emotion_from_context(self, msg: PlatformMessage) -> str:

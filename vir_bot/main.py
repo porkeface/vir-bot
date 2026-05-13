@@ -31,6 +31,8 @@ class _AppState:
         self.proactive_service: Any = None
         self.hardware: Any = None
         self.visual: Any = None
+        self.tts_provider: Any = None
+        self.asr_provider: Any = None
 
 
 def _get_app_state() -> _AppState:
@@ -84,6 +86,13 @@ async def _init_core(config):
         expression_manager.load()
         logger.info(f"表情系统就绪: {expression_manager.get_expression_count()} 张表情")
 
+        # 初始化语音模块
+        from vir_bot.modules.voice import create_asr, create_tts
+        tts_provider = create_tts(config.voice)
+        asr_provider = create_asr(config.voice, ai_config=config.ai)
+        logger.info(f"TTS 就绪: {config.voice.tts.provider}" if tts_provider else "TTS 未启用")
+        logger.info(f"ASR 就绪: {config.voice.asr.provider}" if asr_provider else "ASR 未启用")
+
         short_term = ShortTermMemory(max_turns=config.memory.short_term.max_turns)
         long_term = (
             LongTermMemory(
@@ -129,6 +138,9 @@ async def _init_core(config):
             mcp_registry=mcp_registry,
             config=config.pipeline,
             expression_manager=expression_manager,
+            tts_provider=tts_provider,
+            asr_provider=asr_provider,
+            voice_config=config.voice,
         )
         logger.info("消息管道就绪")
     except Exception:
@@ -142,6 +154,8 @@ async def _init_core(config):
         "mcp_registry": mcp_registry,
         "pipeline": pipeline,
         "expression_manager": expression_manager,
+        "tts_provider": tts_provider,
+        "asr_provider": asr_provider,
     }
 
 
@@ -234,6 +248,8 @@ async def lifespan(app: FastAPI):
     app_state.character_card = core["character_card"]
     app_state.mcp_registry = core["mcp_registry"]
     app_state.pipeline = core["pipeline"]
+    app_state.tts_provider = core.get("tts_provider")
+    app_state.asr_provider = core.get("asr_provider")
 
     app_state.adapters = await _init_platforms(config, core["pipeline"])
     for name, adapter in app_state.adapters.items():

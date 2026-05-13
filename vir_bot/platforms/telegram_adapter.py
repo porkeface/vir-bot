@@ -49,6 +49,13 @@ class TelegramAdapter(PlatformAdapter):
         )
         self._app.add_handler(photo_handler)
 
+        # 注册语音消息处理器
+        voice_handler = MessageHandler(
+            filters.VOICE | filters.AUDIO,
+            self._handle_voice,
+        )
+        self._app.add_handler(voice_handler)
+
         logger.info("[Telegram] 正在启动 polling...")
 
     async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -179,6 +186,81 @@ class TelegramAdapter(PlatformAdapter):
         except Exception as e:
             logger.error(f"[Telegram] 下载图片失败: {e}")
 
+    async def _handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """处理收到的语音/音频消息"""
+        message = update.effective_message
+        if not message:
+            return
+
+        user = message.from_user
+        if not user:
+            return
+
+        user_id = str(user.id)
+        chat_id = str(message.chat_id)
+
+        # 过滤
+        if self.config.block_list and user_id in self.config.block_list:
+            return
+        if self.config.allowed_users and user_id not in self.config.allowed_users:
+            return
+        if self.config.allowed_chats and chat_id not in self.config.allowed_chats:
+            return
+
+        # 速率限制
+        if not self._check_rate_limit(user_id):
+            return
+
+        # 确定文件 ID 和扩展名
+        file_id = None
+        file_ext = ".ogg"
+        if message.voice:
+            file_id = message.voice.file_id
+            file_ext = ".ogg"
+        elif message.audio:
+            file_id = message.audio.file_id
+            file_ext = ".mp3"
+        elif message.video_note:
+            file_id = message.video_note.file_id
+            file_ext = ".mp4"
+
+        if not file_id:
+            return
+
+        try:
+            file = await context.bot.get_file(file_id)
+            file_name = f"{user_id}_{int(time.time())}{file_ext}"
+            file_path = self._temp_dir / file_name
+            await file.download_to_drive(file_path)
+
+            msg_id = str(message.message_id)
+            self._pending_messages[msg_id] = {"chat_id": chat_id}
+
+            is_group = message.chat.type in ("group", "supergroup")
+            group_id = chat_id if is_group else None
+
+            platform_msg = PlatformMessage(
+                platform=Platform.TELEGRAM,
+                msg_id=msg_id,
+                user_id=user_id,
+                user_name=user.full_name or user.username or user_id,
+                group_id=group_id,
+                content="",
+                msg_type=MessageType.VOICE,
+                raw_data={
+                    "chat_id": chat_id,
+                    "file_path": str(file_path),
+                    "file_id": file_id,
+                },
+                timestamp=time.time(),
+            )
+
+            await self._queue.put(platform_msg)
+            logger.info(f"[Telegram] 收到语音消息: {file_name}")
+
+        except Exception as e:
+            logger.error(f"[Telegram] 下载语音失败: {e}")
+
     def _check_rate_limit(self, key: str) -> bool:
         now = time.time()
         window = 60.0
@@ -247,6 +329,12 @@ class TelegramAdapter(PlatformAdapter):
             if expression_path:
                 await self._send_photo(chat_id, expression_path)
 
+            # 发送语音回复
+            voice_file = response.metadata.get("voice_file")
+            if voice_file:
+                await self._send_voice(chat_id, voice_file)
+                return
+
             # 发送文字消息
             if response.content:
                 kwargs = {
@@ -278,3 +366,26 @@ class TelegramAdapter(PlatformAdapter):
             logger.info(f"[Telegram] 发送表情 -> {chat_id}: {path.name}")
         except Exception as e:
             logger.error(f"[Telegram] 发送表情失败: {e}")
+
+    async def _send_voice(self, chat_id: str, voice_path: str) -> None:
+        """发送语音消息"""
+        try:
+            path = Path(voice_path)
+            if not path.exists():
+                logger.warning(f"[Telegram] 语音文件不存在: {voice_path}")
+                return
+
+            with open(path, "rb") as audio:
+                await self._app.bot.send_voice(
+                    chat_id=int(chat_id),
+                    voice=audio,
+                )
+            logger.info(f"[Telegram] 发送语音 -> {chat_id}: {path.name}")
+
+            # 清理临时文件
+            try:
+                path.unlink()
+            except OSError:
+                pass
+        except Exception as e:
+            logger.error(f"[Telegram] 发送语音失败: {e}")

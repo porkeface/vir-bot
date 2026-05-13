@@ -206,15 +206,26 @@ mcp:
 # 语音模块（预留）
 # -----------------------------------------------------------------------------
 voice:
-  enabled: false
+  enabled: true
+  voice_response: true     # 收到语音时用语音回复
   tts:
-    provider: "edge"
-    voice_id: "zh-CN-XiaoxiaoNeural"
+    provider: "cosyvoice2"  # cosyvoice2 | edge
     speed: 1.0
+    # edge-tts 配置（备用）
+    voice_id: "zh-CN-XiaoxiaoNeural"
+    # CosyVoice2 配置（主方案，需要参考音频进行声音克隆）
+    model_dir: "pretrained_models/CosyVoice2-0.5B"
+    voice_sample_path: ""    # 声音克隆样本（10s wav），留空用 instruct2 模式
+    voice_sample_text: ""    # 样本对应文字
+    instruct_text: "用温柔甜美的女声说话"  # instruct2 模式的音色风格描述
   asr:
-    provider: "whisper"
-    model: "base"
-    language: "zh"
+    provider: "sensevoice"   # sensevoice | openai | whisper
+    model: "iic/SenseVoiceSmall"
+    language: "auto"         # auto 让 SenseVoice 自动检测语言
+    device: "cuda:0"
+    # OpenAI Whisper 备用配置（留空则自动使用 ai.openai 的配置）
+    base_url: ""
+    api_key: ""
   wake_word:
     provider: "porcupine"
     keywords: ["hey-vir"]

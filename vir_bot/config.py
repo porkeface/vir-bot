@@ -218,15 +218,23 @@ class MCPConfig(BaseModel):
 
 
 class VoiceTTSConfig(BaseModel):
-    provider: str = "edge"
-    voice_id: str = "zh-CN-XiaoxiaoNeural"
+    provider: str = "edge"  # edge | cosyvoice2
+    voice_id: str = "zh-CN-XiaoxiaoNeural"  # edge-tts 音色
     speed: float = 1.0
+    # CosyVoice2 专用配置
+    model_dir: str = "pretrained_models/CosyVoice2-0.5B"
+    voice_sample_path: str = ""  # 声音克隆样本路径（10s wav），留空则用 instruct2 模式
+    voice_sample_text: str = ""  # 声音样本对应文字
+    instruct_text: str = "用温柔甜美的女声说话"  # instruct2 模式的音色描述
 
 
 class VoiceASRConfig(BaseModel):
-    provider: str = "whisper"
-    model: str = "base"
-    language: str = "zh"
+    provider: str = "sensevoice"  # sensevoice | openai | whisper
+    model: str = "iic/SenseVoiceSmall"
+    language: str = "auto"
+    device: str = "cuda:0"  # SenseVoice 推理设备
+    base_url: str = ""   # OpenAI Whisper 备用：留空则自动使用 ai.openai 的配置
+    api_key: str = ""    # OpenAI Whisper 备用：留空则自动使用 ai.openai 的配置
 
 
 class VoiceWakeWordConfig(BaseModel):
@@ -236,6 +244,7 @@ class VoiceWakeWordConfig(BaseModel):
 
 class VoiceConfig(BaseModel):
     enabled: bool = False
+    voice_response: bool = True   # 是否用语音回复
     tts: VoiceTTSConfig = Field(default_factory=VoiceTTSConfig)
     asr: VoiceASRConfig = Field(default_factory=VoiceASRConfig)
     wake_word: VoiceWakeWordConfig = Field(default_factory=VoiceWakeWordConfig)
