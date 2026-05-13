@@ -319,8 +319,9 @@ class TelegramAdapter(PlatformAdapter):
 
         msg_data = self._pending_messages.get(response.msg_id, {})
         chat_id = response.metadata.get("chat_id") or msg_data.get("chat_id")
+        logger.debug(f"[Telegram] send_message: msg_id={response.msg_id}, metadata_chat_id={response.metadata.get('chat_id')}, msg_data={msg_data}, resolved_chat_id={chat_id}, pending_count={len(self._pending_messages)}")
         if not chat_id:
-            logger.warning("[Telegram] 无法确定 chat_id，跳过发送")
+            logger.warning(f"[Telegram] 无法确定 chat_id，跳过发送 (msg_id={response.msg_id}, pending_keys={list(self._pending_messages.keys())[:5]})")
             return
 
         try:
