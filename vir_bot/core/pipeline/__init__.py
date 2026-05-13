@@ -308,6 +308,9 @@ class MessagePipeline:
 
             # 检测情绪并获取表情
             metadata = {"already_streamed": True}
+            # 透传平台原始数据中的 chat_id，供语音/表情发送使用
+            if "chat_id" in msg.raw_data:
+                metadata["chat_id"] = msg.raw_data["chat_id"]
             if self.expressions:
                 expression_path = await self.expressions.get_expression_async(text=full_content)
                 if expression_path:
