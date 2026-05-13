@@ -206,8 +206,8 @@ mcp:
 # 语音模块（预留）
 # -----------------------------------------------------------------------------
 voice:
-  enabled: true
-  voice_response: true     # 收到语音时用语音回复
+  enabled: false
+  voice_response: false    # 收到语音时用语音回复
   tts:
     provider: "cosyvoice2"  # cosyvoice2 | edge
     speed: 1.0
