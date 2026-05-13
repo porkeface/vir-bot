@@ -332,6 +332,7 @@ class TelegramAdapter(PlatformAdapter):
             # 发送语音回复
             voice_file = response.metadata.get("voice_file")
             if voice_file:
+                logger.info(f"[Telegram] 准备发送语音 -> chat_id={chat_id}, file={voice_file}")
                 await self._send_voice(chat_id, voice_file)
                 return
 
@@ -372,15 +373,18 @@ class TelegramAdapter(PlatformAdapter):
         try:
             path = Path(voice_path)
             if not path.exists():
-                logger.warning(f"[Telegram] 语音文件不存在: {voice_path}")
+                logger.warning(f"[Telegram] 语音文件不存在: {voice_path} (resolved: {path.resolve()})")
                 return
+
+            file_size = path.stat().st_size
+            logger.info(f"[Telegram] 发送语音文件: {path.name} ({file_size} bytes) -> chat_id={chat_id}")
 
             with open(path, "rb") as audio:
                 await self._app.bot.send_voice(
                     chat_id=int(chat_id),
                     voice=audio,
                 )
-            logger.info(f"[Telegram] 发送语音 -> {chat_id}: {path.name}")
+            logger.info(f"[Telegram] 发送语音成功 -> {chat_id}: {path.name}")
 
             # 清理临时文件
             try:
@@ -388,4 +392,4 @@ class TelegramAdapter(PlatformAdapter):
             except OSError:
                 pass
         except Exception as e:
-            logger.error(f"[Telegram] 发送语音失败: {e}")
+            logger.error(f"[Telegram] 发送语音失败: chat_id={chat_id}, file={voice_path}, error={e}")

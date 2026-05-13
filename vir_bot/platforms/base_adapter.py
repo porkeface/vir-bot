@@ -87,6 +87,7 @@ class PlatformAdapter(ABC):
                     # 发送语音文件（TTS 合成可能在流式文字之后完成）
                     voice_file = response.metadata.get("voice_file")
                     if voice_file:
+                        logger.info(f"[{self.platform.value}] 流式后发送语音: msg_id={response.msg_id}, file={voice_file}")
                         await self._send_voice(response.msg_id, voice_file)
                     continue
                 if response and response.content:
