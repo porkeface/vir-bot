@@ -423,14 +423,18 @@ class MessagePipeline:
         import time as _time
 
         try:
+            logger.info(f"[Pipeline] 开始 TTS 合成, 文本长度: {len(text)}")
             cache_dir = Path("./data/cache")
             cache_dir.mkdir(parents=True, exist_ok=True)
             output_path = str(cache_dir / f"voice_{int(_time.time())}_{id(text) % 10000}.mp3")
 
             result = await self.tts.synthesize(text, output_path)
             if result and Path(result).exists():
-                logger.debug(f"[Pipeline] TTS 合成完成: {result}")
+                file_size = Path(result).stat().st_size
+                logger.info(f"[Pipeline] TTS 合成完成: {result} ({file_size} bytes)")
                 return result
+            else:
+                logger.warning(f"[Pipeline] TTS 合成返回空结果: {result}")
         except Exception as e:
             logger.error(f"[Pipeline] TTS 合成失败: {e}")
         return None

@@ -266,6 +266,9 @@ class CosyVoice2TTSProvider(TTSProvider):
             model = self._get_model()
             loop = asyncio.get_event_loop()
 
+            mode = "zero-shot" if self._prompt_speech is not None else "instruct2"
+            logger.info(f"[CosyVoice2] 开始合成 ({mode}), 文本长度: {len(text)}")
+
             def _generate():
                 import torch
                 import torchaudio
@@ -294,18 +297,23 @@ class CosyVoice2TTSProvider(TTSProvider):
                         all_speech.append(output["tts_speech"])
 
                 if not all_speech:
+                    logger.warning("[CosyVoice2] 推理返回空结果")
                     return ""
 
                 speech = torch.cat(all_speech, dim=1)
                 sample_rate = model.sample_rate
+                duration = speech.shape[1] / sample_rate
 
                 Path(output_path).parent.mkdir(parents=True, exist_ok=True)
                 torchaudio.save(output_path, speech, sample_rate)
+                logger.info(f"[CosyVoice2] 音频保存完成: {duration:.1f}s, {output_path}")
                 return output_path
 
             result = await loop.run_in_executor(None, _generate)
             if result:
-                logger.debug(f"[CosyVoice2] 合成完成: {result}")
+                logger.info(f"[CosyVoice2] 合成完成: {result}")
+            else:
+                logger.warning("[CosyVoice2] 合成返回空路径")
             return result
 
         except Exception as e:
