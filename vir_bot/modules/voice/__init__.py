@@ -248,18 +248,46 @@ class CosyVoice2TTSProvider(TTSProvider):
             logger.error(f"[CosyVoice2] 加载声音样本失败: {e}")
             self._prompt_speech = None
 
-    def _get_silent_wav_path(self) -> str:
-        """生成一个静音 WAV 文件路径（instruct2/cross_lingual 模式需要文件路径）"""
+    async def _ensure_reference_wav(self) -> str:
+        """确保 instruct2 模式的参考音频存在。
+        用 edge-tts 生成真实语音参考，因为静音会导致特征提取失败。"""
         cache_dir = Path(__file__).resolve().parents[3] / "data" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        silent_path = cache_dir / "_silent_ref.wav"
-        if not silent_path.exists():
+        ref_wav = cache_dir / "_ref_voice.wav"
+
+        if ref_wav.exists():
+            return str(ref_wav)
+
+        try:
+            import edge_tts
+            ref_mp3 = cache_dir / "_ref_voice.mp3"
+            logger.info("[CosyVoice2] 生成 edge-tts 参考音频...")
+            communicate = edge_tts.Communicate(
+                "你好，我是暖树，很高兴认识你。希望每天都能陪伴你。",
+                "zh-CN-XiaoxiaoNeural",
+            )
+            await communicate.save(str(ref_mp3))
+
+            # MP3 → WAV（22050Hz，单声道）
             import torch
             import torchaudio
-            # 3 秒静音，22050Hz，单声道
+            speech, sr = torchaudio.load(str(ref_mp3), backend="soundfile")
+            if sr != 22050:
+                speech = torchaudio.transforms.Resample(orig_freq=sr, new_freq=22050)(speech)
+            max_samples = 22050 * 10
+            if speech.shape[1] > max_samples:
+                speech = speech[:, :max_samples]
+            torchaudio.save(str(ref_wav), speech, 22050)
+            ref_mp3.unlink(missing_ok=True)
+            logger.info(f"[CosyVoice2] 参考音频就绪: {ref_wav}")
+        except Exception as e:
+            logger.warning(f"[CosyVoice2] 生成参考音频失败: {e}，使用静音")
+            import torch
+            import torchaudio
             silence = torch.zeros(1, 22050 * 3)
-            torchaudio.save(str(silent_path), silence, 22050)
-        return str(silent_path)
+            torchaudio.save(str(ref_wav), silence, 22050)
+
+        return str(ref_wav)
 
     async def synthesize(self, text: str, output_path: str) -> str:
         try:
@@ -268,6 +296,11 @@ class CosyVoice2TTSProvider(TTSProvider):
 
             mode = "zero-shot" if self._prompt_speech is not None else "instruct2"
             logger.info(f"[CosyVoice2] 开始合成 ({mode}), 文本长度: {len(text)}")
+
+            # instruct2 模式需要真实语音参考，提前生成
+            ref_path = None
+            if self._prompt_speech is None:
+                ref_path = await self._ensure_reference_wav()
 
             def _generate():
                 import torch
@@ -286,12 +319,11 @@ class CosyVoice2TTSProvider(TTSProvider):
                     ):
                         all_speech.append(output["tts_speech"])
                 else:
-                    # instruct2 模式：通过文字描述音色风格（prompt_wav 需要文件路径）
-                    silent_path = self._get_silent_wav_path()
+                    # instruct2 模式：通过文字描述音色风格（prompt_wav 需要真实语音文件）
                     for output in model.inference_instruct2(
                         tts_text=text,
                         instruct_text=self.instruct_text,
-                        prompt_wav=silent_path,
+                        prompt_wav=ref_path,
                         speed=self.speed,
                     ):
                         all_speech.append(output["tts_speech"])
