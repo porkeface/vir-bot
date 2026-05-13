@@ -80,12 +80,9 @@ async def _init_core(config):
 
         # 初始化表情管理器
         character_dir = str(config.app.data_dir) + "/characters/" + character_card.name
-        tenor_api_key = getattr(config.expression, 'tenor_api_key', '')
-        expression_manager = ExpressionManager(character_dir, tenor_api_key=tenor_api_key)
+        expression_manager = ExpressionManager(character_dir)
         expression_manager.load()
         logger.info(f"表情系统就绪: {expression_manager.get_expression_count()} 张表情")
-        if tenor_api_key:
-            logger.info("Tenor API 已配置，在线搜索已启用")
 
         short_term = ShortTermMemory(max_turns=config.memory.short_term.max_turns)
         long_term = (

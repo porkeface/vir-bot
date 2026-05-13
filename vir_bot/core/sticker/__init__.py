@@ -11,22 +11,21 @@ from vir_bot.utils.logger import logger
 
 
 class ExpressionManager:
-    """角色表情管理器（文件夹 + metadata + 动态搜索）"""
+    """角色表情管理器（文件夹 + metadata）"""
 
-    def __init__(self, character_dir: str | Path, tenor_api_key: str = ""):
+    def __init__(self, character_dir: str | Path):
         self.base_path = Path(character_dir) / "expressions"
         self.metadata: dict[str, dict[str, Any]] = {}
         self.emotions: dict[str, list[Path]] = {}
         self._loaded = False
         self._downloader = None
-        self._tenor_api_key = tenor_api_key
 
     @property
     def downloader(self):
         """延迟加载下载器"""
         if self._downloader is None:
             from vir_bot.core.sticker.downloader import ExpressionDownloader
-            self._downloader = ExpressionDownloader(self.base_path, self._tenor_api_key)
+            self._downloader = ExpressionDownloader(self.base_path)
         return self._downloader
 
     def load(self) -> None:
@@ -101,9 +100,8 @@ class ExpressionManager:
         self,
         emotion: str | None = None,
         text: str | None = None,
-        search_online: bool = True,
     ) -> Path | None:
-        """获取表情图片路径（支持在线搜索）- 异步版本"""
+        """获取表情图片路径 - 异步版本"""
         if not self._loaded:
             self.load()
 
@@ -114,53 +112,7 @@ class ExpressionManager:
         if emotion is None:
             emotion = "neutral"
 
-        # 先从本地获取
-        local_result = self.get_expression(emotion=emotion)
-        if local_result and self.get_expression_count(emotion) >= 3:
-            # 本地有足够图片，直接返回
-            return local_result
-
-        # 本地不足，尝试在线搜索
-        if search_online and self._tenor_api_key and text:
-            keyword = self._get_search_keyword(emotion, text)
-            downloaded = await self.downloader.search_and_download(
-                keyword=keyword,
-                emotion=emotion,
-                limit=3,
-            )
-            if downloaded:
-                # 刷新本地缓存
-                self._refresh_emotion(emotion)
-                return random.choice(downloaded)
-
-        # 返回本地有的（可能为None）
-        return local_result
-
-    def _get_search_keyword(self, emotion: str, text: str) -> str:
-        """根据情绪生成搜索关键词"""
-        # 情绪到搜索关键词的映射
-        keyword_map = {
-            "hug": "anime hug",
-            "pat": "anime headpat",
-            "kiss": "anime kiss",
-            "hold_hands": "anime hold hands",
-            "lean": "anime lean",
-            "good_morning": "good morning anime",
-            "good_night": "good night anime",
-            "eat": "anime eating",
-            "work": "anime working",
-            "miss_you": "anime miss you",
-            "angry_action": "anime angry",
-            "joy": "anime happy",
-            "anger": "anime angry",
-            "sadness": "anime sad",
-            "surprise": "anime surprised",
-            "fear": "anime scared",
-            "embarrassment": "anime embarrassed",
-            "blush": "anime blush",
-            "neutral": "anime cute",
-        }
-        return keyword_map.get(emotion, f"anime {emotion}")
+        return self.get_expression(emotion=emotion)
 
     def _refresh_emotion(self, emotion: str) -> None:
         """刷新指定情绪的图片列表"""

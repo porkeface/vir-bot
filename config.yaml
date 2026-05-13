@@ -55,13 +55,6 @@ character:
 # -----------------------------------------------------------------------------
 expression:
   enabled: true
-  # Tenor API Key（免费申请：https://developers.google.com/tenor/guides/quickstart）
-  # 留空则只使用本地表情包
-  tenor_api_key: ""
-  # 是否启用在线搜索（本地不足时自动搜索）
-  search_online: true
-  # 每次搜索下载数量
-  search_limit: 3
 
 # -----------------------------------------------------------------------------
 # 记忆系统配置
@@ -127,7 +120,7 @@ platforms:
 
   # QQ 官方机器人（QQ 开放平台）
   qq_official:
-    enabled: true
+    enabled: false
     app_id: "1903915316"
     app_secret: "***REMOVED***"
     callback_path: "https://606f-223-160-220-195.ngrok-free.app/api/platforms/qq/callback"

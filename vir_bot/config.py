@@ -321,9 +321,6 @@ class SecurityConfig(BaseModel):
 class ExpressionConfig(BaseModel):
     """表情包系统配置"""
     enabled: bool = True
-    tenor_api_key: str = ""
-    search_online: bool = True
-    search_limit: int = 3
 
 
 # =============================================================================
