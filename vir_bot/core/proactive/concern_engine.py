@@ -137,6 +137,11 @@ class ConcernEngine:
         if context.get("recent_topics"):
             parts.append(f"- 最近话题: {', '.join(context['recent_topics'])}")
 
+        # 对话状态提示
+        state_hint = context.get("state_hint", "")
+        if state_hint:
+            parts.append(f"- 当前情境: {state_hint}")
+
         if context.get("recent_memories"):
             parts.append("\n## 相关记忆")
             for i, mem in enumerate(context["recent_memories"][:5], 1):

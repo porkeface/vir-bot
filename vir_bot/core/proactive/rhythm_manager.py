@@ -100,6 +100,9 @@ class RhythmManager:
             last_date, count = self._daily_counts[user_id]
             self._daily_counts[user_id] = (last_date, count + 1)
 
+        # 同时记录到交互历史（让 _is_user_responsive 和 _get_recent_proactive_count 生效）
+        self.record_interaction(user_id, initiator="bot")
+
     def _is_user_responsive(self, user_id: str) -> bool:
         """检查用户近期是否积极回复。"""
         now = time.time()

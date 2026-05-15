@@ -126,6 +126,7 @@ class MessagePipeline:
         self.asr = asr_provider
         self.voice_config = voice_config
         self._rate_limiter = RateLimiter()
+        self._on_user_message: "Any | None" = None  # 由 main.py 注入，通知主动消息系统
 
     async def process(
         self,
@@ -152,6 +153,13 @@ class MessagePipeline:
         if not self._pre_filter(msg):
             logger.info(f"[Pipeline] 消息被过滤: {msg.content[:30]}")
             return None
+
+        # 通知主动消息系统：用户发来了消息
+        if self._on_user_message:
+            try:
+                self._on_user_message(msg.user_id, msg.content)
+            except Exception as e:
+                logger.debug(f"[Pipeline] 通知主动消息系统失败: {e}")
 
         if not await self._rate_limiter.check(msg):
             return PlatformResponse(

@@ -281,6 +281,8 @@ async def lifespan(app: FastAPI):
         config=app_state.config,
         platform_adapters=app_state.adapters,
     )
+    # 串联：pipeline 收到用户消息时通知主动消息系统
+    app_state.pipeline._on_user_message = app_state.proactive_service.on_user_message
     logger.info(f"app_state.proactive_service 已设置: {hasattr(app_state, 'proactive_service')}")
     if app_state.proactive_service._enabled:
         await app_state.proactive_service.start()
