@@ -29,7 +29,7 @@ ai:
   # OpenAI 兼容 API（Qwen / DeepSeek / 等）
   openai:
     base_url: "https://token-plan-cn.xiaomimimo.com/v1"
-    api_key: "***REMOVED***"
+    api_key: ""
     model: "mimo-v2.5-pro"
     timeout: 60
     max_retries: 3
@@ -152,13 +152,13 @@ platforms:
   telegram:
     enabled: true
     bot_token: "***REMOVED***"
-    allowed_users: []    # 留空则允许所有用户
-    allowed_chats: []    # 留空则允许所有聊天
+    allowed_users: [] # 留空则允许所有用户
+    allowed_chats: [] # 留空则允许所有聊天
     block_list: []
     rate_limit:
       per_user: 20
       per_chat: 60
-    parse_mode: ""       # "HTML" 或 "Markdown" 或留空
+    parse_mode: "" # "HTML" 或 "Markdown" 或留空
 
 # -----------------------------------------------------------------------------
 # 消息处理管道配置
@@ -175,9 +175,9 @@ pipeline:
   # 消息拆分：将长回复拆成多条短消息逐条发送
   split:
     enabled: true
-    max_chunk_chars: 200    # 安全阈值，正常由 AI 自然分段，仅超长行才强制拆
-    delay_min_ms: 500       # 两条之间最小延迟
-    delay_max_ms: 2000      # 两条之间最大延迟
+    max_chunk_chars: 200 # 安全阈值，正常由 AI 自然分段，仅超长行才强制拆
+    delay_min_ms: 500 # 两条之间最小延迟
+    delay_max_ms: 2000 # 两条之间最大延迟
 
 # -----------------------------------------------------------------------------
 # MCP 工具协议配置
@@ -207,21 +207,21 @@ mcp:
 # -----------------------------------------------------------------------------
 voice:
   enabled: false
-  voice_response: false    # 收到语音时用语音回复
+  voice_response: false # 收到语音时用语音回复
   tts:
-    provider: "cosyvoice2"  # cosyvoice2 | edge
+    provider: "cosyvoice2" # cosyvoice2 | edge
     speed: 1.0
     # edge-tts 配置（备用）
     voice_id: "zh-CN-XiaoxiaoNeural"
     # CosyVoice2 配置（主方案，需要参考音频进行声音克隆）
     model_dir: "pretrained_models/CosyVoice2-0.5B"
-    voice_sample_path: ""    # 声音克隆样本（10s wav），留空用 instruct2 模式
-    voice_sample_text: ""    # 样本对应文字
-    instruct_text: "用温柔甜美的女声说话"  # instruct2 模式的音色风格描述
+    voice_sample_path: "" # 声音克隆样本（10s wav），留空用 instruct2 模式
+    voice_sample_text: "" # 样本对应文字
+    instruct_text: "用温柔甜美的女声说话" # instruct2 模式的音色风格描述
   asr:
-    provider: "sensevoice"   # sensevoice | openai | whisper
+    provider: "sensevoice" # sensevoice | openai | whisper
     model: "iic/SenseVoiceSmall"
-    language: "auto"         # auto 让 SenseVoice 自动检测语言
+    language: "auto" # auto 让 SenseVoice 自动检测语言
     device: "cuda:0"
     # OpenAI Whisper 备用配置（留空则自动使用 ai.openai 的配置）
     base_url: ""

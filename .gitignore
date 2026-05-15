@@ -32,3 +32,24 @@ Thumbs.db
 # 项目特定文件
 *.pid
 *.lock
+
+# 蒸馏产物 & 个人数据（防止泄露聊天记录和角色卡）
+data/characters/
+data/wiki/characters/
+data/chat_records/
+data/distillation/
+data/temp/
+data/cache/
+*_chat.txt
+
+# 保留默认角色卡模板
+!data/characters/default.json
+!data/wiki/characters/template.md
+
+# 预训练模型 & 第三方
+pretrained_models/
+third_party/
+tools/
+
+# 工作报告等个人文档
+docs/2026-*.md

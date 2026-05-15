@@ -31,7 +31,6 @@ from uuid import uuid4
 
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     File,
     HTTPException,
     UploadFile,
@@ -44,8 +43,21 @@ from pydantic import BaseModel, Field
 from vir_bot.config import get_config
 from vir_bot.core.distillation import create_pipeline
 
-# Access global app_state (initialized in vir_bot.main)
-from vir_bot.main import app_state
+
+def _get_app_state():
+    """Dynamically get app_state to avoid stale import references.
+    Tries __main__ module first (for -m mode), then vir_bot.main.
+    """
+    import sys
+    main_mod = sys.modules.get("__main__")
+    if main_mod and hasattr(main_mod, "app_state"):
+        return main_mod.app_state
+    # fallback
+    try:
+        import vir_bot.main as _m
+        return getattr(_m, "app_state", None)
+    except Exception:
+        return None
 
 logger = logging.getLogger(__name__)
 
@@ -232,11 +244,21 @@ async def _run_distillation_job(
         _append_log(job_id, f"Job started: input={input_path} name={name}")
 
         # Create pipeline instance using global ai provider and config
-        ai_provider = getattr(app_state, "ai_provider", None)
-        cfg = getattr(app_state, "config", get_config())
+        _app = _get_app_state()
+        logger.info("app_state lookup: _app=%s, type=%s", _app is not None, type(_app).__name__ if _app else "None")
+        if _app:
+            logger.info("app_state attrs: ai_provider=%s, config=%s",
+                        hasattr(_app, "ai_provider"), hasattr(_app, "config"))
+        if not _app:
+            raise RuntimeError("app_state not initialized — server may not have started properly")
+        ai_provider = getattr(_app, "ai_provider", None)
+        cfg = getattr(_app, "config", get_config())
 
         if not ai_provider:
-            raise RuntimeError("AI provider not initialized")
+            raise RuntimeError(
+                f"AI provider not initialized — app_state exists but ai_provider is None. "
+                f"Has attr: {hasattr(_app, 'ai_provider')}, value: {getattr(_app, 'ai_provider', 'MISSING')}"
+            )
 
         pipeline = create_pipeline(
             ai_provider,
@@ -306,6 +328,25 @@ async def _run_distillation_job(
 # -----------------------
 # API endpoints
 # -----------------------
+@router.get("/debug/state")
+async def debug_state():
+    """Debug endpoint to check if app_state and ai_provider are initialized."""
+    import sys
+    _app = _get_app_state()
+    main_mod_name = "__main__" if "__main__" in sys.modules else "N/A"
+    main_has_attr = hasattr(sys.modules.get("__main__", object()), "app_state")
+    return {
+        "app_state_found": _app is not None,
+        "app_state_type": type(_app).__name__ if _app else None,
+        "has_ai_provider": hasattr(_app, "ai_provider") if _app else False,
+        "ai_provider_value": str(getattr(_app, "ai_provider", "MISSING"))[:100] if _app else "N/A",
+        "has_config": hasattr(_app, "config") if _app else False,
+        "main_module": main_mod_name,
+        "main_has_app_state": main_has_attr,
+        "sys_modules_keys_with_main": [k for k in sys.modules if "main" in k.lower() or "vir_bot" in k.lower()],
+    }
+
+
 @router.post("/upload", response_model=UploadResp)
 async def upload_chat(file: UploadFile = File(...)):
     """
@@ -326,8 +367,12 @@ async def upload_chat(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"upload failed: {e}")
 
 
+# Keep references to background tasks to prevent garbage collection
+_BACKGROUND_TASKS: set = set()
+
+
 @router.post("/start", response_model=StartResp)
-async def start_distillation(req: StartRequest, background_tasks: BackgroundTasks):
+async def start_distillation(req: StartRequest):
     """
     Start a distillation job for a previously uploaded file (file_id).
     """
@@ -340,14 +385,25 @@ async def start_distillation(req: StartRequest, background_tasks: BackgroundTask
 
     job_id = _create_job_record(req.file_id, req.name)
     _append_log(job_id, f"Enqueued job for file {input_path}")
+    logger.info("Starting distillation job %s for file %s", job_id, input_path)
 
-    # Schedule background run
-    # Use BackgroundTasks to ensure it runs in the background of the request
-    background_tasks.add_task(
-        _run_distillation_job,
-        job_id, input_path, req.name, req.parser, req.evaluate, req.dry_run, req.timeout,
-        req.target,
-    )
+    # Schedule background run via asyncio.create_task
+    async def _guarded_job():
+        try:
+            logger.info("Background task started for job %s", job_id)
+            await _run_distillation_job(
+                job_id, input_path, req.name, req.parser, req.evaluate, req.dry_run, req.timeout,
+                target_sender=req.target,
+            )
+        except Exception as e:
+            logger.exception("Background task crashed for job %s: %s", job_id, e)
+            _set_error(job_id, f"Task crashed: {e}")
+
+    task = asyncio.create_task(_guarded_job())
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+    logger.info("Background task created for job %s, task=%s", job_id, task)
+
     return StartResp(job_id=job_id)
 
 
@@ -459,6 +515,28 @@ async def list_jobs():
     # sort by created_at desc
     out.sort(key=lambda x: x.get("created_at") or "", reverse=True)
     return out
+
+
+@router.delete("/jobs/{job_id}")
+async def delete_job(job_id: str):
+    """Delete a job and its persisted metadata."""
+    JOBS.pop(job_id, None)
+    meta_path = _job_meta_path(job_id)
+    if meta_path.exists():
+        meta_path.unlink()
+    return {"ok": True}
+
+
+@router.delete("/jobs")
+async def clear_all_jobs():
+    """Clear all jobs (both in-memory and on-disk)."""
+    JOBS.clear()
+    for p in JOBS_DIR.glob("*.json"):
+        try:
+            p.unlink()
+        except Exception:
+            pass
+    return {"ok": True}
 
 
 # -----------------------

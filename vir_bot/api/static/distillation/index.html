@@ -607,7 +607,15 @@
                         <div class="card">
                             <div class="card-header">
                                 <h2 class="card-title">任务列表</h2>
-                                <span class="badge">{{ jobs.length }}</span>
+                                <div style="display:flex;align-items:center;gap:0.5rem">
+                                    <span class="badge">{{ jobs.length }}</span>
+                                    <button
+                                        v-if="jobs.length > 0"
+                                        class="btn btn-sm"
+                                        style="background:var(--danger);color:#fff;border:none;font-size:0.7rem;padding:0.25rem 0.6rem"
+                                        @click="clearAllJobs"
+                                    >清空</button>
+                                </div>
                             </div>
                             <div class="job-list">
                                 <div
@@ -631,11 +639,19 @@
                                         <span class="job-name"
                                             >{{ j.name || '未命名' }}</span
                                         >
-                                        <span
-                                            class="job-status"
-                                            :class="'status-' + j.status"
-                                            >{{ j.status }}</span
-                                        >
+                                        <div style="display:flex;align-items:center;gap:0.4rem">
+                                            <span
+                                                class="job-status"
+                                                :class="'status-' + j.status"
+                                                >{{ j.status }}</span
+                                            >
+                                            <button
+                                                class="btn btn-sm"
+                                                style="background:transparent;border:1px solid var(--danger);color:var(--danger);font-size:0.65rem;padding:0.1rem 0.4rem;cursor:pointer"
+                                                @click.stop="deleteJob(j.job_id)"
+                                                title="删除任务"
+                                            >✕</button>
+                                        </div>
                                     </div>
                                     <div class="progress-bar">
                                         <div
@@ -1038,6 +1054,29 @@
                         const downloadUrl = (job_id, typ) =>
                             apiPath(`/download/${job_id}?typ=${typ}`);
 
+                        const deleteJob = async (job_id) => {
+                            try {
+                                await fetch(apiPath(`/jobs/${job_id}`), { method: "DELETE" });
+                                jobs.value = jobs.value.filter(j => j.job_id !== job_id);
+                                if (selectedJobId.value === job_id) selectedJobId.value = null;
+                                toast("已删除", "ok");
+                            } catch (err) {
+                                toast("删除失败", "err");
+                            }
+                        };
+
+                        const clearAllJobs = async () => {
+                            if (!confirm("确定清空所有任务？")) return;
+                            try {
+                                await fetch(apiPath("/jobs"), { method: "DELETE" });
+                                jobs.value = [];
+                                selectedJobId.value = null;
+                                toast("已清空", "ok");
+                            } catch (err) {
+                                toast("清空失败", "err");
+                            }
+                        };
+
                         const clearUploaded = () => {
                             upload.file = null;
                             upload.file_id = null;
@@ -1082,6 +1121,8 @@
                             cancelSelection,
                             downloadUrl,
                             clearUploaded,
+                            deleteJob,
+                            clearAllJobs,
                         };
                     },
                 }).mount("#app");

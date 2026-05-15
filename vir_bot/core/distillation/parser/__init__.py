@@ -29,11 +29,11 @@ __all__ = [
 
 # 默认注册表，值可以是类对象或导入路径字符串 "package.module:ClassName"
 _registry: Dict[str, Type | str] = {
-    # 常见解析器占位（实现文件建议放在同目录下）
+    # GenericParser 内置支持 generic/wechat/txt 格式自动识别
     "generic": "vir_bot.core.distillation.parser.generic:GenericParser",
-    "wechat": "vir_bot.core.distillation.parser.wechat:WeChatParser",
-    "qq": "vir_bot.core.distillation.parser.qq:QQParser",
-    "discord": "vir_bot.core.distillation.parser.discord:DiscordParser",
+    "wechat": "vir_bot.core.distillation.parser.generic:GenericParser",
+    "qq": "vir_bot.core.distillation.parser.generic:GenericParser",
+    "discord": "vir_bot.core.distillation.parser.generic:GenericParser",
 }
 
 
