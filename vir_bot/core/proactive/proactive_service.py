@@ -1,4 +1,4 @@
-"""主动消息服务：整合牵挂引擎、评估、表达、节奏管理"""
+"""主动消息服务 v3：动态调度 + 状态机 + 内容种子 + 情绪向量"""
 from __future__ import annotations
 
 import asyncio
@@ -11,21 +11,30 @@ from vir_bot.utils.logger import logger
 
 class ConversationState(Enum):
     """对话状态机：控制主动消息的情绪和节奏"""
-    IDLE = "idle"                   # 空闲，正常节奏
-    WAITING = "waiting"             # 刚发了主动消息，等用户回复
-    CONCERNED = "concerned"         # 等了一会没回，可以发一条关心
-    WORRIED = "worried"            # 还没回，更急切
-    BACK_OFF = "back_off"          # 发了很多都没回，用户可能在忙/睡了，停止
+    IDLE = "idle"
+    WAITING = "waiting"
+    CONCERNED = "concerned"
+    WORRIED = "worried"
+    BACK_OFF = "back_off"
 
 
 class ProactiveService:
-    """主动消息总服务"""
+    """主动消息总服务 v3"""
 
     # 状态转移时间阈值（秒）
-    WAIT_TO_CONCERNED = 10 * 60      # 发了消息后等 10 分钟没回 → 关心
-    CONCERNED_TO_WORRIED = 20 * 60   # 关心后又等 20 分钟 → 着急
-    WORRIED_TO_BACKOFF = 30 * 60     # 着急后又等 30 分钟 → 停止打扰
-    BACK_OFF_RESET = 2 * 3600       # 停止 2 小时后重置回 IDLE
+    WAIT_TO_CONCERNED = 15 * 60
+    CONCERNED_TO_WORRIED = 30 * 60
+    WORRIED_TO_BACKOFF = 30 * 60
+    BACK_OFF_RESET = 2 * 3600
+
+    # 状态对应的每日限额和冷却（与 scheduler 保持一致）
+    STATE_LIMITS = {
+        ConversationState.IDLE:      (5, 7200),
+        ConversationState.WAITING:   (3, 1800),
+        ConversationState.CONCERNED: (2, 3600),
+        ConversationState.WORRIED:   (1, 14400),
+        ConversationState.BACK_OFF:  (0, 86400),
+    }
 
     def __init__(
         self,
@@ -45,11 +54,12 @@ class ProactiveService:
             return
 
         self._enabled = True
+
         from vir_bot.core.proactive.state_tracker import StateTracker
         from vir_bot.core.proactive.concern_engine import ConcernEngine
         from vir_bot.core.proactive.evaluator import ConcernEvaluator
         from vir_bot.core.proactive.expression import ExpressionLayer
-        from vir_bot.core.proactive.rhythm_manager import RhythmManager
+        from vir_bot.core.proactive.scheduler import ProactiveScheduler
 
         self._tracker = StateTracker(memory_manager, character_card)
         self._concern_engine = ConcernEngine(
@@ -57,111 +67,116 @@ class ProactiveService:
         )
         self._evaluator = ConcernEvaluator(ai_provider, self._config)
         self._expression = ExpressionLayer(ai_provider, character_card, memory_manager)
-        self._rhythm = RhythmManager(self._config)
+        self._scheduler = ProactiveScheduler(self._config)
 
-        # 从配置读取发送目标
         self._targets = self._config.targets if hasattr(self._config, "targets") else {}
 
-        # 对话状态机
-        self._conv_state: dict[str, ConversationState] = {}  # user_id -> state
-        self._last_proactive_ts: dict[str, float] = {}       # user_id -> 最后一次主动消息时间
-        self._last_user_msg_ts: dict[str, float] = {}        # user_id -> 最后一次用户消息时间
-        self._proactive_count_since_reply: dict[str, int] = {}  # user_id -> 用户回复前发了几条
+        # 对话状态
+        self._last_user_msg_ts: dict[str, float] = {}
+        self._first_unanswered_ts: dict[str, float] = {}
+        self._proactive_count_since_reply: dict[str, int] = {}
+        self._last_proactive_ts: dict[str, float] = {}
+        self._daily_sent: dict[str, int] = {}
+        self._daily_sent_date: str = ""
 
     # ------------------------------------------------------------------
     # 用户消息通知（由 pipeline 调用）
     # ------------------------------------------------------------------
 
     def on_user_message(self, user_id: str, message: str = "") -> None:
-        """当用户发来消息时调用 — 更新状态机和追踪器"""
+        """当用户发来消息时调用"""
         if not self._enabled:
             return
         now = time.time()
         self._last_user_msg_ts[user_id] = now
         self._proactive_count_since_reply[user_id] = 0
+        self._first_unanswered_ts.pop(user_id, None)
 
-        # 通知 StateTracker 和 RhythmManager
         self._tracker.update_from_message(user_id, message, direction="in")
-        self._rhythm.record_interaction(user_id, initiator="user")
 
-        # 用户回复了 → 状态回到 IDLE
-        old_state = self._conv_state.get(user_id, ConversationState.IDLE)
-        self._conv_state[user_id] = ConversationState.IDLE
-        if old_state != ConversationState.IDLE:
-            logger.info(f"[主动消息] 用户 {user_id} 回复了，状态 {old_state.value} → IDLE")
+        logger.info(f"[主动消息] 用户 {user_id} 发来消息，状态重置为 IDLE")
+
+        # 唤醒调度循环重新计算 sleep
+        if self._task and not self._task.done():
+            self._task.cancel()
+
+    # ------------------------------------------------------------------
+    # 状态机
+    # ------------------------------------------------------------------
 
     def _get_conv_state(self, user_id: str) -> ConversationState:
-        """获取用户的对话状态，自动处理状态转移"""
-        state = self._conv_state.get(user_id, ConversationState.IDLE)
-        now = time.time()
+        first_ts = self._first_unanswered_ts.get(user_id)
+        if first_ts is None:
+            return ConversationState.IDLE
 
-        if state == ConversationState.WAITING:
-            elapsed = now - self._last_proactive_ts.get(user_id, 0)
-            if elapsed > self.WAIT_TO_CONCERNED:
-                self._conv_state[user_id] = ConversationState.CONCERNED
-                logger.info(f"[主动消息] 用户 {user_id}: WAITING → CONCERNED ({elapsed:.0f}s)")
-                return ConversationState.CONCERNED
-
-        elif state == ConversationState.CONCERNED:
-            elapsed = now - self._last_proactive_ts.get(user_id, 0)
-            if elapsed > self.WAIT_TO_CONCERNED + self.CONCERNED_TO_WORRIED:
-                self._conv_state[user_id] = ConversationState.WORRIED
-                logger.info(f"[主动消息] 用户 {user_id}: CONCERNED → WORRIED ({elapsed:.0f}s)")
-                return ConversationState.WORRIED
-
-        elif state == ConversationState.WORRIED:
-            elapsed = now - self._last_proactive_ts.get(user_id, 0)
-            if elapsed > self.WAIT_TO_CONCERNED + self.CONCERNED_TO_WORRIED + self.WORRIED_TO_BACKOFF:
-                self._conv_state[user_id] = ConversationState.BACK_OFF
-                logger.info(f"[主动消息] 用户 {user_id}: WORRIED → BACK_OFF ({elapsed:.0f}s)")
-                return ConversationState.BACK_OFF
-
-        elif state == ConversationState.BACK_OFF:
-            elapsed = now - self._last_proactive_ts.get(user_id, 0)
-            if elapsed > self.BACK_OFF_RESET:
-                self._conv_state[user_id] = ConversationState.IDLE
-                logger.info(f"[主动消息] 用户 {user_id}: BACK_OFF → IDLE (重置)")
-                return ConversationState.IDLE
-
-        return state
+        elapsed = time.time() - first_ts
+        if elapsed < self.WAIT_TO_CONCERNED:
+            return ConversationState.WAITING
+        if elapsed < self.WAIT_TO_CONCERNED + self.CONCERNED_TO_WORRIED:
+            return ConversationState.CONCERNED
+        if elapsed < self.WAIT_TO_CONCERNED + self.CONCERNED_TO_WORRIED + self.WORRIED_TO_BACKOFF:
+            return ConversationState.WORRIED
+        return ConversationState.BACK_OFF
 
     def _should_send_by_state(self, state: ConversationState) -> tuple[bool, str]:
-        """根据对话状态判断是否允许发送"""
         if state == ConversationState.IDLE:
-            return True, "空闲状态，可以主动发消息"
+            return True, "空闲状态"
         if state == ConversationState.WAITING:
             return False, "正在等用户回复"
         if state == ConversationState.CONCERNED:
-            return True, "用户没回，发一条关心"
+            count = self._get_proactive_count()
+            if count < 2:
+                return True, "用户没回，发一条关心"
+            return False, "已经关心过了"
         if state == ConversationState.WORRIED:
-            count = 0
-            # 取任意用户的 count（单用户场景）
-            for c in self._proactive_count_since_reply.values():
-                count = c
-                break
-            if count < 3:
+            count = self._get_proactive_count()
+            if count < 4:
                 return True, "用户还没回，继续关心"
-            return False, "已经发了几条了，等等"
+            return False, "已经发了几条了"
         if state == ConversationState.BACK_OFF:
-            return False, "用户可能在忙/睡了，停止打扰"
+            return False, "停止打扰"
         return False, "未知状态"
 
+    def _get_proactive_count(self) -> int:
+        for c in self._proactive_count_since_reply.values():
+            return c
+        return 0
+
     def _get_state_hint(self, state: ConversationState) -> str:
-        """给 LLM 的状态提示"""
         hints = {
             ConversationState.IDLE: "你想主动找对方聊天。",
             ConversationState.CONCERNED: "你之前发了消息但对方没回，有点担心。",
-            ConversationState.WORRIED: "你发了好几条消息对方都没回，很着急，想知道对方是不是出什么事了。",
+            ConversationState.WORRIED: "你发了好几条消息对方都没回，很着急。",
         }
         return hints.get(state, "你想主动找对方聊天。")
+
+    # ------------------------------------------------------------------
+    # 每日计数
+    # ------------------------------------------------------------------
+
+    def _ensure_daily_count(self, user_id: str) -> int:
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        if self._daily_sent_date != today:
+            self._daily_sent = {}
+            self._daily_sent_date = today
+        return self._daily_sent.get(user_id, 0)
+
+    def _increment_daily_count(self, user_id: str) -> None:
+        self._ensure_daily_count(user_id)
+        self._daily_sent[user_id] = self._daily_sent.get(user_id, 0) + 1
+
+    # ------------------------------------------------------------------
+    # 主循环（动态调度）
+    # ------------------------------------------------------------------
 
     async def start(self) -> None:
         if not self._enabled:
             logger.info("主动消息系统未启用")
             return
         self._running = True
-        self._task = asyncio.get_event_loop().create_task(self._concern_loop())
-        logger.info("主动消息服务已启动")
+        self._task = asyncio.get_event_loop().create_task(self._scheduler_loop())
+        logger.info("主动消息服务已启动（动态调度模式）")
 
     async def stop(self) -> None:
         if not self._enabled:
@@ -175,78 +190,120 @@ class ProactiveService:
                 pass
         logger.info("主动消息服务已停止")
 
-    async def _concern_loop(self) -> None:
-        """完整的牵挂→评估→生成→发送循环"""
+    async def _scheduler_loop(self) -> None:
+        """动态调度主循环：计算下次唤醒 → sleep → 检查 → 发送或跳过"""
         while self._running:
             try:
-                await self._run_once()
-            except Exception as e:
-                logger.error(f"主动消息循环错误: {e}")
-            await asyncio.sleep(self._config.check_interval_seconds)
+                # 1. 构建调度上下文
+                user_id = "default"
+                conv_state = self._get_conv_state(user_id)
+                ctx = self._build_scheduler_context(user_id, conv_state)
 
-    async def _run_once(self) -> None:
-        """执行一次完整流程"""
-        # 1. 获取用户上下文
+                # 2. 计算下次唤醒时间
+                next_wake = self._scheduler.calculate_next_wake(ctx)
+                sleep_seconds = max(10, next_wake - time.time())
+                logger.info(
+                    f"[主动消息] 下次唤醒: {sleep_seconds:.0f}s 后 "
+                    f"(状态: {conv_state.value})"
+                )
+
+                # 3. sleep（可被 on_user_message 打断）
+                try:
+                    await asyncio.sleep(sleep_seconds)
+                except asyncio.CancelledError:
+                    continue  # 被打断（用户发消息了），重新计算
+
+                # 4. 预过滤（0 次 LLM）
+                daily_sent = self._ensure_daily_count(user_id)
+                filter_ctx = self._scheduler.build_filter_context(
+                    user_id=user_id,
+                    conv_state=conv_state.value,
+                    last_proactive_ts=self._last_proactive_ts.get(user_id, 0),
+                    last_user_msg_ts=self._last_user_msg_ts.get(user_id, 0),
+                    daily_sent=daily_sent,
+                    unanswered_count=self._get_proactive_count(),
+                )
+                passed, reason = self._scheduler.run_pre_filters(filter_ctx)
+                if not passed:
+                    logger.debug(f"[主动消息] 预过滤未通过: {reason}")
+                    continue
+
+                # 5. 状态机检查
+                can_send, state_reason = self._should_send_by_state(conv_state)
+                if not can_send:
+                    logger.debug(f"[主动消息] 状态不允许: {state_reason}")
+                    continue
+
+                # 6. LLM 管线（ConcernEngine → Evaluator → Expression）
+                await self._run_llm_pipeline(user_id, conv_state)
+
+            except asyncio.CancelledError:
+                continue
+            except Exception as e:
+                logger.error(f"[主动消息] 调度循环错误: {e}")
+                await asyncio.sleep(60)
+
+    def _build_scheduler_context(self, user_id: str, conv_state: ConversationState) -> dict:
+        return {
+            "user_id": user_id,
+            "conv_state": conv_state.value,
+            "last_user_msg_ts": self._last_user_msg_ts.get(user_id, 0),
+            "first_unanswered_ts": self._first_unanswered_ts.get(user_id, 0),
+            "last_proactive_ts": self._last_proactive_ts.get(user_id, 0),
+        }
+
+    async def _run_llm_pipeline(self, user_id: str, conv_state: ConversationState) -> None:
+        """LLM 管线：生成 → 评估 → 表达 → 发送"""
+        # 1. 获取上下文
         context = await self._tracker.get_user_context(
             max_memories=self._config.expression.max_context_memories
         )
-        user_id = context.get("user_id", "default")
-
-        # 2. 对话状态机检查
-        conv_state = self._get_conv_state(user_id)
-        can_send, state_reason = self._should_send_by_state(conv_state)
-        if not can_send:
-            logger.debug(f"对话状态不允许发送: {state_reason}")
-            return
-
-        # 3. 节奏检查
-        can_send, reason = self._rhythm.can_send(user_id)
-        if not can_send:
-            logger.debug(f"节奏检查未通过: {reason}")
-            return
-
-        # 4. 生成牵挂念头（传入状态提示）
         context["state_hint"] = self._get_state_hint(conv_state)
+
+        # 2. 生成牵挂念头
         thought = await self._concern_engine._generate_thought(context)
         if not thought or not thought.content:
-            logger.debug("未生成牵挂念头")
+            logger.debug("[主动消息] 未生成牵挂念头")
             return
 
-        # 5. 评估牵挂
+        # 3. 评估
         send, score, eval_reason = await self._evaluator.evaluate(thought, context)
         if not send:
-            logger.debug(f"牵挂评估未通过: {eval_reason} (分数: {score:.2f})")
+            logger.debug(f"[主动消息] 评估未通过: {eval_reason} (分数: {score:.2f})")
             return
 
-        logger.info(f"牵挂通过评估: {eval_reason} (分数: {score:.2f})")
+        logger.info(f"[主动消息] 通过评估: {eval_reason} (分数: {score:.2f})")
 
-        # 6. 生成消息
+        # 4. 生成消息
         state = self._tracker.get_state(user_id)
         message = await self._expression.generate_message(thought, user_id, state)
         if not message:
-            logger.warning("消息生成为空")
+            logger.warning("[主动消息] 消息生成为空")
             return
 
-        # 7. 发送消息
+        # 5. 发送
         await self._send_message(message)
 
-        # 8. 记录状态
-        self._rhythm.on_proactive_sent(user_id)
-        self._tracker.update_proactive_sent(user_id)
+        # 6. 更新状态
         self._last_proactive_ts[user_id] = time.time()
+        self._increment_daily_count(user_id)
         self._proactive_count_since_reply[user_id] = (
             self._proactive_count_since_reply.get(user_id, 0) + 1
         )
 
-        # 发了主动消息 → 进入 WAITING
         if conv_state == ConversationState.IDLE:
-            self._conv_state[user_id] = ConversationState.WAITING
-            logger.info(f"[主动消息] 用户 {user_id}: IDLE → WAITING")
+            self._first_unanswered_ts[user_id] = time.time()
+            logger.info(f"[主动消息] IDLE → 发出消息，开始计时")
+
+        self._tracker.update_proactive_sent(user_id)
+
+    # ------------------------------------------------------------------
+    # 发送
+    # ------------------------------------------------------------------
 
     async def _send_message(self, message: str) -> None:
-        """通过平台适配器发送消息"""
         if not self._platform_adapters:
-            logger.info(f"主动消息（无平台）: {message}")
+            logger.info(f"[主动消息] 无平台: {message}")
             return
 
         for name, adapter in self._platform_adapters.items():
@@ -254,28 +311,16 @@ class ProactiveService:
             try:
                 if hasattr(adapter, "send_proactive_message"):
                     await adapter.send_proactive_message(message, target)
-                    logger.info(f"主动消息已通过 {name} 发送")
+                    logger.info(f"[主动消息] 已通过 {name} 发送")
                 elif hasattr(adapter, "send_message"):
-                    # 构造 PlatformResponse 并调用 send_message
-                    from vir_bot.core.pipeline import PlatformResponse, MessageType
-
-                    response = PlatformResponse(
-                        msg_id="",
-                        content=message,
-                        metadata=target,
-                    )
+                    from vir_bot.core.pipeline import PlatformResponse
+                    response = PlatformResponse(msg_id="", content=message, metadata=target)
                     await adapter.send_message(response)
-                    logger.info(f"主动消息已通过 {name} 发送")
-                else:
-                    logger.warning(f"平台 {name} 不支持主动消息发送")
+                    logger.info(f"[主动消息] 已通过 {name} 发送")
             except Exception as e:
-                logger.error(f"通过 {name} 发送主动消息失败: {e}")
+                logger.error(f"[主动消息] {name} 发送失败: {e}")
 
     def get_stats(self) -> dict:
-        """获取服务统计"""
         if not self._enabled:
             return {"enabled": False}
-        return {
-            "enabled": True,
-            "rhythm": self._rhythm.get_stats(),
-        }
+        return {"enabled": True, "mode": "dynamic_scheduler"}

@@ -50,15 +50,16 @@ class RhythmManager:
         if len(self._history) > self._max_history:
             self._history.pop(0)
 
-    def can_send(self, user_id: str) -> tuple[bool, str]:
+    def can_send(self, user_id: str, skip_cooldown: bool = False) -> tuple[bool, str]:
         """
         综合判断：是否应该发送主动消息。
         返回：(是否允许, 原因)
+        skip_cooldown: 跳过冷却检查（状态机自己管节奏时用）
         """
         now = time.time()
 
-        # 1. 冷却期检查
-        if user_id in self._last_proactive_time:
+        # 1. 冷却期检查（状态机接管节奏时跳过）
+        if not skip_cooldown and user_id in self._last_proactive_time:
             elapsed = now - self._last_proactive_time[user_id]
             if elapsed < self._cooldown_seconds:
                 return False, f"冷却期，还剩{int((self._cooldown_seconds - elapsed) / 60)}分钟"
