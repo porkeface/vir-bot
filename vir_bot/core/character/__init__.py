@@ -26,18 +26,23 @@ class CharacterCard:
 
     @classmethod
     def from_json(cls, data: dict) -> "CharacterCard":
-        """从 SillyTavern JSON 格式加载"""
-        # SillyTavern 标准字段
-        name = data.get("name", data.get("char_name", "未命名"))
-        description = data.get("description", data.get("char_description", ""))
-        personality = data.get("personality", "")
-        world_info = data.get("world_info", data.get("worldinfo", ""))
-        scenario = data.get("scenario", "")
-        first_message = data.get("first_message", data.get(" greetings", ""))
-        example_dialogue = data.get("example_dialogue", data.get("example_dialogue", ""))
+        """从 SillyTavern JSON 格式加载（兼容 V1 扁平和 V2 嵌套格式）"""
+        # SillyTavern V2 嵌套格式：字段在 data.data 里
+        if "data" in data and isinstance(data["data"], dict):
+            inner = data["data"]
+        else:
+            inner = data
+
+        name = inner.get("name", inner.get("char_name", "未命名"))
+        description = inner.get("description", inner.get("char_description", ""))
+        personality = inner.get("personality", "")
+        world_info = inner.get("world_info", inner.get("worldinfo", ""))
+        scenario = inner.get("scenario", "")
+        first_message = inner.get("first_message", inner.get("first_mes", inner.get("greetings", "")))
+        example_dialogue = inner.get("example_dialogue", inner.get("mes_example", ""))
 
         # 扩展字段（项目自定义）
-        extensions = data.get("extensions", {})
+        extensions = inner.get("extensions", data.get("extensions", {}))
 
         return cls(
             name=name,
