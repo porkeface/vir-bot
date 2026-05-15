@@ -1,16 +1,17 @@
-"""主动消息服务 v3：动态调度 + 状态机 + 内容种子 + 情绪向量"""
+"""主动消息服务 v3：动态调度 + 状态机 + 内容种子 + 情绪向量 + 质量门控"""
 from __future__ import annotations
 
 import asyncio
 import time
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 from vir_bot.utils.logger import logger
 
 
 class ConversationState(Enum):
-    """对话状态机：控制主动消息的情绪和节奏"""
+    """对话状态机"""
     IDLE = "idle"
     WAITING = "waiting"
     CONCERNED = "concerned"
@@ -27,7 +28,7 @@ class ProactiveService:
     WORRIED_TO_BACKOFF = 30 * 60
     BACK_OFF_RESET = 2 * 3600
 
-    # 状态对应的每日限额和冷却（与 scheduler 保持一致）
+    # 状态对应的每日限额和冷却
     STATE_LIMITS = {
         ConversationState.IDLE:      (5, 7200),
         ConversationState.WAITING:   (3, 1800),
@@ -48,6 +49,7 @@ class ProactiveService:
         self._platform_adapters = platform_adapters or {}
         self._running = False
         self._task = None
+        self._fact_task = None
 
         if not self._config.enabled:
             self._enabled = False
@@ -56,18 +58,24 @@ class ProactiveService:
         self._enabled = True
 
         from vir_bot.core.proactive.state_tracker import StateTracker
-        from vir_bot.core.proactive.concern_engine import ConcernEngine
-        from vir_bot.core.proactive.evaluator import ConcernEvaluator
-        from vir_bot.core.proactive.expression import ExpressionLayer
         from vir_bot.core.proactive.scheduler import ProactiveScheduler
+        from vir_bot.core.proactive.mood_model import MoodModel
+        from vir_bot.core.proactive.seed_selector import SeedSelector
+        from vir_bot.core.proactive.reflector import Reflector
+        from vir_bot.core.proactive.expression import ExpressionLayer
+        from vir_bot.core.proactive.fact_extractor import FactExtractor
 
         self._tracker = StateTracker(memory_manager, character_card)
-        self._concern_engine = ConcernEngine(
-            ai_provider, memory_manager, character_card, self._tracker, self._config
-        )
-        self._evaluator = ConcernEvaluator(ai_provider, self._config)
-        self._expression = ExpressionLayer(ai_provider, character_card, memory_manager)
         self._scheduler = ProactiveScheduler(self._config)
+        self._mood_model = MoodModel()
+        self._expression = ExpressionLayer(ai_provider, character_card, memory_manager)
+        self._reflector = Reflector(ai_provider)
+
+        # FactExtractor：后台提取事实
+        data_dir = Path(config.app.data_dir) if hasattr(config, "app") else Path("data")
+        fact_path = str(data_dir / "memory" / "facts.json")
+        self._fact_extractor = FactExtractor(ai_provider, fact_path)
+        self._seed_selector = SeedSelector(self._fact_extractor.store, memory_manager)
 
         self._targets = self._config.targets if hasattr(self._config, "targets") else {}
 
@@ -78,6 +86,11 @@ class ProactiveService:
         self._last_proactive_ts: dict[str, float] = {}
         self._daily_sent: dict[str, int] = {}
         self._daily_sent_date: str = ""
+        self._recent_messages: dict[str, list[str]] = {}  # 最近发的消息（防重复）
+
+        # AI provider 引用（FactExtractor 后台任务需要）
+        self._ai_provider = ai_provider
+        self._memory_manager = memory_manager
 
     # ------------------------------------------------------------------
     # 用户消息通知（由 pipeline 调用）
@@ -176,30 +189,51 @@ class ProactiveService:
             return
         self._running = True
         self._task = asyncio.get_event_loop().create_task(self._scheduler_loop())
+        # 后台事实提取任务
+        self._fact_task = asyncio.get_event_loop().create_task(self._fact_extraction_loop())
         logger.info("主动消息服务已启动（动态调度模式）")
 
     async def stop(self) -> None:
         if not self._enabled:
             return
         self._running = False
-        if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
+        for task in [self._task, self._fact_task]:
+            if task:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
         logger.info("主动消息服务已停止")
 
-    async def _scheduler_loop(self) -> None:
-        """动态调度主循环：计算下次唤醒 → sleep → 检查 → 发送或跳过"""
+    async def _fact_extraction_loop(self) -> None:
+        """后台事实提取：每 6 小时从聊天记录中提取事实"""
         while self._running:
             try:
-                # 1. 构建调度上下文
+                await asyncio.sleep(6 * 3600)  # 6 小时
+                # 从记忆系统获取最近对话
+                if self._memory_manager and hasattr(self._memory_manager, "retrieval_router"):
+                    memories = await self._memory_manager.retrieval_router.retrieve(
+                        query="用户最近说的话", top_k=20
+                    )
+                    if memories:
+                        messages = [{"role": "user", "content": m.content[:200]} for m in memories]
+                        facts = await self._fact_extractor.extract_from_messages(messages)
+                        if facts:
+                            logger.info(f"[主动消息] 后台提取了 {len(facts)} 条事实")
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"[主动消息] 事实提取失败: {e}")
+
+    async def _scheduler_loop(self) -> None:
+        """动态调度主循环"""
+        while self._running:
+            try:
                 user_id = "default"
                 conv_state = self._get_conv_state(user_id)
                 ctx = self._build_scheduler_context(user_id, conv_state)
 
-                # 2. 计算下次唤醒时间
                 next_wake = self._scheduler.calculate_next_wake(ctx)
                 sleep_seconds = max(10, next_wake - time.time())
                 logger.info(
@@ -207,13 +241,12 @@ class ProactiveService:
                     f"(状态: {conv_state.value})"
                 )
 
-                # 3. sleep（可被 on_user_message 打断）
                 try:
                     await asyncio.sleep(sleep_seconds)
                 except asyncio.CancelledError:
-                    continue  # 被打断（用户发消息了），重新计算
+                    continue
 
-                # 4. 预过滤（0 次 LLM）
+                # 预过滤
                 daily_sent = self._ensure_daily_count(user_id)
                 filter_ctx = self._scheduler.build_filter_context(
                     user_id=user_id,
@@ -228,13 +261,13 @@ class ProactiveService:
                     logger.debug(f"[主动消息] 预过滤未通过: {reason}")
                     continue
 
-                # 5. 状态机检查
+                # 状态机检查
                 can_send, state_reason = self._should_send_by_state(conv_state)
                 if not can_send:
                     logger.debug(f"[主动消息] 状态不允许: {state_reason}")
                     continue
 
-                # 6. LLM 管线（ConcernEngine → Evaluator → Expression）
+                # LLM 管线
                 await self._run_llm_pipeline(user_id, conv_state)
 
             except asyncio.CancelledError:
@@ -253,33 +286,80 @@ class ProactiveService:
         }
 
     async def _run_llm_pipeline(self, user_id: str, conv_state: ConversationState) -> None:
-        """LLM 管线：生成 → 评估 → 表达 → 发送"""
-        # 1. 获取上下文
-        context = await self._tracker.get_user_context(
-            max_memories=self._config.expression.max_context_memories
+        """v3 LLM 管线：情绪 → 种子 → 生成 → 反思 → 发送"""
+
+        # 1. 计算情绪向量
+        mood = self._mood_model.compute(
+            user_id=user_id,
+            conv_state=conv_state.value,
+            last_user_msg_ts=self._last_user_msg_ts.get(user_id, 0),
+            last_proactive_ts=self._last_proactive_ts.get(user_id, 0),
+            proactive_count=self._get_proactive_count(),
         )
-        context["state_hint"] = self._get_state_hint(conv_state)
 
-        # 2. 生成牵挂念头
-        thought = await self._concern_engine._generate_thought(context)
-        if not thought or not thought.content:
-            logger.debug("[主动消息] 未生成牵挂念头")
+        # 2. 选择内容种子
+        seed = await self._seed_selector.select(
+            mood_vector=mood.to_dict(),
+            conv_state=conv_state.value,
+            last_user_msg_ts=self._last_user_msg_ts.get(user_id, 0),
+        )
+        if not seed:
+            logger.debug("[主动消息] 无可用内容种子")
             return
 
-        # 3. 评估
-        send, score, eval_reason = await self._evaluator.evaluate(thought, context)
-        if not send:
-            logger.debug(f"[主动消息] 评估未通过: {eval_reason} (分数: {score:.2f})")
-            return
+        logger.info(f"[主动消息] 选中种子: [{seed.seed_type}] {seed.content[:40]}...")
 
-        logger.info(f"[主动消息] 通过评估: {eval_reason} (分数: {score:.2f})")
-
-        # 4. 生成消息
-        state = self._tracker.get_state(user_id)
-        message = await self._expression.generate_message(thought, user_id, state)
+        # 3. 生成消息
+        state_hint = self._get_state_hint(conv_state)
+        message = await self._expression.generate_message(
+            seed_content=seed.content,
+            seed_context=seed.context,
+            mood_directive=mood.style_directive,
+            state_hint=state_hint,
+            user_id=user_id,
+        )
         if not message:
             logger.warning("[主动消息] 消息生成为空")
             return
+
+        # 4. 质量门控（Reflector）
+        recent = self._recent_messages.get(user_id, [])
+        result = await self._reflector.reflect(
+            message=message,
+            seed_content=seed.content,
+            mood_directive=mood.style_directive,
+            recent_messages=recent,
+        )
+        if not result.approved:
+            logger.info(f"[主动消息] Reflector 拒绝: {result.reason} (score={result.score:.2f})")
+            # 尝试一次重试（换种子）
+            seed2 = await self._seed_selector.select(
+                mood_vector=mood.to_dict(),
+                conv_state=conv_state.value,
+                last_user_msg_ts=self._last_user_msg_ts.get(user_id, 0),
+            )
+            if seed2 and seed2.content != seed.content:
+                message2 = await self._expression.generate_message(
+                    seed_content=seed2.content,
+                    seed_context=seed2.context,
+                    mood_directive=mood.style_directive,
+                    state_hint=state_hint,
+                    user_id=user_id,
+                )
+                result2 = await self._reflector.reflect(
+                    message=message2,
+                    seed_content=seed2.content,
+                    mood_directive=mood.style_directive,
+                    recent_messages=recent,
+                )
+                if result2.approved:
+                    message = message2
+                    seed = seed2
+                else:
+                    logger.info(f"[主动消息] 重试也未通过: {result2.reason}")
+                    return
+            else:
+                return
 
         # 5. 发送
         await self._send_message(message)
@@ -291,11 +371,20 @@ class ProactiveService:
             self._proactive_count_since_reply.get(user_id, 0) + 1
         )
 
+        # 记录最近消息（防重复）
+        if user_id not in self._recent_messages:
+            self._recent_messages[user_id] = []
+        self._recent_messages[user_id].append(message)
+        self._recent_messages[user_id] = self._recent_messages[user_id][-10:]
+
         if conv_state == ConversationState.IDLE:
             self._first_unanswered_ts[user_id] = time.time()
             logger.info(f"[主动消息] IDLE → 发出消息，开始计时")
 
         self._tracker.update_proactive_sent(user_id)
+
+        # 标记种子已使用
+        self._fact_extractor.store.mark_used(seed.content)
 
     # ------------------------------------------------------------------
     # 发送
