@@ -344,12 +344,9 @@ async def start_distillation(req: StartRequest, background_tasks: BackgroundTask
     # Schedule background run
     # Use BackgroundTasks to ensure it runs in the background of the request
     background_tasks.add_task(
-        lambda: asyncio.create_task(
-            _run_distillation_job(
-                job_id, input_path, req.name, req.parser, req.evaluate, req.dry_run, req.timeout,
-                target_sender=req.target,
-            )
-        )
+        _run_distillation_job,
+        job_id, input_path, req.name, req.parser, req.evaluate, req.dry_run, req.timeout,
+        req.target,
     )
     return StartResp(job_id=job_id)
 
