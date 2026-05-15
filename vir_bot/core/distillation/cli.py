@@ -113,6 +113,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="count",
         help="增加详细度（-v 或 -vv）",
     )
+    p.add_argument(
+        "--target", "-t",
+        help="目标分析对象的发送者名称（两人聊天时指定要分析谁）",
+        default=None,
+    )
 
     # ---- 子命令：train ----
     train_parser = sub.add_parser("train", help="LoRA 微调训练")
@@ -185,6 +190,7 @@ async def _run_distillation_async(args: argparse.Namespace) -> int:
         json_output_dir=args.json_output,
         chunk_size=args.chunk_size,
         enable_judge_eval=(not args.no_judge),
+        target_sender=getattr(args, "target", None),
     )
 
     # 执行蒸馏

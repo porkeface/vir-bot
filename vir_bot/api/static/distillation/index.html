@@ -538,6 +538,15 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group">
+                                    <label>目标人物 <small style="color: var(--text-muted); font-weight: 400">（两人聊天时指定分析谁，留空则分析全部）</small></label>
+                                    <input
+                                        type="text"
+                                        v-model="params.target"
+                                        placeholder="例如：陈十一"
+                                    />
+                                </div>
+
                                 <div
                                     class="form-group"
                                     style="display: flex; gap: 1rem"
@@ -815,6 +824,7 @@
                             evaluate: true,
                             dry_run: false,
                             timeout: 120,
+                            target: "",
                         });
                         const jobs = ref([]);
                         const selectedJobId = ref(null);

@@ -129,12 +129,14 @@ class PersonaExtractor:
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         max_chunk_chars: int = DEFAULT_MAX_CHUNK_CHARS,
         timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+        target_sender: Optional[str] = None,
     ) -> None:
         self.ai = ai_provider
         self.prompts = prompts or {}
         self.chunk_size = chunk_size
         self.max_chunk_chars = max_chunk_chars
         self.timeout_seconds = timeout_seconds
+        self.target_sender = target_sender
 
     # ------------------------------------------------------------------
     # 主入口
@@ -156,6 +158,8 @@ class PersonaExtractor:
         5. 如果有冲突，执行修正轮
         """
         logger.info("开始人格提取（共 %d 轮对话，每块 %d 轮）", len(turns), self.chunk_size)
+        if self.target_sender:
+            logger.info("目标分析对象：%s", self.target_sender)
 
         # Step 1: 分块
         chunks = self._split_into_chunks(turns)
@@ -255,8 +259,11 @@ class PersonaExtractor:
             turn_range=(0, len(turns)),
         )
 
+        # 目标人物上下文
+        target_ctx = self._build_target_context()
+
         # Round 1
-        round1_prompt = render_prompt("round1", dialogue_text=dialogue_text)
+        round1_prompt = render_prompt("round1", dialogue_text=dialogue_text) + target_ctx
         round1_raw = await self._call_llm(round1_prompt)
         result.round1 = self._safe_parse_json(round1_raw)
         logger.debug("块 %d Round1: %s", chunk_index, list(result.round1.keys()) if result.round1 else "None")
@@ -266,12 +273,12 @@ class PersonaExtractor:
             "round2",
             dialogue_text=dialogue_text,
             round1_output=json.dumps(result.round1, ensure_ascii=False) if result.round1 else "{}",
-        )
+        ) + target_ctx
         round2_raw = await self._call_llm(round2_prompt)
         result.round2 = self._safe_parse_json(round2_raw)
 
         # Round 3
-        round3_prompt = render_prompt("round3", dialogue_text=dialogue_text)
+        round3_prompt = render_prompt("round3", dialogue_text=dialogue_text) + target_ctx
         round3_raw = await self._call_llm(round3_prompt)
         result.round3 = self._safe_parse_json(round3_raw)
 
@@ -524,8 +531,19 @@ class PersonaExtractor:
     # 工具方法
     # ------------------------------------------------------------------
 
+    def _build_target_context(self) -> str:
+        """构建目标分析对象的上下文提示。"""
+        if not self.target_sender:
+            return ""
+        return (
+            f"\n\n### 重要：目标分析对象\n"
+            f"请只分析 **{self.target_sender}** 这个人的人格特征和说话风格。\n"
+            f"对话中其他人的消息仅作为上下文参考，不要将其特征混入目标人物的分析中。\n"
+            f"在输出 JSON 中，name 字段设为 \"{self.target_sender}\"。"
+        )
+
     def _render_dialogue_text(self, turns: List[DialogueTurn]) -> str:
-        """将对话轮次转换为纯文本。"""
+        """将对话轮次转换为纯文本。目标人物的消息用 [★] 标记。"""
         lines: List[str] = []
         for t in turns:
             ts = t.timestamp.isoformat() if getattr(t, "timestamp", None) else ""
@@ -535,7 +553,9 @@ class PersonaExtractor:
             if t.metadata:
                 meta_keys = ", ".join(sorted(t.metadata.keys()))
                 meta = f" [{meta_keys}]" if meta_keys else ""
-            lines.append(f"{ts} {sender}:{meta} {content}".strip())
+            # 标记目标人物
+            marker = " [★]" if self.target_sender and sender == self.target_sender else ""
+            lines.append(f"{ts} {sender}{marker}:{meta} {content}".strip())
         return "\n".join(lines)
 
     def _safe_parse_json(self, text_or_obj: Any) -> Optional[Dict[str, Any]]:

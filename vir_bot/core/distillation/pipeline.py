@@ -81,6 +81,7 @@ class DistillationPipeline:
         json_output_dir: str = "./data/characters",
         chunk_size: int = 400,
         enable_judge_eval: bool = True,
+        target_sender: Optional[str] = None,
     ) -> None:
         self.ai = ai_provider
         self.config = config
@@ -89,6 +90,7 @@ class DistillationPipeline:
         self.json_output_dir = json_output_dir
         self.chunk_size = chunk_size
         self.enable_judge_eval = enable_judge_eval
+        self.target_sender = target_sender
 
     async def run(
         self,
@@ -114,6 +116,8 @@ class DistillationPipeline:
             timeout_seconds: 单次 LLM 调用超时
         """
         logger.info("开始蒸馏：%s（模式：%s）", name, "增量" if incremental else "标准")
+        if self.target_sender:
+            logger.info("目标分析对象：%s", self.target_sender)
 
         # 验证输入
         p = Path(input_path)
@@ -132,6 +136,7 @@ class DistillationPipeline:
             prompts=getattr(self.config, "prompts", None),
             timeout_seconds=timeout_seconds,
             chunk_size=self.chunk_size,
+            target_sender=self.target_sender,
         )
 
         # Step 3: 提取
@@ -265,7 +270,7 @@ class DistillationPipeline:
             # 1. StyleAnalyzer：统计说话风格
             logger.info("执行统计分析...")
             style_analyzer = StyleAnalyzer()
-            style_stats = style_analyzer.analyze(turns)
+            style_stats = style_analyzer.analyze(turns, target_sender=self.target_sender)
             style_dict = style_analyzer.to_dict(style_stats)
             logger.info("统计分析完成：句数=%d, 平均句长=%.1f, 语气词率=%.2f",
                         style_stats.sentence_count,
@@ -290,7 +295,7 @@ class DistillationPipeline:
             try:
                 logger.info("执行话题聚类...")
                 topic_clusterer = TopicClusterer(n_clusters=6)
-                topic_analysis = topic_clusterer.analyze(turns)
+                topic_analysis = topic_clusterer.analyze(turns, target_sender=self.target_sender)
                 topic_dict = topic_clusterer.to_dict(topic_analysis)
                 profile_obj.raw_notes["topic_analysis"] = topic_dict
                 logger.info("话题聚类完成：%d 个话题", len(topic_analysis.clusters))

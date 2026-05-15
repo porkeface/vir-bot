@@ -56,6 +56,12 @@ _TIMESTAMP_SENDER_RE = re.compile(
     re.VERBOSE,
 )
 
+# WeChat export date header: ********************2024-04-03********************
+_WECHAT_DATE_RE = re.compile(r"^\*{10,}\s*(\d{4}-\d{2}-\d{2})\s*\*{10,}$")
+
+# WeChat message: sender:content (sender 不含冒号，content 可含任意字符)
+_WECHAT_MSG_RE = re.compile(r"^(?P<sender>[^:\s*][^:]{0,30}):\s*(?P<content>.+)$")
+
 
 class GenericParser(ChatParser):
     """
@@ -97,7 +103,11 @@ class GenericParser(ChatParser):
         elif suffix in (".ndjson", ".jsonl"):
             try_parsers = ["ndjson", "json_array", "txt_lines"]
         elif suffix in (".txt", ".log", ".chat"):
-            try_parsers = ["txt_lines", "ndjson", "json_array"]
+            # WeChat TXT 格式优先（有 * 日期分隔符）
+            if _WECHAT_DATE_RE.search(text[:500]):
+                try_parsers = ["wechat_txt", "txt_lines", "ndjson", "json_array"]
+            else:
+                try_parsers = ["txt_lines", "ndjson", "json_array"]
         else:
             # Unknown extension: try structured parsers first if it looks like JSON
             stripped = text.lstrip()
@@ -116,6 +126,8 @@ class GenericParser(ChatParser):
                     turns = self._parse_ndjson(text)
                 elif parser == "txt_lines":
                     turns = self._parse_txt_lines(text)
+                elif parser == "wechat_txt":
+                    turns = self._parse_wechat_txt(text)
                 else:
                     continue
 
@@ -217,6 +229,74 @@ class GenericParser(ChatParser):
         return turns
 
     # ---------- Helpers ----------
+
+    def _parse_wechat_txt(self, text: str) -> List[DialogueTurn]:
+        """
+        Parse WeChat TXT export format.
+
+        Format example:
+            ********************2024-04-03********************
+            学姐 你是一直在学校的吧 这几天
+            殴怡靖:对
+            陈十一:好的
+
+            ********************2024-04-04********************
+            殴怡靖:学弟
+            陈十一:在的
+
+        Rules:
+        - Lines matching *date* are date headers
+        - Lines matching sender:content are messages
+        - Other non-empty lines are continuation of previous message
+        """
+        turns: List[DialogueTurn] = []
+        current_date: Optional[str] = None
+        current_sender: str = ""
+        current_content_parts: List[str] = []
+        turn_idx = 0
+
+        def _flush():
+            nonlocal turn_idx, current_sender, current_content_parts
+            if current_sender and current_content_parts:
+                content = "\n".join(current_content_parts).strip()
+                if content:
+                    ts = parse_timestamp(current_date) if current_date else None
+                    turns.append(DialogueTurn(
+                        turn_id=turn_idx,
+                        sender=current_sender,
+                        content=content,
+                        timestamp=ts,
+                    ))
+                    turn_idx += 1
+            current_content_parts = []
+
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            # Check for date header
+            date_match = _WECHAT_DATE_RE.match(line)
+            if date_match:
+                _flush()
+                current_date = date_match.group(1)
+                current_sender = ""
+                continue
+
+            # Check for sender:message
+            msg_match = _WECHAT_MSG_RE.match(line)
+            if msg_match:
+                _flush()
+                current_sender = msg_match.group("sender").strip()
+                current_content_parts = [msg_match.group("content").strip()]
+                continue
+
+            # Continuation line (belongs to previous sender)
+            if current_sender:
+                current_content_parts.append(line)
+
+        _flush()
+        return turns
 
     def _turns_from_dicts(self, items: Iterable[Dict[str, Any]]) -> List[DialogueTurn]:
         """

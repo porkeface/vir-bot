@@ -82,6 +82,9 @@ class StartRequest(BaseModel):
     evaluate: bool = Field(default=False)
     dry_run: bool = Field(default=False)
     timeout: int = Field(default=120)
+    target: Optional[str] = Field(
+        default=None, description="target sender name for two-person chats"
+    )
 
 
 class StartResp(BaseModel):
@@ -213,6 +216,7 @@ async def _run_distillation_job(
     evaluate: bool,
     dry_run: bool,
     timeout: int,
+    target_sender: Optional[str] = None,
 ) -> None:
     """
     Orchestrate the distillation pipeline in background, updating JOBS metadata.
@@ -239,6 +243,7 @@ async def _run_distillation_job(
             config=cfg,
             parser_name=(parser or None),
             wiki_output_dir=str(ARTIFACTS_DIR),
+            target_sender=target_sender,
         )
 
         _append_log(job_id, "Pipeline instance created")
@@ -341,7 +346,8 @@ async def start_distillation(req: StartRequest, background_tasks: BackgroundTask
     background_tasks.add_task(
         lambda: asyncio.create_task(
             _run_distillation_job(
-                job_id, input_path, req.name, req.parser, req.evaluate, req.dry_run, req.timeout
+                job_id, input_path, req.name, req.parser, req.evaluate, req.dry_run, req.timeout,
+                target_sender=req.target,
             )
         )
     )
