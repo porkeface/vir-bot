@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Persona extractor: provide dataclasses describing a persona and a multi-round
-LLM-driven extractor that turns DialogueTurn sequences into a structured
-PersonaProfile.
+PersonaExtractor — 多轮 LLM 人格提取器（v2）
 
-Design notes:
-- The extractor drives a multi-round analysis as described in DISTILLATION_PLAN.md:
-  1) coarse Big Five + speaking style + keywords
-  2) fine-grained emotional patterns, values, quirks
-  3) sample dialogues selection
-  4) consistency check & annotated role card draft
-- The implementation is written to be backend-agnostic: it uses an injected
-  `AIProvider` to perform LLM calls. The provider must offer an async `chat`
-  method compatible with `vir_bot.core.ai_provider.AIProvider`.
-- The extractor attempts to parse machine-readable JSON from the model; when
-  that fails it falls back to simpler heuristics (plain text).
+核心改进：
+1. 分块提取：长对话按轮数分块，每块独立提取，最后合并
+2. Round 4 回流：一致性校验发现冲突后自动修正
+3. 中文 prompt：提升中文聊天记录的提取质量
+4. 增量更新：支持已有角色卡 + 新对话 → 更新角色卡
 """
 
 from __future__ import annotations
@@ -22,16 +14,26 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from dataclasses import dataclass, field
+import math
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
 from vir_bot.core.ai_provider import AIProvider, AIResponse
 from vir_bot.core.distillation.parser.base import DialogueTurn
+from vir_bot.core.distillation.prompt_templates import render_prompt
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Data models (PersonaProfile and supporting structures)
+# 配置常量
+# ---------------------------------------------------------------------------
+DEFAULT_CHUNK_SIZE = 400  # 每块对话轮数
+DEFAULT_MAX_CHUNK_CHARS = 40_000  # 每块最大字符数（安全阀）
+DEFAULT_TIMEOUT_SECONDS = 120  # 单次 LLM 调用超时
+MAX_CONFLICTS_TO_CORRECT = 5  # 最多修正几个冲突字段
+
+# ---------------------------------------------------------------------------
+# 数据模型
 # ---------------------------------------------------------------------------
 
 
@@ -92,87 +94,31 @@ class PersonaProfile:
     raw_notes: Dict[str, Any] = field(default_factory=dict)
 
 
-# ---------------------------------------------------------------------------
-# Prompts (default templates). Implementations can override by passing
-# custom prompts via config to PersonaExtractor.
-# ---------------------------------------------------------------------------
+@dataclass
+class ChunkResult:
+    """单个对话块的提取结果。"""
+    chunk_index: int
+    turn_range: tuple  # (start, end)
+    round1: Optional[Dict[str, Any]] = None
+    round2: Optional[Dict[str, Any]] = None
+    round3: Optional[Dict[str, Any]] = None
+    profile: Optional[PersonaProfile] = None
 
-_DEFAULT_SYSTEM_PROMPT = """You are an expert in personality analysis and writing concise structured profiles.
-Given conversational logs, produce structured JSON following the requested schema.
-Be precise and conservative: if something cannot be inferred, leave it empty or null.
-"""
-
-_ROUND1_USER_PROMPT = """Round 1 - Coarse Extraction.
-Input: the conversation logs (plain text). Tasks:
-1) Provide Big-Five scores (0.0-1.0) for: openness, conscientiousness, extraversion, agreeableness, neuroticism.
-2) Summarize speaking style in 2-3 short sentences.
-3) List up to 5 single-word core personality keywords.
-4) Output JSON only with keys: big_five, speaking_style_summary, core_keywords.
-Conversation:
-```
-{dialogue_text}
-```"""
-
-_ROUND2_USER_PROMPT = """Round 2 - Fine-grained Extraction.
-Input: same conversation and previous round results.
-Tasks:
-1) Extract emotional patterns: dominant emotions, triggers, recovery behaviors, expression style.
-2) Extract values: frequent topics, attitudes to typical domains (work, love, family), humor style.
-3) Identify special quirks or taboos (up to 10 items).
-4) Output JSON only with keys: emotional_patterns, values, taboos, special_quirks.
-Conversation:
-```
-{dialogue_text}
-```
-Previous round output:
-```
-{round1_output}
-```"""
-
-_ROUND3_USER_PROMPT = """Round 3 - Dialogue Example Selection.
-Input: conversation logs.
-Tasks:
-1) Choose 5-10 representative dialogue snippets. For each provide:
-   - context (short explanation when this happens)
-   - original (the exact messages involved; keep original text)
-   - trigger (what topic or situation leads to this)
-   - note (why it's representative)
-2) Output JSON: {"examples": [{...}, ...]}
-Conversation:
-```
-{dialogue_text}
-```"""
-
-_ROUND4_USER_PROMPT = """Round 4 - Consistency Check.
-Input: aggregated persona draft and examples.
-Tasks:
-1) Verify consistency between persona descriptions and examples.
-2) Highlight up to 10 conflicts or uncertain inferences.
-3) Output JSON: {"conflicts": [...], "validated_persona": <persona-draft>}
-Input persona:
-```
-{persona_json}
-```
-Examples:
-```
-{examples_json}
-```"""
 
 # ---------------------------------------------------------------------------
-# PersonaExtractor implementation
+# PersonaExtractor
 # ---------------------------------------------------------------------------
 
 
 class PersonaExtractor:
     """
-    PersonaExtractor performs multi-round LLM-based extraction to produce a
-    PersonaProfile from a list of DialogueTurn.
+    多轮 LLM 人格提取器。
 
-    Constructor parameters:
-    - ai_provider: instance of AIProvider used to call the LLM.
-    - prompts: optional dict to override prompt templates.
-    - max_chunk_chars: when the conversation is large, we chunk text to avoid
-      sending overly long prompts (the extractor concatenates the first N chars).
+    改进点：
+    - 分块提取：长对话按 chunk_size 轮分块，每块独立提取
+    - Merge Round：合并多块结果，处理矛盾
+    - Round 4 回流：校验冲突后自动修正
+    - 增量更新：已有角色卡 + 新对话 → 更新
     """
 
     def __init__(
@@ -180,132 +126,420 @@ class PersonaExtractor:
         ai_provider: AIProvider,
         *,
         prompts: Optional[Dict[str, str]] = None,
-        max_chunk_chars: int = 40_000,
-        timeout_seconds: int = 60,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        max_chunk_chars: int = DEFAULT_MAX_CHUNK_CHARS,
+        timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
     ) -> None:
         self.ai = ai_provider
         self.prompts = prompts or {}
-        self.max_chunk_chars = int(max_chunk_chars)
-        self.timeout_seconds = int(timeout_seconds)
+        self.chunk_size = chunk_size
+        self.max_chunk_chars = max_chunk_chars
+        self.timeout_seconds = timeout_seconds
+
+    # ------------------------------------------------------------------
+    # 主入口
+    # ------------------------------------------------------------------
 
     async def extract(
-        self, turns: List[DialogueTurn], name: Optional[str] = None
+        self,
+        turns: List[DialogueTurn],
+        name: Optional[str] = None,
     ) -> PersonaProfile:
         """
-        Run the full extraction pipeline and return a PersonaProfile.
-        The method is resilient: even if LLM outputs cannot be parsed as JSON,
-        it will attempt to salvage useful text into the profile.
+        执行完整的提取流水线。
+
+        流程：
+        1. 分块
+        2. 每块跑 Round 1~3
+        3. Merge Round 合并
+        4. Round 4 一致性校验
+        5. 如果有冲突，执行修正轮
         """
-        logger.info("Starting persona extraction (turns=%d)", len(turns))
+        logger.info("开始人格提取（共 %d 轮对话，每块 %d 轮）", len(turns), self.chunk_size)
 
-        dialogue_text = self._render_dialogue_text(turns)
-        if len(dialogue_text) > self.max_chunk_chars:
-            logger.debug(
-                "Dialogue text too long (%d chars), truncating to %d",
-                len(dialogue_text),
-                self.max_chunk_chars,
-            )
-            dialogue_text = dialogue_text[: self.max_chunk_chars]
+        # Step 1: 分块
+        chunks = self._split_into_chunks(turns)
+        logger.info("分为 %d 个块", len(chunks))
 
-        # Round 1: coarse extraction
-        round1 = await self._call_llm(_ROUND1_USER_PROMPT.format(dialogue_text=dialogue_text))
-        round1_json = self._safe_parse_json(round1)
-        logger.debug("Round1 parsed: %s", round1_json)
+        # Step 2: 每块独立提取
+        chunk_results: List[ChunkResult] = []
+        for i, chunk_turns in enumerate(chunks):
+            logger.info("提取第 %d/%d 块（%d 轮）", i + 1, len(chunks), len(chunk_turns))
+            result = await self._extract_chunk(chunk_turns, chunk_index=i)
+            chunk_results.append(result)
 
-        # Round 2: fine-grained
-        round2_input = _ROUND2_USER_PROMPT.format(
-            dialogue_text=dialogue_text,
-            round1_output=round1 if isinstance(round1, str) else json.dumps(round1),
-        )
-        round2 = await self._call_llm(round2_input)
-        round2_json = self._safe_parse_json(round2)
-        logger.debug("Round2 parsed: %s", round2_json)
+        # Step 3: 合并
+        if len(chunk_results) == 1:
+            profile = chunk_results[0].profile or PersonaProfile(name=name)
+        else:
+            profile = await self._merge_chunks(chunk_results, name=name)
 
-        # Round 3: select dialogue examples
-        round3_input = _ROUND3_USER_PROMPT.format(dialogue_text=dialogue_text)
-        round3 = await self._call_llm(round3_input)
-        round3_json = self._safe_parse_json(round3)
-        logger.debug("Round3 parsed: %s", round3_json)
+        # Step 4: Round 4 一致性校验 + 回流修正
+        profile = await self._consistency_check_and_correct(profile, turns)
 
-        # Build initial PersonaProfile from collected outputs
-        profile = self._build_profile_from_rounds(name, round1_json, round2_json, round3_json)
-
-        # Round 4: consistency check (ask LLM to validate)
-        try:
-            persona_json_text = json.dumps(
-                self._profile_to_serializable(profile), ensure_ascii=False, indent=2
-            )
-            examples_json_text = json.dumps(round3_json or {}, ensure_ascii=False, indent=2)
-            round4_input = _ROUND4_USER_PROMPT.format(
-                persona_json=persona_json_text, examples_json=examples_json_text
-            )
-            round4 = await self._call_llm(round4_input)
-            round4_json = self._safe_parse_json(round4)
-            # incorporate conflicts/notes into profile.raw_notes for later review
-            if round4_json:
-                profile.raw_notes["consistency_check"] = round4_json
-        except Exception as e:
-            logger.exception("Round 4 consistency check failed: %s", e)
-            profile.raw_notes.setdefault("errors", []).append(f"round4_error: {e}")
-
-        logger.info("Extraction complete for persona '%s'", name or profile.name or "<unknown>")
+        logger.info("人格提取完成：%s", name or profile.name or "<unknown>")
         return profile
 
-    # -------------------------
-    # Internal helpers
-    # -------------------------
+    async def extract_incremental(
+        self,
+        existing_persona: str,
+        new_turns: List[DialogueTurn],
+        name: Optional[str] = None,
+    ) -> PersonaProfile:
+        """
+        增量更新：已有角色描述 + 新对话 → 更新后的人格。
+
+        Args:
+            existing_persona: 现有角色描述（Markdown 或 JSON 字符串）
+            new_turns: 新的对话记录
+            name: 角色名称
+        """
+        logger.info("增量更新：%d 轮新对话", len(new_turns))
+        dialogue_text = self._render_dialogue_text(new_turns)
+
+        # 裁剪到安全长度
+        if len(dialogue_text) > self.max_chunk_chars:
+            dialogue_text = dialogue_text[:self.max_chunk_chars]
+
+        prompt = render_prompt(
+            "incremental",
+            existing_persona=existing_persona,
+            dialogue_text=dialogue_text,
+        )
+        response = await self._call_llm(prompt)
+        result_json = self._safe_parse_json(response) or {}
+
+        # 构建 profile
+        updated = result_json.get("updated_persona", result_json)
+        profile = self._dict_to_profile(updated, name=name)
+        profile.raw_notes["incremental_changes"] = result_json.get("changes", [])
+        profile.raw_notes["extraction_mode"] = "incremental"
+
+        return profile
+
+    # ------------------------------------------------------------------
+    # 分块
+    # ------------------------------------------------------------------
+
+    def _split_into_chunks(self, turns: List[DialogueTurn]) -> List[List[DialogueTurn]]:
+        """按轮数分块，每块 chunk_size 轮。"""
+        if len(turns) <= self.chunk_size:
+            return [turns]
+
+        chunks = []
+        for i in range(0, len(turns), self.chunk_size):
+            chunk = turns[i : i + self.chunk_size]
+            if chunk:
+                chunks.append(chunk)
+        return chunks
+
+    # ------------------------------------------------------------------
+    # 单块提取
+    # ------------------------------------------------------------------
+
+    async def _extract_chunk(
+        self,
+        turns: List[DialogueTurn],
+        chunk_index: int = 0,
+    ) -> ChunkResult:
+        """对单个对话块执行 Round 1~3 提取。"""
+        dialogue_text = self._render_dialogue_text(turns)
+
+        # 安全截断
+        if len(dialogue_text) > self.max_chunk_chars:
+            logger.debug("块 %d 字符过多（%d），截断到 %d", chunk_index, len(dialogue_text), self.max_chunk_chars)
+            dialogue_text = dialogue_text[:self.max_chunk_chars]
+
+        result = ChunkResult(
+            chunk_index=chunk_index,
+            turn_range=(0, len(turns)),
+        )
+
+        # Round 1
+        round1_prompt = render_prompt("round1", dialogue_text=dialogue_text)
+        round1_raw = await self._call_llm(round1_prompt)
+        result.round1 = self._safe_parse_json(round1_raw)
+        logger.debug("块 %d Round1: %s", chunk_index, list(result.round1.keys()) if result.round1 else "None")
+
+        # Round 2
+        round2_prompt = render_prompt(
+            "round2",
+            dialogue_text=dialogue_text,
+            round1_output=json.dumps(result.round1, ensure_ascii=False) if result.round1 else "{}",
+        )
+        round2_raw = await self._call_llm(round2_prompt)
+        result.round2 = self._safe_parse_json(round2_raw)
+
+        # Round 3
+        round3_prompt = render_prompt("round3", dialogue_text=dialogue_text)
+        round3_raw = await self._call_llm(round3_prompt)
+        result.round3 = self._safe_parse_json(round3_raw)
+
+        # 构建单块 profile
+        result.profile = self._build_profile_from_rounds(
+            name=None,
+            round1_json=result.round1,
+            round2_json=result.round2,
+            round3_json=result.round3,
+        )
+
+        return result
+
+    # ------------------------------------------------------------------
+    # 合并多块结果
+    # ------------------------------------------------------------------
+
+    async def _merge_chunks(
+        self,
+        chunk_results: List[ChunkResult],
+        name: Optional[str] = None,
+    ) -> PersonaProfile:
+        """用 Merge Round 合并多块提取结果。"""
+        logger.info("合并 %d 个块的提取结果", len(chunk_results))
+
+        # 构建合并输入
+        chunk_summaries = []
+        for cr in chunk_results:
+            summary = {
+                "chunk_index": cr.chunk_index,
+                "round1": cr.round1,
+                "round2": cr.round2,
+                "examples_count": len(cr.profile.dialogue_examples) if cr.profile else 0,
+            }
+            chunk_summaries.append(summary)
+
+        chunk_results_text = json.dumps(chunk_summaries, ensure_ascii=False, indent=2)
+
+        # 如果太长，只传摘要
+        if len(chunk_results_text) > self.max_chunk_chars:
+            # 只传 Round1 + Round2 的核心字段
+            condensed = []
+            for cr in chunk_results:
+                condensed.append({
+                    "chunk": cr.chunk_index,
+                    "big_five": cr.round1.get("big_five") if cr.round1 else None,
+                    "keywords": cr.round1.get("core_keywords") if cr.round1 else None,
+                    "style": cr.round1.get("speaking_style_summary") if cr.round1 else None,
+                    "emotions": (cr.round2.get("emotional_patterns", {}).get("dominant_emotions") if cr.round2 else None),
+                    "taboos": cr.round2.get("taboos") if cr.round2 else None,
+                    "quirks": cr.round2.get("special_quirks") if cr.round2 else None,
+                })
+            chunk_results_text = json.dumps(condensed, ensure_ascii=False, indent=2)
+
+        merge_prompt = render_prompt("merge", chunk_results=chunk_results_text)
+        merge_raw = await self._call_llm(merge_prompt)
+        merge_json = self._safe_parse_json(merge_raw)
+
+        if merge_json:
+            profile = self._build_profile_from_rounds(
+                name=name,
+                round1_json=merge_json,
+                round2_json=merge_json,
+                round3_json=None,
+            )
+        else:
+            # fallback：取第一个块的结果
+            profile = chunk_results[0].profile or PersonaProfile(name=name)
+
+        # 合并所有块的对话示例
+        all_examples = []
+        for cr in chunk_results:
+            if cr.profile and cr.profile.dialogue_examples:
+                all_examples.extend(cr.profile.dialogue_examples)
+        # 去重（按 original 文本）
+        seen = set()
+        unique_examples = []
+        for ex in all_examples:
+            if ex.original not in seen:
+                seen.add(ex.original)
+                unique_examples.append(ex)
+        # 最多保留 10 个
+        profile.dialogue_examples = unique_examples[:10]
+
+        profile.raw_notes["merge_chunks"] = len(chunk_results)
+        profile.raw_notes["total_examples_merged"] = len(all_examples)
+
+        return profile
+
+    # ------------------------------------------------------------------
+    # Round 4 一致性校验 + 回流修正
+    # ------------------------------------------------------------------
+
+    async def _consistency_check_and_correct(
+        self,
+        profile: PersonaProfile,
+        turns: List[DialogueTurn],
+    ) -> PersonaProfile:
+        """执行 Round 4 一致性校验，如果有冲突则修正。"""
+        logger.info("执行一致性校验")
+
+        persona_json = json.dumps(
+            self._profile_to_serializable(profile), ensure_ascii=False, indent=2
+        )
+        examples_json = json.dumps(
+            [asdict(e) for e in profile.dialogue_examples],
+            ensure_ascii=False,
+            indent=2,
+        )
+
+        round4_prompt = render_prompt(
+            "round4",
+            persona_json=persona_json,
+            examples_json=examples_json,
+        )
+        round4_raw = await self._call_llm(round4_prompt)
+        round4_json = self._safe_parse_json(round4_raw)
+
+        if not round4_json:
+            logger.warning("Round 4 输出解析失败，跳过校验")
+            return profile
+
+        conflicts = round4_json.get("conflicts", [])
+        validated = round4_json.get("validated_persona", {})
+
+        profile.raw_notes["consistency_check"] = round4_json
+        logger.info("一致性校验完成，发现 %d 个冲突", len(conflicts))
+
+        if not conflicts:
+            # 无冲突，用 validated_persona 更新
+            if validated:
+                profile = self._apply_validated_persona(profile, validated)
+            return profile
+
+        # 有冲突 → 执行修正轮
+        if len(conflicts) > MAX_CONFLICTS_TO_CORRECT:
+            conflicts = conflicts[:MAX_CONFLICTS_TO_CORRECT]
+
+        logger.info("执行修正轮（%d 个冲突）", len(conflicts))
+        return await self._correct_conflicts(profile, turns, conflicts, examples_json)
+
+    async def _correct_conflicts(
+        self,
+        profile: PersonaProfile,
+        turns: List[DialogueTurn],
+        conflicts: List[Dict],
+        examples_json: str,
+    ) -> PersonaProfile:
+        """根据冲突修正人格特征。"""
+        dialogue_text = self._render_dialogue_text(turns)
+        if len(dialogue_text) > self.max_chunk_chars:
+            dialogue_text = dialogue_text[:self.max_chunk_chars]
+
+        persona_json = json.dumps(
+            self._profile_to_serializable(profile), ensure_ascii=False, indent=2
+        )
+        conflicts_json = json.dumps(conflicts, ensure_ascii=False, indent=2)
+
+        correction_prompt = render_prompt(
+            "correction",
+            conflicts_json=conflicts_json,
+            dialogue_text=dialogue_text,
+            examples_json=examples_json,
+            persona_json=persona_json,
+        )
+        correction_raw = await self._call_llm(correction_prompt)
+        correction_json = self._safe_parse_json(correction_raw)
+
+        if correction_json:
+            corrected_profile = self._build_profile_from_rounds(
+                name=profile.name,
+                round1_json=correction_json,
+                round2_json=correction_json,
+                round3_json=None,
+            )
+            # 保留原始对话示例
+            corrected_profile.dialogue_examples = profile.dialogue_examples
+            corrected_profile.raw_notes["correction_applied"] = True
+            corrected_profile.raw_notes["original_conflicts"] = conflicts
+            logger.info("修正完成")
+            return corrected_profile
+
+        logger.warning("修正轮输出解析失败，保留原始结果")
+        return profile
+
+    def _apply_validated_persona(
+        self, profile: PersonaProfile, validated: Dict[str, Any]
+    ) -> PersonaProfile:
+        """将 Round 4 的 validated_persona 合并到 profile 中。"""
+        if "big_five" in validated:
+            for k, v in validated["big_five"].items():
+                if v is not None:
+                    try:
+                        profile.big_five[k] = max(0.0, min(1.0, float(v)))
+                    except (ValueError, TypeError):
+                        pass
+
+        if "speaking_style_summary" in validated:
+            profile.speaking_style.summary = validated["speaking_style_summary"]
+
+        if "core_keywords" in validated:
+            profile.raw_notes["core_keywords"] = validated["core_keywords"]
+
+        if "emotional_patterns" in validated:
+            ep = validated["emotional_patterns"]
+            if isinstance(ep, dict):
+                profile.emotional_patterns.dominant_emotions = ep.get("dominant_emotions", [])
+                profile.emotional_patterns.triggers = ep.get("triggers", [])
+                profile.emotional_patterns.recovery_behaviors = ep.get("recovery_behaviors", [])
+                profile.emotional_patterns.expression_style = ep.get("expression_style", "")
+
+        if "values" in validated:
+            vals = validated["values"]
+            if isinstance(vals, dict):
+                profile.values.frequent_topics = vals.get("frequent_topics", [])
+                profile.values.attitudes = vals.get("attitudes", {})
+                profile.values.life_view = vals.get("life_view")
+                profile.values.humor_style = vals.get("humor_style")
+
+        if "taboos" in validated:
+            profile.taboos = validated["taboos"]
+
+        if "special_quirks" in validated:
+            profile.special_quirks = validated["special_quirks"]
+
+        return profile
+
+    # ------------------------------------------------------------------
+    # LLM 调用
+    # ------------------------------------------------------------------
 
     async def _call_llm(self, user_prompt: str) -> str:
-        """
-        Call the AI provider with a best-effort time bound. Return the content
-        string from the response. Raises on provider errors.
-        """
-        system = self.prompts.get("system", _DEFAULT_SYSTEM_PROMPT)
-        # Build a simple chat message sequence
+        """调用 AI Provider，带超时保护。"""
+        system = self.prompts.get("system", render_prompt("system"))
         messages = [{"role": "user", "content": user_prompt}]
         try:
-            coro = self.ai.chat(messages=messages, system=system, stream=False, temperature=0.2)
-            # Enforce timeout using asyncio.wait_for
-            resp: AIResponse = await asyncio.wait_for(coro, timeout=self.timeout_seconds)
-            logger.debug(
-                "LLM response model=%s finish=%s",
-                getattr(resp, "model", None),
-                getattr(resp, "finish_reason", None),
+            coro = self.ai.chat(
+                messages=messages, system=system, stream=False, temperature=0.2
             )
+            resp: AIResponse = await asyncio.wait_for(coro, timeout=self.timeout_seconds)
             return resp.content or ""
         except asyncio.TimeoutError:
-            logger.exception("LLM call timed out")
+            logger.error("LLM 调用超时（%ds）", self.timeout_seconds)
             raise
         except Exception:
-            logger.exception("LLM call failed")
+            logger.exception("LLM 调用失败")
             raise
 
+    # ------------------------------------------------------------------
+    # 工具方法
+    # ------------------------------------------------------------------
+
     def _render_dialogue_text(self, turns: List[DialogueTurn]) -> str:
-        """
-        Convert a list of DialogueTurn into a reasonably compact plain text
-        representation for the LLM. Preserve original content and basic metadata.
-        """
+        """将对话轮次转换为纯文本。"""
         lines: List[str] = []
         for t in turns:
             ts = t.timestamp.isoformat() if getattr(t, "timestamp", None) else ""
             sender = t.sender or "<unknown>"
-            # keep original content without modification
             content = t.content.replace("\n", " \\n ")
             meta = ""
             if t.metadata:
-                # include minimal metadata hints
                 meta_keys = ", ".join(sorted(t.metadata.keys()))
                 meta = f" [{meta_keys}]" if meta_keys else ""
             lines.append(f"{ts} {sender}:{meta} {content}".strip())
         return "\n".join(lines)
 
     def _safe_parse_json(self, text_or_obj: Any) -> Optional[Dict[str, Any]]:
-        """
-        Try to parse LLM output as JSON. Accept either a dict-like object
-        (already parsed) or a string. Returns dict on success, otherwise None.
-        When parsing fails, it will attempt to extract the first JSON object
-        substring as a fallback.
-        """
+        """解析 LLM 输出的 JSON，带多重 fallback。"""
         if text_or_obj is None:
             return None
         if isinstance(text_or_obj, dict):
@@ -315,34 +549,34 @@ class PersonaExtractor:
                 return json.loads(str(text_or_obj))
             except Exception:
                 return None
+
         text = text_or_obj.strip()
-        # direct parse attempt
+
+        # 直接解析
         try:
             return json.loads(text)
         except Exception:
             pass
-        # fallback: find first {...} or [ ... ] block and parse
+
+        # 提取第一个 {...}
         start = text.find("{")
         end = text.rfind("}")
         if start != -1 and end != -1 and end > start:
-            candidate = text[start : end + 1]
             try:
-                return json.loads(candidate)
+                return json.loads(text[start : end + 1])
             except Exception:
                 pass
-        # try array
+
+        # 提取第一个 [...]
         start = text.find("[")
         end = text.rfind("]")
         if start != -1 and end != -1 and end > start:
-            candidate = text[start : end + 1]
             try:
-                parsed = json.loads(candidate)
-                # wrap into dict if appropriate
-                return {"_list": parsed}
+                return {"_list": json.loads(text[start : end + 1])}
             except Exception:
                 pass
-        # parse failure: return None and keep raw text in notes
-        logger.debug("Failed to parse JSON from LLM output. Storing raw text.")
+
+        logger.debug("JSON 解析失败，保留原始文本")
         return {"_raw": text}
 
     def _build_profile_from_rounds(
@@ -352,64 +586,51 @@ class PersonaExtractor:
         round2_json: Optional[Dict[str, Any]],
         round3_json: Optional[Dict[str, Any]],
     ) -> PersonaProfile:
-        """
-        Consolidate the JSON outputs into a PersonaProfile dataclass.
-        This function is conservative: it extracts known fields but preserves
-        the raw round outputs in profile.raw_notes for human inspection.
-        """
-        profile = PersonaProfile(name=name or None)
+        """将多轮 JSON 输出合并为 PersonaProfile。"""
+        profile = PersonaProfile(name=name)
         profile.raw_notes["round1"] = round1_json
         profile.raw_notes["round2"] = round2_json
         profile.raw_notes["round3"] = round3_json
 
-        # Round1 -> big_five, speaking_style_summary, core_keywords
+        # Round 1 → big_five, speaking_style, keywords
         if round1_json:
             bf = round1_json.get("big_five") or round1_json.get("bigFive") or {}
-            # normalize values if possible
-            for k in (
-                "openness",
-                "conscientiousness",
-                "extraversion",
-                "agreeableness",
-                "neuroticism",
-            ):
-                try:
-                    v = float(bf.get(k, profile.big_five.get(k, 0.0)))
-                    profile.big_five[k] = max(0.0, min(1.0, v))
-                except Exception:
-                    # if not numeric, leave default
-                    pass
-            # speaking style summary
-            profile.speaking_style.summary = (
-                round1_json.get("speaking_style_summary") or round1_json.get("speaking_style") or ""
-            )
-            # core keywords
-            core = round1_json.get("core_keywords") or round1_json.get("keywords") or []
-            try:
-                profile.raw_notes["core_keywords"] = list(core)
-            except Exception:
-                profile.raw_notes["core_keywords"] = core
+            for k in ("openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"):
+                v = bf.get(k)
+                if v is not None:
+                    try:
+                        profile.big_five[k] = max(0.0, min(1.0, float(v)))
+                    except (ValueError, TypeError):
+                        pass
 
-        # Round2 -> emotional_patterns, values, taboos, special_quirks
+            profile.speaking_style.summary = (
+                round1_json.get("speaking_style_summary")
+                or round1_json.get("speaking_style")
+                or ""
+            )
+            core = round1_json.get("core_keywords") or round1_json.get("keywords") or []
+            profile.raw_notes["core_keywords"] = list(core) if isinstance(core, list) else core
+
+        # Round 2 → emotional_patterns, values, taboos, quirks
         if round2_json:
             ep = round2_json.get("emotional_patterns") or {}
             if isinstance(ep, dict):
-                profile.emotional_patterns.dominant_emotions = (
-                    ep.get("dominant_emotions") or ep.get("dominant") or []
-                )
+                profile.emotional_patterns.dominant_emotions = ep.get("dominant_emotions") or ep.get("dominant") or []
                 profile.emotional_patterns.triggers = ep.get("triggers") or []
                 profile.emotional_patterns.recovery_behaviors = ep.get("recovery_behaviors") or []
                 profile.emotional_patterns.expression_style = ep.get("expression_style") or ""
+
             vals = round2_json.get("values") or {}
             if isinstance(vals, dict):
                 profile.values.frequent_topics = vals.get("frequent_topics") or []
                 profile.values.attitudes = vals.get("attitudes") or {}
-                profile.values.life_view = vals.get("life_view") or None
-                profile.values.humor_style = vals.get("humor_style") or None
+                profile.values.life_view = vals.get("life_view")
+                profile.values.humor_style = vals.get("humor_style")
+
             profile.taboos = round2_json.get("taboos") or []
             profile.special_quirks = round2_json.get("special_quirks") or []
 
-        # Round3 -> examples
+        # Round 3 → dialogue examples
         if round3_json:
             examples = (
                 round3_json.get("examples")
@@ -417,41 +638,45 @@ class PersonaExtractor:
                 or round3_json.get("_list")
                 or []
             )
-            parsed_examples: List[DialogueExample] = []
             for ex in examples:
                 if isinstance(ex, dict):
-                    parsed_examples.append(
-                        DialogueExample(
-                            context=ex.get("context") or "",
-                            original=ex.get("original") or ex.get("text") or "",
-                            trigger=ex.get("trigger") or None,
-                            note=ex.get("note") or None,
-                        )
-                    )
+                    profile.dialogue_examples.append(DialogueExample(
+                        context=ex.get("context") or "",
+                        original=ex.get("original") or ex.get("text") or "",
+                        trigger=ex.get("trigger"),
+                        note=ex.get("note"),
+                    ))
                 else:
-                    parsed_examples.append(DialogueExample(context="", original=str(ex)))
-            profile.dialogue_examples = parsed_examples
+                    profile.dialogue_examples.append(DialogueExample(context="", original=str(ex)))
 
-        # If no textual summary provided, craft a minimal summary from available data
+        # 生成 summary
         if not profile.summary:
-            # prefer speaking style summary, then values.life_view, then keywords
             if profile.speaking_style.summary:
                 profile.summary = profile.speaking_style.summary
             else:
                 kw = profile.raw_notes.get("core_keywords")
-                if kw:
+                if kw and isinstance(kw, list):
                     profile.summary = " / ".join(kw[:5])
                 elif profile.values.life_view:
                     profile.summary = profile.values.life_view
                 else:
-                    profile.summary = "Persona extracted from conversation logs."
+                    profile.summary = "从对话记录中提取的人格特征。"
 
         return profile
 
+    def _dict_to_profile(self, data: Dict[str, Any], name: Optional[str] = None) -> PersonaProfile:
+        """将字典转换为 PersonaProfile。"""
+        if not data:
+            return PersonaProfile(name=name)
+        return self._build_profile_from_rounds(
+            name=name or data.get("name"),
+            round1_json=data,
+            round2_json=data,
+            round3_json={"examples": data.get("dialogue_examples", [])} if "dialogue_examples" in data else None,
+        )
+
     def _profile_to_serializable(self, profile: PersonaProfile) -> Dict[str, Any]:
-        """
-        Convert PersonaProfile to a JSON-serializable dict for validation or saving.
-        """
+        """将 PersonaProfile 转为可序列化的字典。"""
         return {
             "name": profile.name,
             "summary": profile.summary,
@@ -483,5 +708,4 @@ class PersonaExtractor:
             ],
             "taboos": profile.taboos,
             "special_quirks": profile.special_quirks,
-            "raw_notes": profile.raw_notes,
         }

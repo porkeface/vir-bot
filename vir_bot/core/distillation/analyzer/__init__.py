@@ -34,9 +34,14 @@ __all__ = [
 _registry: Dict[str, Type | str] = {
     # Core extractor which performs multi-round LLM-based persona extraction
     "extractor": "vir_bot.core.distillation.analyzer.extractor:PersonaExtractor",
+    # Statistical style analyzer (no LLM, pure computation)
+    "style": "vir_bot.core.distillation.analyzer.style_analyzer:StyleAnalyzer",
+    # Topic clustering using embeddings
+    "topic_clusterer": "vir_bot.core.distillation.analyzer.topic_clusterer:TopicClusterer",
+    # Fusion engine: merge stats + LLM results
+    "fusion": "vir_bot.core.distillation.analyzer.fusion:FusionEngine",
     # Optional components (placeholders). Implementations may be added later.
     "big_five": "vir_bot.core.distillation.analyzer.big_five:BigFiveAnalyzer",
-    "style": "vir_bot.core.distillation.analyzer.style_analyzer:StyleAnalyzer",
     "emotion": "vir_bot.core.distillation.analyzer.emotion_mapper:EmotionMapper",
     "dialogue_sampler": "vir_bot.core.distillation.analyzer.dialogue_sampler:DialogueSampler",
 }

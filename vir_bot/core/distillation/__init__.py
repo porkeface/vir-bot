@@ -25,9 +25,16 @@ __all__ = [
     "get_persona_extractor_class",
     "get_chat_parser_base",
     "get_wiki_generator_class",
+    "get_evaluator_class",
     "create_pipeline",
     "create_persona_extractor",
     "create_wiki_generator",
+    "create_evaluator",
+    # finetune 模块
+    "create_builder",
+    "create_trainer",
+    "create_inference",
+    "create_personality_evaluator",
 ]
 
 __version__ = "0.1.0"
@@ -132,3 +139,55 @@ def create_wiki_generator(*args: Any, **kwargs: Any) -> Any:
     """
     GeneratorCls = get_wiki_generator_class()
     return GeneratorCls(*args, **kwargs)
+
+
+def get_evaluator_class() -> Type:
+    """
+    返回 `LLMJudgeEvaluator` 类（惰性导入）。
+    """
+    try:
+        from .evaluator import LLMJudgeEvaluator
+
+        return LLMJudgeEvaluator
+    except Exception:
+        _raise_missing(
+            "evaluator",
+            "Expected file: vir_bot/core/distillation/evaluator.py with class 'LLMJudgeEvaluator'.",
+        )
+
+
+def create_evaluator(*args: Any, **kwargs: Any) -> Any:
+    """
+    创建并返回一个 `LLMJudgeEvaluator` 实例（工厂函数）。
+    """
+    EvaluatorCls = get_evaluator_class()
+    return EvaluatorCls(*args, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Finetune 模块工厂函数
+# ---------------------------------------------------------------------------
+
+
+def create_builder(*args: Any, **kwargs: Any) -> Any:
+    """创建训练数据构造器（TrainDataBuilder）。"""
+    from .finetune import create_builder as _create
+    return _create(*args, **kwargs)
+
+
+def create_trainer(*args: Any, **kwargs: Any) -> Any:
+    """创建 LoRA 训练器（LoRATrainer）。"""
+    from .finetune import create_trainer as _create
+    return _create(*args, **kwargs)
+
+
+def create_inference(*args: Any, **kwargs: Any) -> Any:
+    """创建 LoRA 推理引擎（LoRAInference）。"""
+    from .finetune import create_inference as _create
+    return _create(*args, **kwargs)
+
+
+def create_personality_evaluator(*args: Any, **kwargs: Any) -> Any:
+    """创建人格保真度评测器（PersonalityEvaluator）。"""
+    from .finetune import create_evaluator as _create
+    return _create(*args, **kwargs)

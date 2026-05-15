@@ -1,309 +1,424 @@
 # -*- coding: utf-8 -*-
 """
-Distillation prompt templates
+蒸馏提示词模板（中文版）
 
-This module centralizes the LLM prompt templates used by the distillation
-PersonaExtractor. Prompts are written to be clear, conservative, and to request
-machine-parsable (JSON) outputs where possible. The extractor uses these
-templates to run the multi-round extraction described in DISTILLATION_PLAN.md.
-
-Guidelines encoded in prompts:
-- Ask the model to be explicit about what is inferred vs. unknown.
-- Prefer numeric ranges for Big Five (0.0 - 1.0).
-- Request strict JSON output and provide schema examples.
-- Provide fallback instructions to produce a compact raw text when JSON fails.
+所有 prompt 集中管理，支持多轮提取、合并、增量更新和校验回流。
+每轮 prompt 都强制要求 JSON 输出，并提供 schema 示例。
 """
 
 from __future__ import annotations
 
 from typing import Any, Dict
 
-# -----------------------------------------------------------------------------
-# System-level prompt (intent & behavior)
-# -----------------------------------------------------------------------------
-SYSTEM_PROMPT = """You are an expert analyst specialized in extracting stable personality
-profiles and speaking style from conversational logs. Your job is to read chat
-turns and produce structured, conservative, and human-readable persona data
-that can be interpreted by downstream tooling.
+# ---------------------------------------------------------------------------
+# 系统提示词
+# ---------------------------------------------------------------------------
+SYSTEM_PROMPT = """你是一位专注于人格分析的专家，擅长从对话记录中提取稳定的性格特征和说话风格。
 
-Rules:
-- Respond primarily in JSON when asked for structured output.
-- If you are not certain about an inference, prefer null or empty lists instead
-  of fabricating details.
-- Keep answers concise and machine-parseable.
-- When asked for example dialogues, preserve the original text exactly (do not
-  rewrite messages) and provide a short contextual note for each snippet.
-- Always avoid revealing or fabricating personally-identifying information.
-"""
+核心原则：
+- 只提取有充分对话证据支持的特征，宁可留空也不要编造
+- 输出严格 JSON 格式，不要附加任何解释性文字
+- 保留原始对话中的用词和表达方式，不要改写
+- 当证据不足时，对应字段设为 null 或空数组
+- 注意区分"在聊天中的表现"和"真实性格"，提取的是聊天中的行为模式"""
 
+# ---------------------------------------------------------------------------
+# Round 1：粗提取 — 大五人格 + 说话风格概要 + 核心关键词
+# ---------------------------------------------------------------------------
+ROUND1_PROMPT = """## 第一轮：粗粒度人格提取
 
-# -----------------------------------------------------------------------------
-# JSON schemas / examples to include in prompts
-# These are not formal JSON Schema files, but compact "expected output" examples
-# to encourage LLM to produce machine-readable replies.
-# -----------------------------------------------------------------------------
-_BIG_FIVE_SCHEMA_EXAMPLE = r"""
-Example expected JSON (Round 1):
-{
-  "big_five": {
+读取下面的对话记录，完成以下任务：
+
+1. **大五人格评分**（每项 0.0~1.0）：
+   - openness（开放性）：好奇心、创意、接受新事物的程度
+   - conscientiousness（尽责性）：计划性、自律、负责任的程度
+   - extraversion（外向性）：社交活跃度、精力充沛程度
+   - agreeableness（宜人性）：友善、同理心、合作意愿
+   - neuroticism（神经质）：情绪波动、焦虑倾向
+   如果某个维度在对话中完全没有体现，设为 null
+
+2. **说话风格概要**（2~3 句话）：描述这个人的语言特点
+
+3. **核心关键词**（最多 5 个）：用一个词概括这个人的核心特质
+
+输出格式：
+```json
+{{
+  "big_five": {{
     "openness": 0.72,
-    "conscientiousness": 0.35,
+    "conscientiousness": null,
     "extraversion": 0.60,
     "agreeableness": 0.80,
     "neuroticism": 0.22
-  },
-  "speaking_style_summary": "Short, playful sentences; frequent use of emojis and laughter tokens.",
-  "core_keywords": ["playful", "curious", "warm", "impulsive", "supportive"]
-}
-"""
+  }},
+  "speaking_style_summary": "说话简短活泼，喜欢用语气词和表情符号，回复速度快。",
+  "core_keywords": ["活泼", "温柔", "关心人", "会撒娇", "有点傲娇"]
+}}
+```
 
-_ROUND2_SCHEMA_EXAMPLE = r"""
-Example expected JSON (Round 2):
-{
-  "emotional_patterns": {
-    "dominant_emotions": ["joy", "anxiety"],
-    "triggers": ["work criticism", "misunderstandings about care"],
-    "recovery_behaviors": ["self-deprecating humor", "distraction by hobbies"],
-    "expression_style": "expressive, uses exclamation and emojis to convey warmth"
-  },
-  "values": {
-    "frequent_topics": ["music", "relationships", "personal growth"],
-    "attitudes": {"work": "pragmatic", "love": "romantic", "family": "protective"},
-    "life_view": "optimistic with occasional worry about status",
-    "humor_style": "self-deprecating and meme-aware"
-  },
-  "taboos": ["jokes about family", "dismissive comments about mental health"],
-  "special_quirks": ["adds '哈哈' after uncomfortable statements", "uses ~ to soften sentences"]
-}
-"""
-
-_ROUND3_SCHEMA_EXAMPLE = r"""
-Example expected JSON (Round 3):
-{
-  "examples": [
-    {
-      "context": "Reassuring a friend who is upset",
-      "original": "A: 我懂你为什么生气。B: 谢谢你... 我现在好多了。",
-      "trigger": "friend shares sadness",
-      "note": "Shows comforting and empathic tone"
-    }
-  ]
-}
-"""
-
-_ROUND4_SCHEMA_EXAMPLE = r"""
-Example expected JSON (Round 4):
-{
-  "conflicts": [
-    {"field": "extraversion", "issue": "Round1 suggests high extraversion but examples show long introspective messages"}
-  ],
-  "validated_persona": { /* persona draft validated or with clarifying notes */ }
-}
-"""
-
-# -----------------------------------------------------------------------------
-# Multi-round user prompts
-# - Round 1: Coarse extraction (Big Five, style, keywords)
-# - Round 2: Fine-grained (emotions, values, taboos, quirks)
-# - Round 3: Dialogue examples selection (representative snippets)
-# - Round 4: Consistency check (validate, highlight conflicts)
-# -----------------------------------------------------------------------------
-
-ROUND1_PROMPT = """Round 1 — Coarse Persona Extraction
-
-Task:
-1) Read the conversation below and provide:
-   - A Big Five score for each trait in the range 0.0 - 1.0:
-     - openness, conscientiousness, extraversion, agreeableness, neuroticism
-   - A concise (1-3 sentences) `speaking_style_summary`
-   - Up to 5 `core_keywords` (single words) that capture the person's core personality
-
-Requirements:
-- Output JSON only. No additional commentary.
-- Follow the structure in the example exactly when possible.
-- If a trait cannot be inferred, set its value to null.
-
-Schema hint:
-{schema_example}
-
-Conversation:
+对话记录：
 ```
 {dialogue_text}
+```"""
+
+# ---------------------------------------------------------------------------
+# Round 2：细提取 — 情绪模式 + 价值观 + 禁忌 + 口癖
+# ---------------------------------------------------------------------------
+ROUND2_PROMPT = """## 第二轮：细粒度人格分析
+
+基于对话记录和第一轮的结果，提取更细致的人格特征。
+
+### 任务 1：情绪模式
+- dominant_emotions：主要情绪（最多 8 个，如"开心"、"焦虑"、"撒娇"）
+- triggers：什么话题/情况会触发强烈情绪
+- recovery_behaviors：情绪低落时如何恢复
+- expression_style：情绪表达方式的一句话描述
+
+### 任务 2：价值观
+- frequent_topics：经常聊的话题
+- attitudes：对生活各领域的态度（工作/恋爱/家庭等，2~5 个维度）
+- life_view：人生观/生活态度（1~2 句话，如果能推断的话）
+- humor_style：幽默风格（如果有的话）
+
+### 任务 3：禁忌和口癖
+- taboos：说话时避免的事（最多 5 项）
+- special_quirks：特殊的语言习惯或口癖（最多 10 项）
+
+输出格式：
+```json
+{{
+  "emotional_patterns": {{
+    "dominant_emotions": ["开心", "撒娇", "傲娇", "关心"],
+    "triggers": ["被忽视", "对方说重话", "忘记重要事情"],
+    "recovery_behaviors": ["撒娇求关注", "转移话题", "自嘲"],
+    "expression_style": "用语气词和表情符号表达情绪，喜怒哀乐都很明显"
+  }},
+  "values": {{
+    "frequent_topics": ["日常生活", "音乐", "感情", "对方的状态"],
+    "attitudes": {{"工作": "务实但会抱怨", "恋爱": "重视陪伴和细节", "家庭": "温暖保护型"}},
+    "life_view": "希望被在乎，享受简单的快乐",
+    "humor_style": "自嘲式幽默，偶尔吐槽对方"
+  }},
+  "taboos": ["长时间不理人", "否定她的想法", "忘记重要日子"],
+  "special_quirks": ["句尾加~", "用'讨厌'表达撒娇", "用'才不是呢'掩饰害羞"]
+}}
 ```
-"""
 
-ROUND2_PROMPT = """Round 2 — Fine-grained Analysis
-
-Input:
-- Conversation (same as Round 1)
-- Round1 JSON output (below) — use it as context
-
-Tasks:
-1) Extract `emotional_patterns`:
-   - `dominant_emotions`: list of short emotion words (max 8)
-   - `triggers`: situations/topics causing strong emotions
-   - `recovery_behaviors`: how the person calms down / self-soothes
-   - `expression_style`: brief phrase describing emotional expression
-
-2) Extract `values`:
-   - `frequent_topics`: list of topics they frequently discuss
-   - `attitudes`: short mapping for domains like work/love/family (2-5 keys)
-   - `life_view`: 1-2 sentence summary if inferrable
-   - `humor_style`: short phrase (if present)
-
-3) Identify `taboos` and `special_quirks` (lists).
-
-Requirements:
-- Output JSON only, using the structure in the example below.
-- Be conservative: prefer empty lists or null rather than guessing.
-- Keep lists compact and focused.
-
-Schema hint:
-{schema_example}
-
-Conversation:
+对话记录：
 ```
 {dialogue_text}
 ```
 
-Round1 output:
+第一轮结果：
 ```
 {round1_output}
+```"""
+
+# ---------------------------------------------------------------------------
+# Round 3：对话示例选取
+# ---------------------------------------------------------------------------
+ROUND3_PROMPT = """## 第三轮：代表性对话示例选取
+
+从对话记录中选取 5~10 段最能代表这个人物性格的对话片段。
+
+### 选取原则：
+- 覆盖不同场景（闲聊、情绪表达、关心对方、撒娇/傲娇、认真讨论等）
+- 优先选取能体现独特说话方式的片段
+- 保留原始文字，不要改写
+- 每段对话要有上下文，让人能理解场景
+
+### 输出格式：
+```json
+{{
+  "examples": [
+    {{
+      "context": "对方说累了，角色主动关心",
+      "original": "用户: 今天好累啊\\n角色: 哎呀~辛苦啦！来休息一下，要不要听我唱歌？",
+      "trigger": "对方表达疲惫",
+      "note": "体现关心和活泼的说话方式"
+    }}
+  ]
+}}
 ```
-"""
 
-ROUND3_PROMPT = """Round 3 — Representative Dialogue Examples
-
-Task:
-1) From the conversation select 5-10 representative snippets that illustrate the person's:
-   - speaking style
-   - emotional reactions
-   - values or typical behaviors
-2) For each snippet include:
-   - `context`: short note when/why this happens
-   - `original`: the exact original messages (do NOT paraphrase; preserve punctuation and emojis)
-   - `trigger`: what topic/situation led to this exchange
-   - `note`: one-sentence reason why this snippet is representative
-
-Requirements:
-- Output JSON only in the format shown in the example.
-- Preserve original text verbatim.
-
-Schema hint:
-{schema_example}
-
-Conversation:
+对话记录：
 ```
 {dialogue_text}
+```"""
+
+# ---------------------------------------------------------------------------
+# Round 4：一致性校验
+# ---------------------------------------------------------------------------
+ROUND4_PROMPT = """## 第四轮：一致性校验
+
+检查人格描述和对话示例之间是否存在矛盾。
+
+### 任务：
+1. 逐项检查人格特征是否与对话示例一致
+2. 如果发现矛盾，列出最多 10 个冲突点
+3. 输出修正后的 validated_persona
+
+### 冲突示例：
+- 描述说"说话简短"，但示例中有大段长篇回复 → 标记矛盾
+- 描述说"外向活泼"，但示例中经常沉默不语 → 标记矛盾
+
+### 输出格式：
+```json
+{{
+  "conflicts": [
+    {{
+      "field": "extraversion",
+      "issue": "描述为高外向性，但对话中有多次长时间不回复的情况",
+      "evidence": "示例3中对方发了5条消息才回复"
+    }}
+  ],
+  "validated_persona": {{
+    "big_five": {{ ... }},
+    "speaking_style_summary": "...",
+    "core_keywords": [...],
+    "emotional_patterns": {{ ... }},
+    "values": {{ ... }},
+    "taboos": [...],
+    "special_quirks": [...]
+  }}
+}}
 ```
-"""
 
-ROUND4_PROMPT = """Round 4 — Consistency & Conflict Check
+注意：validated_persona 中只包含你确认无误的字段。如果有冲突的字段，修正后再放入。
 
-Input:
-- Persona draft JSON (combined from previous rounds)
-- The selected examples JSON
-
-Tasks:
-1) Verify whether the described persona attributes are consistent with the examples.
-2) If any inconsistencies or overconfident inferences exist, list up to 10 `conflicts` with:
-   - `field` (e.g., 'extraversion', 'taboos')
-   - `issue` short description
-   - `evidence` pointing to where the conflict comes from (line references or example indices)
-3) Produce `validated_persona`: the persona draft with clarifying notes or corrections where needed.
-
-Requirements:
-- Output JSON only, matching the example.
-- Be explicit about uncertainty (use "uncertain" flags or nulls as needed).
-
-Schema hint:
-{schema_example}
-
-Persona draft:
+人格草稿：
 ```
 {persona_json}
 ```
 
-Examples:
+对话示例：
+```
+{examples_json}
+```"""
+
+# ---------------------------------------------------------------------------
+# Merge Round：合并多块提取结果
+# ---------------------------------------------------------------------------
+MERGE_PROMPT = """## 合并轮：合并多次提取结果
+
+由于对话记录较长，分成了多个片段分别提取人格特征。现在需要将多次提取的结果合并为一个统一的人格描述。
+
+### 合并规则：
+1. **一致的特征**：多个片段都提取到的特征 → 保留，置信度高
+2. **互补的特征**：不同片段提取到不同维度 → 合并到一起
+3. **矛盾的特征**：不同片段对同一维度有不同结论 → 取出现频率更高的，或标记为"表现多变"
+4. **列表类字段**（关键词、禁忌、口癖等）：去重合并，按出现频率排序
+5. **评分字段**（大五人格）：取加权平均，如果没有矛盾就保持一致的值
+
+### 输出格式：与单次提取相同的完整人格 JSON
+
+各片段提取结果：
+```
+{chunk_results}
+```"""
+
+# ---------------------------------------------------------------------------
+# 修正轮：根据 Round 4 冲突修正特定字段
+# ---------------------------------------------------------------------------
+CORRECTION_PROMPT = """## 修正轮：修正有冲突的人格特征
+
+第四轮一致性校验发现了以下冲突：
+```
+{conflicts_json}
+```
+
+请根据对话记录和对话示例，修正这些有冲突的字段。
+
+### 修正原则：
+- 以对话实际表现为准，而不是初始推断
+- 如果某个特征确实存在但表现不稳定，可以标注"表现多变"
+- 修正后输出完整的 validated_persona
+
+对话记录：
+```
+{dialogue_text}
+```
+
+对话示例：
 ```
 {examples_json}
 ```
-"""
 
-# -----------------------------------------------------------------------------
-# Utility mapping and helper
-# -----------------------------------------------------------------------------
+当前人格草稿：
+```
+{persona_json}
+```"""
+
+# ---------------------------------------------------------------------------
+# 增量更新轮
+# ---------------------------------------------------------------------------
+INCREMENTAL_PROMPT = """## 增量更新：基于新对话更新人格描述
+
+已有一个角色人格描述，现在有新的对话记录。请对比新旧信息，更新人格描述。
+
+### 更新规则：
+1. **稳定的特征**：新旧对话都一致 → 保持不变
+2. **新发现的特征**：新对话中出现但旧描述中没有 → 追加
+3. **演变的特征**：新旧对话中同一特征表现不同 → 标记为"演变"，保留新旧对比
+4. **消失的特征**：旧描述中有但新对话中完全没体现 → 保留但标注"近期未观察到"
+
+### 输出格式：
+```json
+{{
+  "updated_persona": {{ ... }},
+  "changes": [
+    {{
+      "field": "emotional_patterns.dominant_emotions",
+      "type": "evolved",
+      "old_value": ["开心", "撒娇"],
+      "new_value": ["开心", "撒娇", "焦虑"],
+      "reason": "新对话中出现了较多工作焦虑的表达"
+    }}
+  ]
+}}
+```
+
+现有角色描述：
+```
+{existing_persona}
+```
+
+新对话记录：
+```
+{dialogue_text}
+```"""
+
+# ---------------------------------------------------------------------------
+# 评测 Judge 提示词
+# ---------------------------------------------------------------------------
+JUDGE_SYSTEM_PROMPT = """你是一位专业的人格评估专家。你的任务是判断一个 AI 角色的回复是否符合给定的人格描述。
+
+评估标准：
+- 说话风格是否匹配（语气、用词、句式）
+- 情绪反应是否符合人格特征
+- 价值观和态度是否一致
+- 是否出现了人格描述中明确禁止的行为
+
+评分规则：
+- 1.0：完美符合人格描述
+- 0.8：大体符合，有微小偏差
+- 0.6：部分符合，某些方面不够准确
+- 0.4：明显不符合，有多处偏差
+- 0.2：严重不符合，基本不像这个人
+- 0.0：完全不符合"""
+
+JUDGE_EVALUATE_PROMPT = """## 人格还原度评估
+
+### 角色人格描述：
+```
+{persona_description}
+```
+
+### 测试场景：
+{test_scenario}
+
+### 角色回复：
+```
+{role_response}
+```
+
+### 评估任务：
+请从以下维度评估回复的人格还原度，每个维度给出 0.0~1.0 的分数和简短理由：
+
+1. **style_match**（风格匹配）：语气、用词、句式是否符合
+2. **emotion_match**（情绪匹配）：情绪反应是否符合人格特征
+3. **value_match**（价值观匹配）：态度和价值观是否一致
+4. **taboo_avoidance**（禁忌回避）：是否避免了人格描述中的禁忌
+5. **overall**（综合得分）：整体还原度
+
+输出格式：
+```json
+{{
+  "style_match": {{"score": 0.9, "reason": "语气词和句式都很符合"}},
+  "emotion_match": {{"score": 0.8, "reason": "情绪反应恰当"}},
+  "value_match": {{"score": 0.85, "reason": "价值观表达一致"}},
+  "taboo_avoidance": {{"score": 1.0, "reason": "没有出现禁忌行为"}},
+  "overall": {{"score": 0.85, "reason": "整体还原度较高"}}
+}}
+```"""
+
+# ---------------------------------------------------------------------------
+# 测试场景生成提示词
+# ---------------------------------------------------------------------------
+SCENARIO_GENERATION_PROMPT = """## 生成人格测试场景
+
+基于以下角色人格描述，生成 {num_scenarios} 个测试场景，用于评估 AI 是否能还原这个角色。
+
+### 要求：
+- 覆盖角色的各个特征维度（说话风格、情绪、价值观、禁忌）
+- 包含日常场景和边界场景（如触发禁忌、情绪转折）
+- 每个场景要具体，有明确的触发条件
+
+### 输出格式：
+```json
+{{
+  "scenarios": [
+    {{
+      "id": 1,
+      "trigger": "用户说'我今天好累啊'",
+      "expected_traits": ["关心", "温柔", "用语气词"],
+      "category": "日常关心"
+    }}
+  ]
+}}
+```
+
+角色人格描述：
+```
+{persona_description}
+```"""
+
+# ---------------------------------------------------------------------------
+# 模块导出
+# ---------------------------------------------------------------------------
 _PROMPTS: Dict[str, str] = {
     "system": SYSTEM_PROMPT,
     "round1": ROUND1_PROMPT,
     "round2": ROUND2_PROMPT,
     "round3": ROUND3_PROMPT,
     "round4": ROUND4_PROMPT,
-}
-
-_SCHEMA_EXAMPLES: Dict[str, str] = {
-    "round1": _BIG_FIVE_SCHEMA_EXAMPLE,
-    "round2": _ROUND2_SCHEMA_EXAMPLE,
-    "round3": _ROUND3_SCHEMA_EXAMPLE,
-    "round4": _ROUND4_SCHEMA_EXAMPLE,
+    "merge": MERGE_PROMPT,
+    "correction": CORRECTION_PROMPT,
+    "incremental": INCREMENTAL_PROMPT,
+    "judge_system": JUDGE_SYSTEM_PROMPT,
+    "judge_evaluate": JUDGE_EVALUATE_PROMPT,
+    "scenario_generation": SCENARIO_GENERATION_PROMPT,
 }
 
 
 def render_prompt(name: str, **kwargs: Any) -> str:
-    """
-    Render a named prompt with provided keyword replacements.
-
-    Args:
-        name: one of "system", "round1", "round2", "round3", "round4".
-        kwargs: variables referenced in the template, e.g. dialogue_text,
-                round1_output, persona_json, examples_json, etc.
-
-    Returns:
-        A fully formatted prompt string ready to pass to the LLM.
-
-    Notes:
-    - Templates expect `dialogue_text` in most rounds.
-    - The helper will automatically inject the schema hint for the round when available.
-    """
+    """渲染指定名称的提示词模板。"""
     key = name.lower()
     if key not in _PROMPTS:
         raise KeyError(f"Unknown prompt name: {name!r}")
-
-    template = _PROMPTS[key]
-    # Inject schema example into kwargs if not present and available
-    if key in _SCHEMA_EXAMPLES and "schema_example" not in kwargs:
-        kwargs["schema_example"] = _SCHEMA_EXAMPLES[key]
-
-    try:
-        return template.format(**kwargs)
-    except KeyError as e:
-        missing = e.args[0] if e.args else "<unknown>"
-        raise KeyError(f"Missing template variable: {missing} for prompt '{name}'") from e
+    return _PROMPTS[key].format(**kwargs)
 
 
-# -----------------------------------------------------------------------------
-# Convenience small helper for composing multi-message sequences used by the
-# extractor: return (system, user_message) pair for each round.
-# -----------------------------------------------------------------------------
-def prepare_round_messages(round_name: str, **kwargs: Any) -> Dict[str, str]:
-    """
-    Return a dict with keys 'system' and 'user' containing the formatted
-    system and user prompts for a given round name.
-    """
-    system = _PROMPTS["system"]
-    user = render_prompt(round_name, **kwargs)
-    return {"system": system, "user": user}
+def get_prompt(name: str) -> str:
+    """获取原始提示词模板（不渲染）。"""
+    key = name.lower()
+    if key not in _PROMPTS:
+        raise KeyError(f"Unknown prompt name: {name!r}")
+    return _PROMPTS[key]
 
 
-# -----------------------------------------------------------------------------
-# Module-level exported names
-# -----------------------------------------------------------------------------
 __all__ = [
     "SYSTEM_PROMPT",
     "ROUND1_PROMPT",
     "ROUND2_PROMPT",
     "ROUND3_PROMPT",
     "ROUND4_PROMPT",
+    "MERGE_PROMPT",
+    "CORRECTION_PROMPT",
+    "INCREMENTAL_PROMPT",
+    "JUDGE_SYSTEM_PROMPT",
+    "JUDGE_EVALUATE_PROMPT",
+    "SCENARIO_GENERATION_PROMPT",
     "render_prompt",
-    "prepare_round_messages",
+    "get_prompt",
 ]
