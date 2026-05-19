@@ -32,6 +32,19 @@ Thumbs.db
 # 项目特定文件
 *.pid
 *.lock
+*.bak
+
+# 配置文件（含个人设置和 API key）
+config.yaml
+
+# 运行时数据（记忆、向量库、训练数据、日志）
+data/memory/
+data/training/
+data/lora_adapters/
+data/logs/
+
+# Claude Code 工作目录
+.claude/
 
 # 蒸馏产物 & 个人数据（防止泄露聊天记录和角色卡）
 data/characters/
