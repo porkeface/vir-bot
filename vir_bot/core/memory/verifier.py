@@ -29,25 +29,20 @@ class WriteVerifier:
         self._sim_threshold = 0.85  # 语义相似度阈值
 
     async def _ensure_model_loaded(self) -> bool:
-        """懒加载 embedding 模型。"""
+        """懒加载 embedding 模型。
+
+        注意：sentence_transformers 在 Windows 上与 PyTorch CUDA 存在 DLL 冲突，
+        导入时会触发 native segfault（无法被 try-except 捕获）。
+        因此直接使用文本匹配回退方案。
+        """
         if self._model is not None:
             return True
         if self._model_error:
             return False
-        try:
-            from sentence_transformers import SentenceTransformer
-            import asyncio
-            loop = asyncio.get_event_loop()
-            self._model = await loop.run_in_executor(
-                None,
-                lambda: SentenceTransformer(self.embedding_model_name),
-            )
-            logger.info(f"Verifier embedding model loaded: {self.embedding_model_name}")
-            return True
-        except Exception as e:
-            self._model_error = True
-            logger.warning(f"Failed to load embedding model: {e}")
-            return False
+        # sentence_transformers 与 PyTorch CUDA 在 Windows 上有 DLL 冲突
+        self._model_error = True
+        logger.info("Verifier: CrossEncoder 已禁用（Windows DLL 冲突），使用文本匹配")
+        return False
 
     def _cosine_similarity(self, vec1, vec2) -> float:
         """计算余弦相似度。"""

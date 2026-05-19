@@ -124,17 +124,13 @@ class LongTermMemory:
 
     def _load_embedding_fn(self):
         """懒加载嵌入函数，支持多种回退方案"""
+        # 方案0：跳过 SentenceTransformer（Windows 上与 PyTorch CUDA 有 DLL 冲突）
+        logger.info("SentenceTransformer 已跳过（Windows DLL 冲突），尝试其他 embedding 方案")
+
         # 方案1：尝试 SentenceTransformer（如果模型已缓存则离线可用）
-        try:
-            from sentence_transformers import SentenceTransformer
-            # 尝试离线模式
-            import os
-            os.environ["TRANSFORMERS_OFFLINE"] = "1"
-            model = SentenceTransformer(self.embedding_model, local_files_only=True)
-            logger.info(f"Loaded embedding model (offline): {self.embedding_model}")
-            return model.encode
-        except Exception as e:
-            logger.warning(f"SentenceTransformer load failed: {e}")
+        # 注意：sentence_transformers 在 Windows 上与 PyTorch CUDA 存在 DLL 冲突，
+        # 导入时会触发 native segfault（无法被 try-except 捕获）。
+        # 因此跳过此方案，直接尝试 Ollama 或 ChromaDB 默认 embedding。
 
         # 方案2：尝试 Ollama 嵌入 API
         try:

@@ -142,22 +142,10 @@ class TopicClusterer:
         if self._encoder is not None:
             return self._encoder
 
-        try:
-            from sentence_transformers import SentenceTransformer
-            import os
-            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
-            self._encoder = SentenceTransformer(self.embedding_model_name, local_files_only=True)
-            logger.info("加载 embedding 模型: %s", self.embedding_model_name)
-            return self._encoder
-        except Exception as e:
-            logger.warning("SentenceTransformer 加载失败: %s，尝试在线模式", e)
-            try:
-                from sentence_transformers import SentenceTransformer
-                self._encoder = SentenceTransformer(self.embedding_model_name)
-                return self._encoder
-            except Exception as e2:
-                logger.error("Embedding 模型加载失败: %s", e2)
-                return None
+        # sentence_transformers 在 Windows 上与 PyTorch CUDA 有 DLL 冲突，
+        # 导入会导致进程级 segfault，直接跳过
+        logger.warning("SentenceTransformer 已跳过（Windows DLL 冲突），聚类功能不可用")
+        return None
 
     def _get_embeddings(self, texts: List[str]) -> Optional[List[List[float]]]:
         """生成文本 embedding。"""
