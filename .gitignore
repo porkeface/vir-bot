@@ -48,7 +48,7 @@ data/logs/
 
 # 蒸馏产物 & 个人数据（防止泄露聊天记录和角色卡）
 data/characters/
-data/wiki/characters/
+data/wiki/
 data/chat_records/
 data/distillation/
 data/temp/
