@@ -237,6 +237,20 @@ async def lifespan(app: FastAPI):
     if main_mod and hasattr(main_mod, "app_state"):
         app_state = main_mod.app_state
 
+    # 设置 asyncio 全局异常处理器，防止未捕获的 task 异常导致静默退出
+    def _asyncio_exception_handler(loop, context):
+        exc = context.get("exception")
+        msg = context.get("message", "未知 asyncio 错误")
+        logger.error(f"[AsyncIO] 未处理异常: {msg}")
+        if exc:
+            import traceback
+
+            logger.error(f"[AsyncIO] 异常详情: {''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))}")
+        else:
+            logger.error(f"[AsyncIO] 上下文: {context}")
+
+    asyncio.get_running_loop().set_exception_handler(_asyncio_exception_handler)
+
     config = get_config()
     logger.info(f"=== vir-bot {config.app.version} 启动 ===")
 
@@ -293,6 +307,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"=== vir-bot 启动完成 ===")
 
     yield
+
+    logger.info("=== vir-bot lifespan yield 返回，开始关闭 ===")
 
     # 关闭主动消息服务
     if hasattr(app_state, 'proactive_service') and app_state.proactive_service and app_state.proactive_service._enabled:
@@ -419,6 +435,29 @@ def create_app() -> FastAPI:
 
 
 def run():
+    # 捕获 native 崩溃（segfault 等）的堆栈跟踪
+    import os
+
+    os.makedirs("data/logs", exist_ok=True)
+    import faulthandler
+
+    faulthandler.enable(file=open("data/logs/faulthandler.log", "w"))
+
+    # 捕获未处理的 Python 异常
+    def _global_exception_handler(exc_type, exc_value, exc_tb):
+        import traceback
+
+        tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        print(f"[FATAL] 未处理异常:\n{tb}", flush=True)
+        try:
+            from vir_bot.utils.logger import logger
+
+            logger.error(f"[FATAL] 未处理异常:\n{tb}")
+        except Exception:
+            pass
+
+    sys.excepthook = _global_exception_handler
+
     config = load_config()
     setup_logger(level=config.app.log_level, log_dir=config.app.log_dir)
 

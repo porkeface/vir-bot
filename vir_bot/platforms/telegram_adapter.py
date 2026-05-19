@@ -289,9 +289,21 @@ class TelegramAdapter(PlatformAdapter):
             await self._app.updater.start_polling(drop_pending_updates=True)
             logger.info("[Telegram] polling 已启动")
 
-        # 启动消息处理循环
-        asyncio.create_task(self._run())
+        # 启动消息处理循环（存储引用防止 GC 和静默丢失异常）
+        self._run_task = asyncio.create_task(self._run())
+        self._run_task.add_done_callback(self._on_task_done)
         logger.info(f"[{self.platform.value}] 平台适配器已启动")
+
+    @staticmethod
+    def _on_task_done(task: asyncio.Task) -> None:
+        """任务结束时记录异常（如果有的话）"""
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc:
+            import traceback
+
+            logger.error(f"[Telegram] 消息处理任务异常退出:\n{''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))}")
 
     async def stop(self) -> None:
         """停止适配器"""

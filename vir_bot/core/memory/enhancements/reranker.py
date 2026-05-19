@@ -45,12 +45,45 @@ class ReRanker:
         self._model = None
         self._load_error = False
         self._load_error_msg = None
+        self._st_available: bool | None = None  # None = 未探测
+
+    @staticmethod
+    def _probe_sentence_transformers() -> bool:
+        """用子进程探测 sentence_transformers 能否安全导入（避免 native 段错误杀死主进程）。"""
+        import subprocess
+        import sys
+
+        try:
+            result = subprocess.run(
+                [sys.executable, "-c", "from sentence_transformers import CrossEncoder; print('OK')"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            if result.returncode == 0 and "OK" in result.stdout:
+                return True
+            logger.warning(
+                f"sentence_transformers 不可安全导入 (exit={result.returncode})，"
+                f"ReRanker 将使用关键词匹配回退方案"
+            )
+            return False
+        except Exception as e:
+            logger.warning(f"sentence_transformers 探测失败: {e}")
+            return False
 
     async def _ensure_model_loaded(self) -> bool:
         """懒加载 CrossEncoder 模型。"""
         if self._model is not None:
             return True
         if self._load_error:
+            return False
+        # 首次调用时在 executor 中探测（不阻塞事件循环）
+        if self._st_available is None:
+            import asyncio
+
+            loop = asyncio.get_running_loop()
+            self._st_available = await loop.run_in_executor(None, self._probe_sentence_transformers)
+        if not self._st_available:
             return False
 
         try:

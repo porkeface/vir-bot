@@ -70,15 +70,33 @@ class PlatformAdapter(ABC):
         """启动适配器"""
         self._running = True
         await self.connect()
-        asyncio.create_task(self._run())
+        self._run_task = asyncio.create_task(self._run())
+        self._run_task.add_done_callback(self._on_task_done)
         logger.info(f"[{self.platform.value}] 平台适配器已启动")
+
+    @staticmethod
+    def _on_task_done(task: asyncio.Task) -> None:
+        """任务结束时记录异常"""
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc:
+            import traceback
+
+            logger.error(f"[平台] 适配器任务异常退出:\n{''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))}")
 
     async def _run(self) -> None:
         """收发循环"""
         try:
             async for msg in self._receive_loop():
                 logger.info(f"[{self.platform.value}] 收到消息: {msg.content[:50]} from {msg.user_id}")
-                response = await self.pipeline.process(msg, send_callback=self.send_message)
+                try:
+                    response = await self.pipeline.process(msg, send_callback=self.send_message)
+                except Exception as e:
+                    import traceback
+
+                    logger.error(f"[{self.platform.value}] 处理消息异常:\n{''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
+                    continue
                 if response and response.metadata.get("already_streamed"):
                     # 流式输出已通过回调逐句发送
                     expression_path = response.metadata.get("expression")
@@ -88,7 +106,6 @@ class PlatformAdapter(ABC):
                     voice_file = response.metadata.get("voice_file")
                     if voice_file:
                         logger.info(f"[{self.platform.value}] 流式后发送语音: msg_id={response.msg_id}, file={voice_file}")
-                        # 通过 send_message 发送（会正确查找 chat_id），不调 _send_voice（可能被子类覆盖）
                         voice_response = PlatformResponse(
                             msg_id=response.msg_id,
                             content="",
@@ -101,9 +118,14 @@ class PlatformAdapter(ABC):
                     await self._send_split(response)
                 elif not response:
                     logger.warning(f"[{self.platform.value}] Pipeline 返回空响应")
+        except asyncio.CancelledError:
+            logger.info(f"[{self.platform.value}] 接收循环被取消")
         except Exception as e:
-            logger.error(f"[{self.platform.value}] 接收循环异常: {e}")
+            import traceback
+
+            logger.error(f"[{self.platform.value}] 接收循环异常:\n{''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
         finally:
+            logger.info(f"[{self.platform.value}] 接收循环退出，正在断开连接")
             await self.disconnect()
 
     async def _send_split(self, response: PlatformResponse) -> None:
