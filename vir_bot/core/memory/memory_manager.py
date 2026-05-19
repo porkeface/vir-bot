@@ -279,6 +279,9 @@ class MemoryManager:
                     user_id=user_id,
                 )
                 for triple in triples:
+                    if not all(k in triple for k in ("subject", "predicate", "object", "confidence")):
+                        logger.debug(f"跳过不完整的三元组: {triple}")
+                        continue
                     # 检测冲突
                     existing_edges = self.graph_store.query(
                         subject=triple["subject"],

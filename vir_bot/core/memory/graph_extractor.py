@@ -241,7 +241,9 @@ class GraphRelationExtractor:
         """
         existing_map = {}  # (subject, predicate) -> object
         for edge in existing_edges:
-            subj, pred, obj = edge[0], edge[1], edge[2]
+            subj = edge.subject if hasattr(edge, 'subject') else edge[0]
+            pred = edge.predicate if hasattr(edge, 'predicate') else edge[1]
+            obj = edge.object if hasattr(edge, 'object') else edge[2]
             existing_map[(subj, pred)] = obj
 
         conflicts = []
