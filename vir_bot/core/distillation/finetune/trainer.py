@@ -61,14 +61,22 @@ class TrainingResult:
 
 
 class LoggingCallback:
-    """训练日志回调。"""
+    """训练日志回调。通过 __getattr__ 兼容 transformers Trainer 所有回调事件。"""
 
     def __init__(self, log_interval: int = 10):
         self.log_interval = log_interval
         self.step = 0
         self.losses: List[float] = []
 
-    def on_log(self, logs: Dict[str, Any]) -> None:
+    def __getattr__(self, name):
+        """对未定义的回调事件返回 no-op，避免 AttributeError。"""
+        if name.startswith("on_"):
+            return lambda *args, **kwargs: None
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs is None:
+            return
         self.step += 1
         if "loss" in logs:
             self.losses.append(logs["loss"])
@@ -202,14 +210,16 @@ class LoRATrainer:
             quantization_config = BitsAndBytesConfig(**bnb_config)
             logger.info("启用 QLoRA：%d-bit 量化", self.config.quantization_bits)
 
-        # 加载模型
+        # 加载模型（low_cpu_mem_usage 减少加载时峰值内存，防止 8GB 显卡 OOM）
         model_kwargs: Dict[str, Any] = {
             "trust_remote_code": self.config.trust_remote_code,
             "torch_dtype": torch.bfloat16 if self.config.bf16 else torch.float16,
+            "low_cpu_mem_usage": True,
         }
 
         if quantization_config:
             model_kwargs["quantization_config"] = quantization_config
+            model_kwargs["device_map"] = "auto"
 
         # 尝试从本地加载，失败则在线下载
         model_path = self.config.base_model
@@ -308,61 +318,46 @@ class LoRATrainer:
 
         logger.info("训练集：%d 条，验证集：%d 条", len(data), len(eval_data))
 
-        # 预处理
+        # 预处理：用独立闭包避免 pickle 整个 trainer（含 4B 模型）
+        # num_proc=1 避免 Windows 下 pickle tokenizer 卡死
+        tokenizer = self._tokenizer
+        max_length = self.config.max_seq_length
+
+        def _preprocess_fn(examples: Dict[str, Any]) -> Dict[str, Any]:
+            prompts = []
+            inputs = examples.get("input", [""] * len(examples["instruction"]))
+            for i in range(len(examples["instruction"])):
+                instruction = examples["instruction"][i]
+                inp = inputs[i] or ""
+                output = examples["output"][i]
+                if inp:
+                    prompts.append(f"### 指令：\n{instruction}\n\n### 输入：\n{inp}\n\n### 回复：\n{output}")
+                else:
+                    prompts.append(f"### 指令：\n{instruction}\n\n### 回复：\n{output}")
+
+            tokenized = tokenizer(prompts, truncation=True, max_length=max_length, padding=False)
+            tokenized["labels"] = tokenized["input_ids"].copy()
+            return tokenized
+
         train_dataset = data.map(
-            self._preprocess,
+            _preprocess_fn,
+            batched=True,
+            batch_size=256,
             remove_columns=data.column_names,
-            num_proc=4,
+            num_proc=1,
             desc="预处理训练数据",
         )
 
         eval_dataset = eval_data.map(
-            self._preprocess,
+            _preprocess_fn,
+            batched=True,
+            batch_size=256,
             remove_columns=eval_data.column_names,
-            num_proc=4,
+            num_proc=1,
             desc="预处理验证数据",
         )
 
         return train_dataset, eval_dataset
-
-    def _preprocess(self, examples: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        预处理训练数据。
-
-        将 Alpaca 格式转为模型输入格式：
-        - instruction + input → prompt
-        - output → response
-        - 拼接为完整的训练序列
-        """
-        tokenizer = self._tokenizer
-        max_length = self.config.max_seq_length
-
-        # 构建 prompt
-        prompts = []
-        for i in range(len(examples["instruction"])):
-            instruction = examples["instruction"][i]
-            inp = examples.get("input", [""] * len(examples["instruction"]))[i] or ""
-            output = examples["output"][i]
-
-            if inp:
-                prompt = f"### 指令：\n{instruction}\n\n### 输入：\n{inp}\n\n### 回复：\n{output}"
-            else:
-                prompt = f"### 指令：\n{instruction}\n\n### 回复：\n{output}"
-
-            prompts.append(prompt)
-
-        # Tokenize
-        tokenized = tokenizer(
-            prompts,
-            truncation=True,
-            max_length=max_length,
-            padding=False,
-        )
-
-        # 设置 labels（与 input_ids 相同，causal LM）
-        tokenized["labels"] = tokenized["input_ids"].copy()
-
-        return tokenized
 
     # ------------------------------------------------------------------
     # 训练器设置
@@ -412,10 +407,12 @@ class LoRATrainer:
         logger.info("开始训练...")
         train_output = self._trainer.train()
 
-        # 最终评估
+        # 最终评估（恢复 use_cache 以启用推理加速）
         try:
+            self._model.config.use_cache = True
             eval_result = self._trainer.evaluate()
             logger.info("最终验证 Loss: %.4f", eval_result.get("eval_loss", 0))
+            self._model.config.use_cache = False
         except Exception as e:
             logger.warning("最终评估失败: %s", e)
 
@@ -473,6 +470,9 @@ class LoRATrainer:
         parser.add_argument("--use-qlora", action="store_true", help="启用 QLoRA")
         parser.add_argument("--qlora-bits", type=int, default=4, choices=[4, 8], help="量化位数")
         parser.add_argument("--max-seq-length", type=int, default=2048, help="最大序列长度")
+        parser.add_argument("--grad-accum", type=int, default=4, help="梯度累积步数")
+        parser.add_argument("--eval-steps", type=int, default=100, help="评估间隔（设大值跳过中间eval）")
+        parser.add_argument("--save-steps", type=int, default=100, help="保存间隔")
         parser.add_argument("--output-dir", default="./data/lora_adapters", help="输出目录")
         parser.add_argument("--adapter-name", default="persona_adapter", help="adapter 名称")
 
@@ -486,10 +486,13 @@ class LoRATrainer:
             lora_alpha=parsed.lora_alpha,
             num_epochs=parsed.epochs,
             per_device_batch_size=parsed.batch_size,
+            gradient_accumulation_steps=parsed.grad_accum,
             learning_rate=parsed.lr,
             use_qlora=parsed.use_qlora,
             quantization_bits=parsed.qlora_bits,
             max_seq_length=parsed.max_seq_length,
+            eval_steps=parsed.eval_steps,
+            save_steps=parsed.save_steps,
             output_dir=parsed.output_dir,
             adapter_name=parsed.adapter_name,
         )

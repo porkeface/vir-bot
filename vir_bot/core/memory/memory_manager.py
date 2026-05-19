@@ -79,7 +79,7 @@ class MemoryManager:
             from .verifier import WriteVerifier
 
             embedding_model = getattr(
-                config.long_term if hasattr(config, "long_term") else None,
+                long_term if long_term is not None else None,
                 "embedding_model",
                 "all-MiniLM-L6-v2",
             )
@@ -123,8 +123,8 @@ class MemoryManager:
             from .graph_extractor import GraphRelationExtractor
             from .graph_store import MemoryGraphStore
 
-            config = self._features.get("graph", {})
-            persist_path = config.get("persist_path", "./data/memory/memory_graph.json")
+            graph_config = self._features.get("graph", {})
+            persist_path = graph_config.get("persist_path", "./data/memory/memory_graph.json")
             self.graph_store = MemoryGraphStore(persist_path=persist_path)
 
             # 初始化关系抽取器

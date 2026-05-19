@@ -32,7 +32,9 @@ class TelegramAdapter(PlatformAdapter):
         return Platform.TELEGRAM
 
     async def connect(self) -> None:
-        builder = ApplicationBuilder().token(self.config.bot_token)
+        from telegram.request import HTTPXRequest
+        request = HTTPXRequest(connect_timeout=15, read_timeout=15, write_timeout=15)
+        builder = ApplicationBuilder().token(self.config.bot_token).request(request)
         self._app = builder.build()
 
         # 注册文字消息处理器

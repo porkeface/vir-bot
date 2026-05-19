@@ -374,6 +374,21 @@ def create_app() -> FastAPI:
     except Exception:
         # If StaticFiles or the directory is not available, continue without mounting.
         pass
+    # Serve the config settings UI (if present)
+    try:
+        from pathlib import Path
+
+        from fastapi.staticfiles import StaticFiles
+
+        config_static_dir = Path(__file__).parent / "api" / "static" / "config"
+        if config_static_dir.exists():
+            app.mount(
+                "/config",
+                StaticFiles(directory=str(config_static_dir), html=True),
+                name="config",
+            )
+    except Exception:
+        pass
     app.include_router(chat.router, prefix="/api/chat", tags=["对话"])
 
     @app.get("/health")

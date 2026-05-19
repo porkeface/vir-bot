@@ -45,11 +45,22 @@ class LocalModelConfig(BaseModel):
     timeout: int = 180
 
 
+class LoraConfig(BaseModel):
+    adapter_path: str = "data/lora_adapters/persona_adapter"
+    base_model: str = ""
+    load_in_4bit: bool = True
+    max_new_tokens: int = 512
+    temperature: float = 0.7
+    top_p: float = 0.9
+    repetition_penalty: float = 1.1
+
+
 class AIConfig(BaseModel):
     provider: str = "openai"
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     openai: OpenAIConfig = Field(default_factory=OpenAIConfig)
     local_model: LocalModelConfig = Field(default_factory=LocalModelConfig)
+    lora: LoraConfig = Field(default_factory=LoraConfig)
 
 
 class CharacterExtensions(BaseModel):
@@ -81,6 +92,7 @@ class LongTermMemoryConfig(BaseModel):
 class MemoryConfig(BaseModel):
     short_term: ShortTermMemoryConfig = Field(default_factory=ShortTermMemoryConfig)
     long_term: LongTermMemoryConfig = Field(default_factory=LongTermMemoryConfig)
+    features: dict[str, Any] = Field(default_factory=dict)
 
 
 class QQConnectionConfig(BaseModel):
@@ -419,3 +431,10 @@ def get_config() -> Config:
     if _CONFIG is None:
         return load_config()
     return _CONFIG
+
+
+def get_config_path() -> Path:
+    """获取当前配置文件路径"""
+    if _CONFIG_PATH is not None:
+        return _CONFIG_PATH
+    return Path(os.environ.get("VIRBOT_CONFIG", "config.yaml")).resolve()

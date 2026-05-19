@@ -104,6 +104,8 @@ class LoRAConfig:
             "logging_steps": self.logging_steps,
             "save_steps": self.save_steps,
             "save_total_limit": self.save_total_limit,
+            "eval_steps": self.eval_steps,
+            "eval_strategy": "steps",
             "fp16": self.fp16,
             "bf16": self.bf16,
             "gradient_checkpointing": True,

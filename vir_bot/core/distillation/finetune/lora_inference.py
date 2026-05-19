@@ -239,15 +239,8 @@ class LoRAInference:
 
         config = generation_config or self._gen_config
 
-        # 构建消息列表
-        messages = self._build_messages(user_input, system_prompt, history)
-
-        # Tokenize
-        input_text = self._tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
+        # 使用 Alpaca 格式（与训练格式一致）
+        input_text = self._build_alpaca_prompt(user_input, system_prompt, history)
 
         inputs = self._tokenizer(
             input_text,
@@ -277,6 +270,10 @@ class LoRAInference:
         # 解码
         generated_ids = outputs[0][input_len:]
         output_text = self._tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+        # 清理可能泄漏的 Alpaca 格式标记
+        for marker in ["###", "### 指令", "### 输入", "### 回复"]:
+            if marker in output_text:
+                output_text = output_text[:output_text.index(marker)].strip()
 
         return InferenceResult(
             text=output_text,
@@ -310,13 +307,7 @@ class LoRAInference:
             raise ImportError("需要安装 transformers >= 4.33 以支持 TextIteratorStreamer")
 
         config = generation_config or self._gen_config
-        messages = self._build_messages(user_input, system_prompt, history)
-
-        input_text = self._tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
+        input_text = self._build_alpaca_prompt(user_input, system_prompt, history)
 
         inputs = self._tokenizer(
             input_text,
@@ -405,7 +396,7 @@ class LoRAInference:
         system_prompt: Optional[str],
         history: Optional[List[Dict[str, str]]],
     ) -> List[Dict[str, str]]:
-        """构建消息列表。"""
+        """构建消息列表（旧方法，保留兼容）。"""
         messages: List[Dict[str, str]] = []
 
         if system_prompt:
@@ -416,6 +407,32 @@ class LoRAInference:
 
         messages.append({"role": "user", "content": user_input})
         return messages
+
+    def _build_alpaca_prompt(
+        self,
+        user_input: str,
+        system_prompt: Optional[str],
+        history: Optional[List[Dict[str, str]]],
+    ) -> str:
+        """构建 Alpaca 格式 prompt（与训练格式一致）。"""
+        instruction = (
+            system_prompt
+            or "你正在扮演一个角色。请以该角色的风格回复。"
+        )
+
+        context_parts: List[str] = []
+        if history:
+            for msg in history[-10:]:
+                role = "用户" if msg.get("role") == "user" else "助手"
+                context_parts.append(f"{role}: {msg.get('content', '')}")
+        context_parts.append(f"用户: {user_input}")
+        context = "\n".join(context_parts)
+
+        return (
+            f"### 指令：\n{instruction}\n\n"
+            f"### 输入：\n{context}\n\n"
+            f"### 回复：\n"
+        )
 
     # ------------------------------------------------------------------
     # 工厂方法

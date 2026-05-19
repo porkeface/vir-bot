@@ -1,6 +1,7 @@
 """AI Provider 策略模式：统一抽象 + 多后端实现"""
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from abc import ABC, abstractmethod
@@ -449,6 +450,127 @@ class LocalModelProvider(AIProvider):
 
 
 # =============================================================================
+# LoRA 微调模型实现（本地推理）
+# =============================================================================
+
+
+class LoraProvider(AIProvider):
+    """基于 LoRA 微调 adapter 的本地推理 Provider。"""
+
+    def __init__(self, config: "AIConfig"):
+        super().__init__(config)
+        self._engine = None
+        self._init_lock = asyncio.Lock()
+
+    async def _ensure_engine(self):
+        if self._engine is not None:
+            return
+        async with self._init_lock:
+            if self._engine is not None:
+                return
+            from vir_bot.core.distillation.finetune.lora_inference import (
+                LoRAInference,
+                GenerationConfig,
+            )
+
+            gen_cfg = GenerationConfig(
+                max_new_tokens=self.config.lora.max_new_tokens,
+                temperature=self.config.lora.temperature,
+                top_p=self.config.lora.top_p,
+                repetition_penalty=self.config.lora.repetition_penalty,
+            )
+            logger.info("加载 LoRA 推理引擎：%s", self.config.lora.adapter_path)
+            self._engine = await asyncio.to_thread(
+                LoRAInference,
+                adapter_path=self.config.lora.adapter_path,
+                base_model=self.config.lora.base_model or None,
+                load_in_4bit=self.config.lora.load_in_4bit,
+                generation_config=gen_cfg,
+            )
+            logger.info("LoRA 推理引擎加载完成")
+
+    async def chat(
+        self,
+        messages: list[dict],
+        system: str | None = None,
+        tools: list[dict] | None = None,
+        stream: bool = False,
+        **kwargs,
+    ) -> AIResponse:
+        await self._ensure_engine()
+
+        # 从消息列表中提取最后一轮用户输入和历史
+        user_input = ""
+        history = []
+        for msg in messages:
+            if msg["role"] == "user":
+                user_input = msg["content"]
+            elif msg["role"] == "assistant":
+                history.append(msg)
+
+        result = await asyncio.to_thread(
+            self._engine.generate,
+            user_input,
+            system_prompt=system,
+            history=history if history else None,
+        )
+
+        return AIResponse(
+            content=result.text,
+            model=result.model,
+            usage={
+                "prompt_tokens": result.input_tokens,
+                "completion_tokens": result.output_tokens,
+            },
+            finish_reason="stop",
+        )
+
+    async def chat_stream(
+        self,
+        messages: list[dict],
+        system: str | None = None,
+        tools: list[dict] | None = None,
+        **kwargs,
+    ) -> AsyncIterator[AIStreamChunk]:
+        await self._ensure_engine()
+
+        user_input = ""
+        history = []
+        for msg in messages:
+            if msg["role"] == "user":
+                user_input = msg["content"]
+            elif msg["role"] == "assistant":
+                history.append(msg)
+
+        # 本地 LoRA 推理用非流式生成，一次性返回
+        result = await asyncio.to_thread(
+            self._engine.generate, user_input,
+            system_prompt=system,
+            history=history if history else None,
+        )
+        if result.text:
+            yield AIStreamChunk(delta=result.text)
+        yield AIStreamChunk(delta="", finish_reason="stop")
+
+    async def health_check(self) -> bool:
+        try:
+            await self._ensure_engine()
+            return self._engine is not None and self._engine.is_loaded
+        except Exception as e:
+            logger.warning("LoRA 健康检查失败: %s", e)
+            return False
+
+    @property
+    def model_name(self) -> str:
+        if self._engine and self._engine.is_loaded:
+            return f"lora:{self._engine.base_model}"
+        return f"lora:{self.config.lora.adapter_path}"
+
+    async def close(self) -> None:
+        self._engine = None
+
+
+# =============================================================================
 # 策略工厂
 # =============================================================================
 
@@ -458,6 +580,7 @@ class AIProviderFactory:
         "ollama": OllamaProvider,
         "openai": OpenAIProvider,
         "local_model": LocalModelProvider,
+        "lora": LoraProvider,
     }
 
     @classmethod

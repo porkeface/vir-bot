@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>vir-bot 配置管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#232733;--border:#2d3140;
+  --text:#e4e4e7;--text2:#a1a1aa;--text3:#71717a;
+  --accent:#6366f1;--accent-hover:#818cf8;--accent-bg:rgba(99,102,241,.12);
+  --success:#22c55e;--danger:#ef4444;--warn:#f59e0b;
+  --radius:8px;--radius-sm:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+
+/* Sidebar */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
+.sidebar-header h1{font-size:16px;font-weight:600;letter-spacing:.5px}
+.sidebar-header p{font-size:12px;color:var(--text3);margin-top:4px}
+.nav-list{list-style:none;padding:8px 0}
+.nav-item{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text2);transition:all .15s;font-size:13px;border-left:3px solid transparent}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-bg);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.nav-icon{width:18px;text-align:center;font-size:15px}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.main-header{padding:20px 28px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.main-header h2{font-size:18px;font-weight:600}
+.main-content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* Form */
+.form-section{display:none}
+.form-section.active{display:block}
+.field-group{margin-bottom:20px}
+.field-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field-desc{font-size:11px;color:var(--text3);margin-bottom:6px}
+.field-row{display:flex;align-items:center;gap:12px}
+
+input[type="text"],input[type="number"],input[type="password"],select,textarea{
+  width:100%;max-width:480px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{min-height:80px;resize:vertical}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%2371717a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+
+/* Toggle */
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.2s}
+.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px)}
+.toggle-label{font-size:13px;color:var(--text2)}
+
+/* Sensitive field */
+.sensitive-field{display:flex;align-items:center;gap:8px;max-width:480px}
+.sensitive-field input{flex:1;background:var(--surface);color:var(--text3);cursor:not-allowed}
+.env-hint{font-size:11px;color:var(--warn);background:rgba(245,158,11,.1);padding:4px 8px;border-radius:var(--radius-sm);margin-top:4px;display:inline-block}
+.env-hint code{font-family:"Cascadia Code",Consolas,monospace;color:var(--warn)}
+
+/* Tags input */
+.tags-container{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);max-width:480px;min-height:38px;cursor:text}
+.tags-container:focus-within{border-color:var(--accent)}
+.tag{display:flex;align-items:center;gap:4px;padding:2px 8px;background:var(--accent-bg);color:var(--accent);border-radius:4px;font-size:12px}
+.tag-remove{cursor:pointer;font-size:14px;line-height:1;opacity:.7}
+.tag-remove:hover{opacity:1}
+.tags-input{border:none;background:none;outline:none;color:var(--text);font-size:13px;min-width:80px;flex:1}
+
+/* Section title */
+.section-title{font-size:15px;font-weight:600;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.subsection-title{font-size:13px;font-weight:600;color:var(--text2);margin:24px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* Button */
+.btn{padding:8px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn-danger:hover{background:rgba(239,68,68,.1)}
+
+/* Toast */
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:var(--radius-sm);font-size:13px;z-index:1000;animation:slideIn .3s ease;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.toast.success{background:#16a34a;color:#fff}
+.toast.error{background:var(--danger);color:#fff}
+.toast.info{background:var(--accent);color:#fff}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Card */
+.config-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.config-card h3{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>vir-bot</h1>
+    <p>配置管理</p>
+  </div>
+  <ul class="nav-list" id="navList">
+    <li class="nav-item active" data-section="app"><span class="nav-icon">&#9881;</span> 应用</li>
+    <li class="nav-item" data-section="ai"><span class="nav-icon">&#9889;</span> AI 后端</li>
+    <li class="nav-item" data-section="character"><span class="nav-icon">&#128100;</span> 角色卡</li>
+    <li class="nav-item" data-section="expression"><span class="nav-icon">&#128516;</span> 表情包</li>
+    <li class="nav-item" data-section="memory"><span class="nav-icon">&#129504;</span> 记忆系统</li>
+    <li class="nav-item" data-section="platforms"><span class="nav-icon">&#127760;</span> 平台接入</li>
+    <li class="nav-item" data-section="pipeline"><span class="nav-icon">&#9881;</span> 消息管道</li>
+    <li class="nav-item" data-section="mcp"><span class="nav-icon">&#128295;</span> MCP 工具</li>
+    <li class="nav-item" data-section="voice"><span class="nav-icon">&#127908;</span> 语音</li>
+    <li class="nav-item" data-section="visual"><span class="nav-icon">&#128065;</span> 视觉</li>
+    <li class="nav-item" data-section="web_console"><span class="nav-icon">&#128187;</span> Web 控制台</li>
+    <li class="nav-item" data-section="security"><span class="nav-icon">&#128274;</span> 安全</li>
+    <li class="nav-item" data-section="proactive"><span class="nav-icon">&#128172;</span> 主动消息</li>
+  </ul>
+</nav>
+
+<main class="main">
+  <div class="main-header">
+    <h2 id="sectionTitle">应用设置</h2>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveSection()">保存更改</button>
+  </div>
+  <div class="main-content" id="mainContent">
+    <!-- Dynamic form content rendered here -->
+  </div>
+</main>
+
+<script>
+// =============================================================================
+// State
+// =============================================================================
+let currentSection = 'app';
+let configData = {};
+let envHints = {};
+let sensitiveFields = [];
+
+// Section metadata: display names, icons, field descriptions
+const SECTION_META = {
+  app: {
+    title: '应用设置',
+    fields: {
+      'app.name': { label: '应用名称', type: 'text' },
+      'app.version': { label: '版本号', type: 'text' },
+      'app.debug': { label: '调试模式', type: 'bool', desc: '启用后会输出详细日志' },
+      'app.data_dir': { label: '数据目录', type: 'text', desc: '所有数据文件的根目录' },
+      'app.log_dir': { label: '日志目录', type: 'text' },
+      'app.log_level': { label: '日志级别', type: 'select', options: ['DEBUG', 'INFO', 'WARNING', 'ERROR'] },
+    }
+  },
+  ai: {
+    title: 'AI 后端配置',
+    fields: {
+      'ai.provider': { label: '当前后端', type: 'select', options: ['openai', 'ollama', 'local_model', 'lora'], desc: '选择激活的 AI 推理后端' },
+      // Ollama
+      '__section__:ollama': { label: 'Ollama 配置', type: 'subsection' },
+      'ai.ollama.base_url': { label: 'Ollama 地址', type: 'text' },
+      'ai.ollama.model': { label: '模型名称', type: 'text' },
+      'ai.ollama.keep_alive': { label: '模型保持时间', type: 'text', desc: '如 5m、1h' },
+      'ai.ollama.timeout': { label: '超时（秒）', type: 'number' },
+      // OpenAI
+      '__section__:openai': { label: 'OpenAI 兼容 API 配置', type: 'subsection' },
+      'ai.openai.base_url': { label: 'API 地址', type: 'text' },
+      'ai.openai.api_key': { label: 'API Key', type: 'sensitive' },
+      'ai.openai.model': { label: '模型名称', type: 'text' },
+      'ai.openai.timeout': { label: '超时（秒）', type: 'number' },
+      'ai.openai.max_retries': { label: '最大重试次数', type: 'number' },
+      // Local Model
+      '__section__:local': { label: '本地模型配置', type: 'subsection' },
+      'ai.local_model.base_url': { label: '服务地址', type: 'text' },
+      'ai.local_model.model': { label: '模型名称', type: 'text' },
+      'ai.local_model.timeout': { label: '超时（秒）', type: 'number' },
+      // LoRA
+      '__section__:lora': { label: 'LoRA 微调模型配置', type: 'subsection' },
+      'ai.lora.adapter_path': { label: '适配器路径', type: 'text' },
+      'ai.lora.base_model': { label: '基座模型', type: 'text' },
+      'ai.lora.load_in_4bit': { label: '4-bit 量化', type: 'bool' },
+      'ai.lora.max_new_tokens': { label: '最大生成 Token', type: 'number' },
+      'ai.lora.temperature': { label: '温度', type: 'number', step: '0.1' },
+      'ai.lora.top_p': { label: 'Top P', type: 'number', step: '0.05' },
+      'ai.lora.repetition_penalty': { label: '重复惩罚', type: 'number', step: '0.1' },
+    }
+  },
+  character: {
+    title: '角色卡配置',
+    fields: {
+      'character.card_path': { label: '角色卡路径', type: 'text', desc: 'JSON 或 Markdown 格式' },
+      'character.extensions.voice_style': { label: '语音风格', type: 'text' },
+      'character.extensions.personality_tags': { label: '性格标签', type: 'tags' },
+      'character.extensions.background_knowledge': { label: '背景知识目录', type: 'text' },
+    }
+  },
+  expression: {
+    title: '表情包系统',
+    fields: {
+      'expression.enabled': { label: '启用表情包', type: 'bool', desc: '发送消息时自动匹配表情包' },
+    }
+  },
+  memory: {
+    title: '记忆系统配置',
+    fields: {
+      '__section__:short': { label: '短期记忆', type: 'subsection' },
+      'memory.short_term.max_turns': { label: '最大轮次', type: 'number', desc: 'Ring Buffer 容量' },
+      'memory.short_term.window_size': { label: '窗口大小', type: 'number' },
+      '__section__:long': { label: '长期记忆', type: 'subsection' },
+      'memory.long_term.enabled': { label: '启用长期记忆', type: 'bool' },
+      'memory.long_term.vector_db': { label: '向量数据库', type: 'select', options: ['chroma'] },
+      'memory.long_term.persist_dir': { label: '持久化目录', type: 'text' },
+      'memory.long_term.collection_name': { label: '集合名称', type: 'text' },
+      'memory.long_term.top_k': { label: '检索 Top K', type: 'number' },
+      'memory.long_term.embedding_model': { label: 'Embedding 模型', type: 'text' },
+      'memory.long_term.auto_index': { label: '自动索引', type: 'bool' },
+      '__section__:features': { label: '功能特性开关', type: 'subsection' },
+      'memory.features.reranker.enabled': { label: 'Re-Ranker（重排序）', type: 'bool' },
+      'memory.features.composer.enabled': { label: 'Composer（去重+冲突消解）', type: 'bool' },
+      'memory.features.quality_gate.enabled': { label: 'Quality Gate（质量门）', type: 'bool' },
+      'memory.features.verifier.enabled': { label: 'Verifier（重复检测）', type: 'bool' },
+      'memory.features.lifecycle.enabled': { label: 'Lifecycle（生命周期管理）', type: 'bool' },
+      'memory.features.graph.enabled': { label: 'Graph（图记忆）', type: 'bool' },
+      'memory.features.versioning.enabled': { label: 'Versioning（多版本）', type: 'bool' },
+    }
+  },
+  platforms: {
+    title: '平台接入配置',
+    fields: {
+      '__section__:qq': { label: 'QQ（OneBot v11/v12）', type: 'subsection' },
+      'platforms.qq.enabled': { label: '启用 QQ', type: 'bool' },
+      'platforms.qq.adapter': { label: '适配器', type: 'select', options: ['onebot_v11', 'onebot_v12'] },
+      'platforms.qq.connection.type': { label: '连接方式', type: 'select', options: ['正向WebSocket', '反向WebSocket', 'HTTP'] },
+      'platforms.qq.connection.host': { label: '主机', type: 'text' },
+      'platforms.qq.connection.port': { label: '端口', type: 'number' },
+      'platforms.qq.access_token': { label: 'Access Token', type: 'sensitive' },
+      'platforms.qq.allowed_groups': { label: '允许的群', type: 'tags' },
+      'platforms.qq.allowed_users': { label: '允许的用户', type: 'tags' },
+      'platforms.qq.block_list': { label: '黑名单', type: 'tags' },
+      'platforms.qq.rate_limit.per_user': { label: '每用户限速', type: 'number' },
+      'platforms.qq.rate_limit.per_group': { label: '每群限速', type: 'number' },
+
+      '__section__:qq_official': { label: 'QQ 官方机器人', type: 'subsection' },
+      'platforms.qq_official.enabled': { label: '启用', type: 'bool' },
+      'platforms.qq_official.app_id': { label: 'App ID', type: 'text' },
+      'platforms.qq_official.app_secret': { label: 'App Secret', type: 'sensitive' },
+      'platforms.qq_official.callback_path': { label: '回调地址', type: 'text' },
+
+      '__section__:wechat': { label: '企业微信', type: 'subsection' },
+      'platforms.wechat.enabled': { label: '启用', type: 'bool' },
+      'platforms.wechat.wechat_work.corp_id': { label: '企业 ID', type: 'text' },
+      'platforms.wechat.wechat_work.corp_secret': { label: 'Secret', type: 'sensitive' },
+      'platforms.wechat.wechat_work.agent_id': { label: 'Agent ID', type: 'text' },
+      'platforms.wechat.wechat_work.token': { label: 'Token', type: 'sensitive' },
+      'platforms.wechat.wechat_work.encoding_aes_key': { label: 'AES Key', type: 'sensitive' },
+
+      '__section__:discord': { label: 'Discord', type: 'subsection' },
+      'platforms.discord.enabled': { label: '启用', type: 'bool' },
+      'platforms.discord.bot_token': { label: 'Bot Token', type: 'sensitive' },
+
+      '__section__:telegram': { label: 'Telegram', type: 'subsection' },
+      'platforms.telegram.enabled': { label: '启用', type: 'bool' },
+      'platforms.telegram.bot_token': { label: 'Bot Token', type: 'sensitive' },
+      'platforms.telegram.allowed_users': { label: '允许的用户', type: 'tags' },
+      'platforms.telegram.allowed_chats': { label: '允许的聊天', type: 'tags' },
+      'platforms.telegram.block_list': { label: '黑名单', type: 'tags' },
+      'platforms.telegram.rate_limit.per_user': { label: '每用户限速', type: 'number' },
+      'platforms.telegram.rate_limit.per_chat': { label: '每聊天限速', type: 'number' },
+      'platforms.telegram.parse_mode': { label: '解析模式', type: 'select', options: ['', 'HTML', 'Markdown'] },
+    }
+  },
+  pipeline: {
+    title: '消息处理管道',
+    fields: {
+      'pipeline.max_context_turns': { label: '最大上下文轮次', type: 'number' },
+      'pipeline.filters.block_bots': { label: '屏蔽机器人', type: 'bool' },
+      'pipeline.filters.block_self': { label: '屏蔽自身消息', type: 'bool' },
+      'pipeline.filters.min_content_length': { label: '最小内容长度', type: 'number' },
+      'pipeline.filters.max_content_length': { label: '最大内容长度', type: 'number' },
+      'pipeline.split.enabled': { label: '启用消息拆分', type: 'bool', desc: '长回复自动拆成多条短消息' },
+      'pipeline.split.max_chunk_chars': { label: '单块最大字符', type: 'number' },
+      'pipeline.split.delay_min_ms': { label: '最小延迟（ms）', type: 'number' },
+      'pipeline.split.delay_max_ms': { label: '最大延迟（ms）', type: 'number' },
+    }
+  },
+  mcp: {
+    title: 'MCP 工具协议',
+    fields: {
+      'mcp.enabled': { label: '启用 MCP', type: 'bool' },
+      'mcp.tool_discovery.enabled': { label: '自动发现工具', type: 'bool' },
+      'mcp.tool_discovery.auto_reload': { label: '热重载', type: 'bool' },
+      '__section__:hw': { label: '硬件集成', type: 'subsection' },
+      'mcp.hardware.enabled': { label: '启用硬件', type: 'bool' },
+      'mcp.hardware.mqtt.broker_url': { label: 'MQTT Broker', type: 'text' },
+      'mcp.hardware.mqtt.username': { label: 'MQTT 用户名', type: 'text' },
+      'mcp.hardware.mqtt.password': { label: 'MQTT 密码', type: 'sensitive' },
+    }
+  },
+  voice: {
+    title: '语音模块',
+    fields: {
+      'voice.enabled': { label: '启用语音', type: 'bool' },
+      'voice.voice_response': { label: '语音回复', type: 'bool', desc: '收到语音时用语音回复' },
+      '__section__:tts': { label: 'TTS（文字转语音）', type: 'subsection' },
+      'voice.tts.provider': { label: 'TTS 引擎', type: 'select', options: ['edge', 'cosyvoice2'] },
+      'voice.tts.voice_id': { label: '音色 ID', type: 'text', desc: 'edge-tts 音色' },
+      'voice.tts.speed': { label: '语速', type: 'number', step: '0.1' },
+      'voice.tts.model_dir': { label: 'CosyVoice 模型目录', type: 'text' },
+      'voice.tts.instruct_text': { label: '音色风格描述', type: 'text' },
+      '__section__:asr': { label: 'ASR（语音识别）', type: 'subsection' },
+      'voice.asr.provider': { label: 'ASR 引擎', type: 'select', options: ['sensevoice', 'openai', 'whisper'] },
+      'voice.asr.model': { label: '模型', type: 'text' },
+      'voice.asr.language': { label: '语言', type: 'text', desc: 'auto 自动检测' },
+      'voice.asr.device': { label: '推理设备', type: 'text' },
+      'voice.asr.api_key': { label: 'Whisper API Key', type: 'sensitive' },
+    }
+  },
+  visual: {
+    title: '视觉感知模块',
+    fields: {
+      'visual.enabled': { label: '启用视觉', type: 'bool' },
+      'visual.camera.provider': { label: '摄像头类型', type: 'select', options: ['esp32'] },
+      'visual.camera.esp32_url': { label: 'ESP32 地址', type: 'text' },
+      'visual.camera.capture_interval': { label: '采集间隔（秒）', type: 'number' },
+      'visual.vision.provider': { label: '视觉模型', type: 'select', options: ['openai'] },
+      'visual.vision.model': { label: '模型名称', type: 'text' },
+      'visual.vision.base_url': { label: 'API 地址', type: 'text' },
+      'visual.vision.max_image_size': { label: '最大图片尺寸', type: 'number' },
+    }
+  },
+  web_console: {
+    title: 'Web 控制台',
+    fields: {
+      'web_console.enabled': { label: '启用控制台', type: 'bool' },
+      'web_console.host': { label: '监听地址', type: 'text' },
+      'web_console.port': { label: '端口', type: 'number' },
+      '__section__:auth': { label: '认证', type: 'subsection' },
+      'web_console.auth.enabled': { label: '启用认证', type: 'bool' },
+      'web_console.auth.token': { label: 'Token', type: 'sensitive' },
+      '__section__:cors': { label: 'CORS', type: 'subsection' },
+      'web_console.cors.allow_origins': { label: '允许的来源', type: 'tags' },
+      'web_console.cors.allow_credentials': { label: '允许凭据', type: 'bool' },
+    }
+  },
+  security: {
+    title: '安全与隐私',
+    fields: {
+      'security.log_sanitization': { label: '日志脱敏', type: 'bool', desc: '自动隐藏日志中的敏感信息' },
+      'security.encrypt_local_data': { label: '加密本地数据', type: 'bool' },
+      'security.max_tokens': { label: '最大 Token 数', type: 'number' },
+      'security.http_timeout': { label: 'HTTP 超时（秒）', type: 'number' },
+    }
+  },
+  proactive: {
+    title: '主动消息（牵挂驱动）',
+    fields: {
+      'proactive.enabled': { label: '启用主动消息', type: 'bool' },
+      'proactive.check_interval_seconds': { label: '检查间隔（秒）', type: 'number' },
+      'proactive.min_cooldown_seconds': { label: '最小冷却（秒）', type: 'number' },
+      'proactive.max_daily_messages': { label: '每日上限', type: 'number' },
+      '__section__:concern': { label: '关怀评估', type: 'subsection' },
+      'proactive.concern.threshold': { label: '触发阈值', type: 'number', step: '0.1' },
+      'proactive.concern.llm_evaluate': { label: 'LLM 评估', type: 'bool' },
+      '__section__:expression': { label: '表达配置', type: 'subsection' },
+      'proactive.expression.max_context_memories': { label: '上下文记忆数', type: 'number' },
+      'proactive.expression.max_tokens': { label: '最大 Token', type: 'number' },
+      '__section__:targets': { label: '发送目标', type: 'subsection' },
+      'proactive.targets.telegram.chat_id': { label: 'Telegram Chat ID', type: 'text' },
+      'proactive.targets.qq.user_id': { label: 'QQ 用户号', type: 'text' },
+      'proactive.targets.qq.group_id': { label: 'QQ 群号', type: 'text' },
+      'proactive.targets.discord.channel_id': { label: 'Discord 频道 ID', type: 'text' },
+      'proactive.targets.wechat.touser': { label: '企微用户 ID', type: 'text' },
+    }
+  },
+};
+
+// =============================================================================
+// API
+// =============================================================================
+
+async function fetchConfig() {
+  const [sectionsRes, hintsRes, sensitiveRes] = await Promise.all([
+    fetch('/api/config/sections'),
+    fetch('/api/config/env-hints'),
+    fetch('/api/config/sensitive-fields'),
+  ]);
+  const sectionsData = await sectionsRes.json();
+  envHints = (await hintsRes.json()).hints || {};
+  sensitiveFields = (await sensitiveRes.json()).fields || [];
+  configData = sectionsData.sections || {};
+}
+
+// =============================================================================
+// Get/Set nested values
+// =============================================================================
+
+function getNestedValue(obj, path) {
+  return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
+}
+
+function setNestedValue(obj, path, value) {
+  const keys = path.split('.');
+  let current = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!current[keys[i]] || typeof current[keys[i]] !== 'object') {
+      current[keys[i]] = {};
+    }
+    current = current[keys[i]];
+  }
+  current[keys[keys.length - 1]] = value;
+}
+
+// =============================================================================
+// Render
+// =============================================================================
+
+function renderSection(sectionKey) {
+  const meta = SECTION_META[sectionKey];
+  if (!meta) return;
+
+  document.getElementById('sectionTitle').textContent = meta.title;
+  const container = document.getElementById('mainContent');
+  container.innerHTML = '';
+
+  const form = document.createElement('div');
+  form.className = 'form-section active';
+  form.id = `form-${sectionKey}`;
+
+  for (const [fieldPath, fieldMeta] of Object.entries(meta.fields)) {
+    // Subsection divider
+    if (fieldMeta.type === 'subsection') {
+      const h = document.createElement('h3');
+      h.className = 'subsection-title';
+      h.textContent = fieldMeta.label;
+      form.appendChild(h);
+      continue;
+    }
+
+    const group = document.createElement('div');
+    group.className = 'field-group';
+
+    // Label
+    const label = document.createElement('label');
+    label.className = 'field-label';
+    label.textContent = fieldMeta.label;
+    group.appendChild(label);
+
+    // Description
+    if (fieldMeta.desc) {
+      const desc = document.createElement('div');
+      desc.className = 'field-desc';
+      desc.textContent = fieldMeta.desc;
+      group.appendChild(desc);
+    }
+
+    const yamlPath = fieldPath;
+    const value = getNestedValue(configData, yamlPath);
+
+    // Render by type
+    if (fieldMeta.type === 'sensitive') {
+      group.appendChild(renderSensitiveField(yamlPath, value));
+    } else if (fieldMeta.type === 'bool') {
+      group.appendChild(renderToggle(yamlPath, !!value));
+    } else if (fieldMeta.type === 'select') {
+      group.appendChild(renderSelect(yamlPath, value, fieldMeta.options));
+    } else if (fieldMeta.type === 'number') {
+      group.appendChild(renderNumber(yamlPath, value, fieldMeta.step));
+    } else if (fieldMeta.type === 'tags') {
+      group.appendChild(renderTags(yamlPath, value || []));
+    } else {
+      group.appendChild(renderText(yamlPath, value));
+    }
+
+    form.appendChild(group);
+  }
+
+  container.appendChild(form);
+}
+
+function renderText(path, value) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.dataset.path = path;
+  input.value = value ?? '';
+  return input;
+}
+
+function renderNumber(path, value, step) {
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.dataset.path = path;
+  input.value = value ?? '';
+  if (step) input.step = step;
+  return input;
+}
+
+function renderSelect(path, value, options) {
+  const select = document.createElement('select');
+  select.dataset.path = path;
+  for (const opt of options) {
+    const option = document.createElement('option');
+    option.value = opt;
+    option.textContent = opt || '(空)';
+    if (String(value) === String(opt)) option.selected = true;
+    select.appendChild(option);
+  }
+  return select;
+}
+
+function renderToggle(path, value) {
+  const wrap = document.createElement('div');
+  wrap.className = 'toggle-wrap';
+  const label = document.createElement('label');
+  label.className = 'toggle';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.dataset.path = path;
+  input.checked = !!value;
+  const slider = document.createElement('span');
+  slider.className = 'toggle-slider';
+  label.appendChild(input);
+  label.appendChild(slider);
+  const text = document.createElement('span');
+  text.className = 'toggle-label';
+  text.textContent = value ? '已启用' : '已关闭';
+  input.addEventListener('change', () => { text.textContent = input.checked ? '已启用' : '已关闭'; });
+  wrap.appendChild(label);
+  wrap.appendChild(text);
+  return wrap;
+}
+
+function renderTags(path, value) {
+  const container = document.createElement('div');
+  container.className = 'tags-container';
+  container.dataset.path = path;
+
+  const items = Array.isArray(value) ? [...value] : [];
+
+  function render() {
+    container.querySelectorAll('.tag').forEach(t => t.remove());
+    const input = container.querySelector('.tags-input');
+    for (const item of items) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.innerHTML = `<span>${escHtml(item)}</span><span class="tag-remove" data-val="${escAttr(item)}">&times;</span>`;
+      container.insertBefore(tag, input);
+    }
+  }
+
+  const input = document.createElement('input');
+  input.className = 'tags-input';
+  input.placeholder = '输入后按 Enter 添加...';
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      e.preventDefault();
+      items.push(input.value.trim());
+      input.value = '';
+      render();
+    }
+    if (e.key === 'Backspace' && !input.value && items.length) {
+      items.pop();
+      render();
+    }
+  });
+
+  container.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tag-remove')) {
+      const val = e.target.dataset.val;
+      const idx = items.indexOf(val);
+      if (idx >= 0) items.splice(idx, 1);
+      render();
+    }
+    input.focus();
+  });
+
+  // Store items getter on the container
+  container._getItems = () => items;
+
+  container.appendChild(input);
+  render();
+  return container;
+}
+
+function renderSensitiveField(path, value) {
+  const wrap = document.createElement('div');
+  const row = document.createElement('div');
+  row.className = 'sensitive-field';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value || '***未设置***';
+  input.readOnly = true;
+  row.appendChild(input);
+  wrap.appendChild(row);
+
+  // Env hint
+  const envVar = envHints[path];
+  if (envVar) {
+    const hint = document.createElement('div');
+    hint.className = 'env-hint';
+    hint.innerHTML = `通过环境变量设置: <code>${escHtml(envVar)}</code>`;
+    wrap.appendChild(hint);
+  } else {
+    const hint = document.createElement('div');
+    hint.className = 'env-hint';
+    hint.innerHTML = '此字段仅支持环境变量或手动编辑 config.yaml';
+    wrap.appendChild(hint);
+  }
+
+  return wrap;
+}
+
+// =============================================================================
+// Collect & Save
+// =============================================================================
+
+function collectSectionData(sectionKey) {
+  const meta = SECTION_META[sectionKey];
+  if (!meta) return {};
+
+  const data = {};
+  for (const [fieldPath, fieldMeta] of Object.entries(meta.fields)) {
+    if (fieldMeta.type === 'subsection' || fieldMeta.type === 'sensitive') continue;
+
+    const yamlPath = fieldPath;
+    let el;
+
+    if (fieldMeta.type === 'tags') {
+      const container = document.querySelector(`.tags-container[data-path="${yamlPath}"]`);
+      if (container && container._getItems) {
+        setNestedValue(data, yamlPath, container._getItems());
+      }
+    } else if (fieldMeta.type === 'bool') {
+      el = document.querySelector(`input[type="checkbox"][data-path="${yamlPath}"]`);
+      if (el) setNestedValue(data, yamlPath, el.checked);
+    } else if (fieldMeta.type === 'select') {
+      el = document.querySelector(`select[data-path="${yamlPath}"]`);
+      if (el) {
+        let val = el.value;
+        // Convert numeric strings
+        if (val !== '' && !isNaN(val) && fieldMeta.options.every(o => typeof o === 'number' || o === '')) {
+          val = Number(val);
+        }
+        setNestedValue(data, yamlPath, val);
+      }
+    } else if (fieldMeta.type === 'number') {
+      el = document.querySelector(`input[type="number"][data-path="${yamlPath}"]`);
+      if (el && el.value !== '') setNestedValue(data, yamlPath, Number(el.value));
+    } else {
+      el = document.querySelector(`input[type="text"][data-path="${yamlPath}"]`);
+      if (el) setNestedValue(data, yamlPath, el.value);
+    }
+  }
+
+  // Return only the top-level section key's data
+  const sectionYamlKey = SECTION_KEYS_MAP[sectionKey] || sectionKey;
+  return data[sectionYamlKey] || data;
+}
+
+const SECTION_KEYS_MAP = {
+  app: 'app', ai: 'ai', character: 'character', expression: 'expression',
+  memory: 'memory', platforms: 'platforms', pipeline: 'pipeline', mcp: 'mcp',
+  voice: 'voice', visual: 'visual', web_console: 'web_console',
+  security: 'security', proactive: 'proactive',
+};
+
+async function saveSection() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  try {
+    const body = collectSectionData(currentSection);
+    const res = await fetch(`/api/config/sections/${currentSection}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '保存失败');
+    }
+
+    const result = await res.json();
+    showToast(`保存成功: ${result.updated_fields?.join(', ') || '无变更'}`, 'success');
+
+    // Refresh config data
+    await fetchConfig();
+    renderSection(currentSection);
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '保存更改';
+  }
+}
+
+// =============================================================================
+// Navigation
+// =============================================================================
+
+function switchSection(sectionKey) {
+  currentSection = sectionKey;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.section === sectionKey);
+  });
+  renderSection(sectionKey);
+}
+
+document.getElementById('navList').addEventListener('click', (e) => {
+  const item = e.target.closest('.nav-item');
+  if (item && item.dataset.section) {
+    switchSection(item.dataset.section);
+  }
+});
+
+// =============================================================================
+// Utilities
+// =============================================================================
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function escAttr(s) {
+  return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// =============================================================================
+// Init
+// =============================================================================
+
+(async function init() {
+  try {
+    await fetchConfig();
+    renderSection('app');
+  } catch (e) {
+    showToast('加载配置失败: ' + e.message, 'error');
+  }
+})();
+</script>
+</body>
+</html>
