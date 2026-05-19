@@ -274,9 +274,99 @@ async def get_env_hints():
     }
 
 
+@router.get("/options")
+async def get_config_options():
+    """返回所有可选配置项（用于 UI 下拉框）"""
+    config = get_config()
+    config_dir = get_config_path().parent
+
+    # 扫描角色卡文件
+    characters = []
+    chars_dir = config_dir / "data" / "characters"
+    if chars_dir.exists():
+        for f in sorted(chars_dir.iterdir()):
+            if f.suffix == ".json":
+                name = _peek_character_name(f)
+                characters.append({
+                    "path": str(f.relative_to(config_dir)).replace("\\", "/"),
+                    "name": name or f.stem,
+                    "file": f.name,
+                })
+
+    # 扫描 LoRA 适配器
+    lora_adapters = []
+    adapters_dir = config_dir / "data" / "lora_adapters"
+    if adapters_dir.exists():
+        for d in sorted(adapters_dir.iterdir()):
+            if d.is_dir() and (d / "adapter_config.json").exists():
+                lora_adapters.append({
+                    "path": str(d.relative_to(config_dir)).replace("\\", "/"),
+                    "name": d.name,
+                })
+
+    # Edge-TTS 常用中文音色
+    tts_voices = [
+        {"id": "zh-CN-XiaoxiaoNeural", "name": "晓晓（女，温暖）"},
+        {"id": "zh-CN-XiaoyiNeural", "name": "晓伊（女，活泼）"},
+        {"id": "zh-CN-YunxiNeural", "name": "云希（男，阳光）"},
+        {"id": "zh-CN-YunjianNeural", "name": "云健（男，沉稳）"},
+        {"id": "zh-CN-YunxiaNeural", "name": "云夏（男，少年）"},
+        {"id": "zh-CN-XiaochenNeural", "name": "晓辰（女，知性）"},
+        {"id": "zh-CN-XiaohanNeural", "name": "晓涵（女，温柔）"},
+        {"id": "zh-CN-XiaomengNeural", "name": "晓梦（女，甜美）"},
+        {"id": "zh-CN-XiaomoNeural", "name": "晓墨（女，文艺）"},
+        {"id": "zh-CN-XiaoqiuNeural", "name": "晓秋（女，成熟）"},
+        {"id": "zh-CN-XiaorouNeural", "name": "晓柔（女，柔和）"},
+        {"id": "zh-CN-XiaoshuangNeural", "name": "晓双（女，童声）"},
+        {"id": "zh-CN-XiaoxuanNeural", "name": "晓萱（女，活泼）"},
+        {"id": "zh-CN-XiaoyanNeural", "name": "晓颜（女，优雅）"},
+        {"id": "zh-CN-XiaozhenNeural", "name": "晓甄（女，端庄）"},
+    ]
+
+    # Embedding 模型选项
+    embedding_models = [
+        {"id": "all-MiniLM-L6-v2", "name": "all-MiniLM-L6-v2（轻量，推荐）"},
+        {"id": "paraphrase-multilingual-MiniLM-L12-v2", "name": "multilingual-MiniLM（多语言）"},
+        {"id": "all-mpnet-base-v2", "name": "all-mpnet-base-v2（高精度）"},
+        {"id": "BAAI/bge-small-zh-v1.5", "name": "bge-small-zh（中文专用）"},
+        {"id": "BAAI/bge-base-zh-v1.5", "name": "bge-base-zh（中文高精度）"},
+    ]
+
+    # 知识库目录
+    knowledge_dirs = []
+    knowledge_base = config_dir / "data" / "knowledge"
+    if knowledge_base.exists():
+        for d in sorted(knowledge_base.iterdir()):
+            if d.is_dir():
+                knowledge_dirs.append(str(d.relative_to(config_dir)).replace("\\", "/"))
+        # 也列出根目录下的文件
+        knowledge_dirs.insert(0, str(knowledge_base.relative_to(config_dir)).replace("\\", "/"))
+
+    return {
+        "characters": characters,
+        "lora_adapters": lora_adapters,
+        "tts_voices": tts_voices,
+        "embedding_models": embedding_models,
+        "knowledge_dirs": knowledge_dirs,
+    }
+
+
 # =============================================================================
 # 辅助函数
 # =============================================================================
+
+
+def _peek_character_name(path: Path) -> str | None:
+    """从角色卡 JSON 文件中读取名称（不加载全部内容）"""
+    try:
+        import json
+
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        # SillyTavern 格式
+        return data.get("name") or data.get("data", {}).get("name")
+    except Exception:
+        return None
 
 
 def _deep_merge(base: dict, override: dict) -> None:

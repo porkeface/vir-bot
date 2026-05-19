@@ -15,7 +15,6 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px}
 a{color:var(--accent);text-decoration:none}
-a:hover{color:var(--accent-hover)}
 
 /* Sidebar */
 .sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
@@ -34,12 +33,19 @@ a:hover{color:var(--accent-hover)}
 .main-header h2{font-size:18px;font-weight:600}
 .main-content{flex:1;overflow-y:auto;padding:24px 28px}
 
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card-desc{font-size:12px;color:var(--text3);margin-bottom:16px}
+.card+.card{margin-top:0}
+
 /* Form */
 .form-section{display:none}
 .form-section.active{display:block}
-.field-group{margin-bottom:20px}
-.field-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.field-desc{font-size:11px;color:var(--text3);margin-bottom:6px}
+.field-group{margin-bottom:16px}
+.field-group:last-child{margin-bottom:0}
+.field-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.3px}
+.field-desc{font-size:11px;color:var(--text3);margin-bottom:5px;line-height:1.4}
 .field-row{display:flex;align-items:center;gap:12px}
 
 input[type="text"],input[type="number"],input[type="password"],select,textarea{
@@ -49,10 +55,11 @@ input[type="text"],input[type="number"],input[type="password"],select,textarea{
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 textarea{min-height:80px;resize:vertical}
 select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%2371717a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+select option{background:var(--surface2);color:var(--text)}
 
 /* Toggle */
 .toggle-wrap{display:flex;align-items:center;gap:10px}
-.toggle{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.2s}
 .toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
@@ -62,7 +69,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 
 /* Sensitive field */
 .sensitive-field{display:flex;align-items:center;gap:8px;max-width:480px}
-.sensitive-field input{flex:1;background:var(--surface);color:var(--text3);cursor:not-allowed}
+.sensitive-field input{flex:1;background:var(--surface);color:var(--text3);cursor:not-allowed;font-style:italic}
 .env-hint{font-size:11px;color:var(--warn);background:rgba(245,158,11,.1);padding:4px 8px;border-radius:var(--radius-sm);margin-top:4px;display:inline-block}
 .env-hint code{font-family:"Cascadia Code",Consolas,monospace;color:var(--warn)}
 
@@ -74,17 +81,21 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .tag-remove:hover{opacity:1}
 .tags-input{border:none;background:none;outline:none;color:var(--text);font-size:13px;min-width:80px;flex:1}
 
-/* Section title */
-.section-title{font-size:15px;font-weight:600;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.subsection-title{font-size:13px;font-weight:600;color:var(--text2);margin:24px 0 12px;padding-top:12px;border-top:1px solid var(--border)}
+/* Subsection */
+.subsection-title{font-size:13px;font-weight:600;color:var(--text2);margin:20px 0 10px;padding-top:12px;border-top:1px solid var(--border)}
+.subsection-title:first-child{border-top:none;margin-top:0;padding-top:0}
+
+/* Info badge */
+.info-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:4px;margin-left:8px}
+.char-preview{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:6px;max-width:480px}
+.char-preview-name{font-weight:600;font-size:13px}
+.char-preview-path{font-size:11px;color:var(--text3)}
 
 /* Button */
 .btn{padding:8px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
 .btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{background:var(--accent-hover)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
-.btn-danger:hover{background:rgba(239,68,68,.1)}
 
 /* Toast */
 .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:var(--radius-sm);font-size:13px;z-index:1000;animation:slideIn .3s ease;box-shadow:0 4px 12px rgba(0,0,0,.3)}
@@ -93,9 +104,11 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .toast.info{background:var(--accent);color:#fff}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-/* Card */
-.config-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-.config-card h3{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)}
+/* Range slider */
+.range-wrap{display:flex;align-items:center;gap:10px;max-width:480px}
+.range-wrap input[type=range]{flex:1;-webkit-appearance:none;background:var(--border);height:4px;border-radius:2px;outline:none}
+.range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer}
+.range-val{font-size:13px;color:var(--text2);min-width:36px;text-align:right;font-family:"Cascadia Code",Consolas,monospace}
 </style>
 </head>
 <body>
@@ -112,7 +125,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
     <li class="nav-item" data-section="expression"><span class="nav-icon">&#128516;</span> 表情包</li>
     <li class="nav-item" data-section="memory"><span class="nav-icon">&#129504;</span> 记忆系统</li>
     <li class="nav-item" data-section="platforms"><span class="nav-icon">&#127760;</span> 平台接入</li>
-    <li class="nav-item" data-section="pipeline"><span class="nav-icon">&#9881;</span> 消息管道</li>
+    <li class="nav-item" data-section="pipeline"><span class="nav-icon">&#128256;</span> 消息管道</li>
     <li class="nav-item" data-section="mcp"><span class="nav-icon">&#128295;</span> MCP 工具</li>
     <li class="nav-item" data-section="voice"><span class="nav-icon">&#127908;</span> 语音</li>
     <li class="nav-item" data-section="visual"><span class="nav-icon">&#128065;</span> 视觉</li>
@@ -127,9 +140,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
     <h2 id="sectionTitle">应用设置</h2>
     <button class="btn btn-primary" id="saveBtn" onclick="saveSection()">保存更改</button>
   </div>
-  <div class="main-content" id="mainContent">
-    <!-- Dynamic form content rendered here -->
-  </div>
+  <div class="main-content" id="mainContent"></div>
 </main>
 
 <script>
@@ -140,239 +151,465 @@ let currentSection = 'app';
 let configData = {};
 let envHints = {};
 let sensitiveFields = [];
+let optionsData = {};
 
-// Section metadata: display names, icons, field descriptions
-const SECTION_META = {
+// =============================================================================
+// Section definitions with rich metadata
+// =============================================================================
+const SECTIONS = {
   app: {
     title: '应用设置',
-    fields: {
-      'app.name': { label: '应用名称', type: 'text' },
-      'app.version': { label: '版本号', type: 'text' },
-      'app.debug': { label: '调试模式', type: 'bool', desc: '启用后会输出详细日志' },
-      'app.data_dir': { label: '数据目录', type: 'text', desc: '所有数据文件的根目录' },
-      'app.log_dir': { label: '日志目录', type: 'text' },
-      'app.log_level': { label: '日志级别', type: 'select', options: ['DEBUG', 'INFO', 'WARNING', 'ERROR'] },
-    }
+    cards: [
+      {
+        title: '基本信息',
+        desc: '应用名称、版本和运行模式',
+        fields: [
+          { path: 'app.name', label: '应用名称', type: 'text' },
+          { path: 'app.version', label: '版本号', type: 'text' },
+          { path: 'app.debug', label: '调试模式', type: 'bool', desc: '启用后输出详细日志，生产环境请关闭' },
+        ]
+      },
+      {
+        title: '日志与存储',
+        fields: [
+          { path: 'app.data_dir', label: '数据目录', type: 'text', desc: '所有数据文件的根目录' },
+          { path: 'app.log_dir', label: '日志目录', type: 'text' },
+          { path: 'app.log_level', label: '日志级别', type: 'select', options: [
+            { value: 'DEBUG', label: 'DEBUG（调试，最详细）' },
+            { value: 'INFO', label: 'INFO（信息，推荐）' },
+            { value: 'WARNING', label: 'WARNING（警告）' },
+            { value: 'ERROR', label: 'ERROR（仅错误）' },
+          ]},
+        ]
+      }
+    ]
   },
+
   ai: {
     title: 'AI 后端配置',
-    fields: {
-      'ai.provider': { label: '当前后端', type: 'select', options: ['openai', 'ollama', 'local_model', 'lora'], desc: '选择激活的 AI 推理后端' },
-      // Ollama
-      '__section__:ollama': { label: 'Ollama 配置', type: 'subsection' },
-      'ai.ollama.base_url': { label: 'Ollama 地址', type: 'text' },
-      'ai.ollama.model': { label: '模型名称', type: 'text' },
-      'ai.ollama.keep_alive': { label: '模型保持时间', type: 'text', desc: '如 5m、1h' },
-      'ai.ollama.timeout': { label: '超时（秒）', type: 'number' },
-      // OpenAI
-      '__section__:openai': { label: 'OpenAI 兼容 API 配置', type: 'subsection' },
-      'ai.openai.base_url': { label: 'API 地址', type: 'text' },
-      'ai.openai.api_key': { label: 'API Key', type: 'sensitive' },
-      'ai.openai.model': { label: '模型名称', type: 'text' },
-      'ai.openai.timeout': { label: '超时（秒）', type: 'number' },
-      'ai.openai.max_retries': { label: '最大重试次数', type: 'number' },
-      // Local Model
-      '__section__:local': { label: '本地模型配置', type: 'subsection' },
-      'ai.local_model.base_url': { label: '服务地址', type: 'text' },
-      'ai.local_model.model': { label: '模型名称', type: 'text' },
-      'ai.local_model.timeout': { label: '超时（秒）', type: 'number' },
-      // LoRA
-      '__section__:lora': { label: 'LoRA 微调模型配置', type: 'subsection' },
-      'ai.lora.adapter_path': { label: '适配器路径', type: 'text' },
-      'ai.lora.base_model': { label: '基座模型', type: 'text' },
-      'ai.lora.load_in_4bit': { label: '4-bit 量化', type: 'bool' },
-      'ai.lora.max_new_tokens': { label: '最大生成 Token', type: 'number' },
-      'ai.lora.temperature': { label: '温度', type: 'number', step: '0.1' },
-      'ai.lora.top_p': { label: 'Top P', type: 'number', step: '0.05' },
-      'ai.lora.repetition_penalty': { label: '重复惩罚', type: 'number', step: '0.1' },
-    }
+    cards: [
+      {
+        title: '后端选择',
+        desc: '选择当前激活的 AI 推理后端',
+        fields: [
+          { path: 'ai.provider', label: '当前后端', type: 'select', options: [
+            { value: 'openai', label: 'OpenAI 兼容 API（Qwen/DeepSeek/mimo 等）' },
+            { value: 'ollama', label: 'Ollama（本地推理）' },
+            { value: 'local_model', label: '本地模型（llama.cpp/vLLM）' },
+            { value: 'lora', label: 'LoRA 微调模型（本地 GPU）' },
+          ]},
+        ]
+      },
+      {
+        title: 'Ollama 配置',
+        desc: '本地 Ollama 推理服务',
+        fields: [
+          { path: 'ai.ollama.base_url', label: '服务地址', type: 'text' },
+          { path: 'ai.ollama.model', label: '模型名称', type: 'text', desc: '如 qwen2.5:7b、llama3:8b' },
+          { path: 'ai.ollama.keep_alive', label: '模型保持时间', type: 'text', desc: '模型在内存中保持的时间，如 5m、1h' },
+          { path: 'ai.ollama.timeout', label: '超时（秒）', type: 'number' },
+        ]
+      },
+      {
+        title: 'OpenAI 兼容 API',
+        desc: '适用于 Qwen、DeepSeek、mimo 等 OpenAI 格式的服务',
+        fields: [
+          { path: 'ai.openai.base_url', label: 'API 地址', type: 'text' },
+          { path: 'ai.openai.api_key', label: 'API Key', type: 'sensitive' },
+          { path: 'ai.openai.model', label: '模型名称', type: 'text' },
+          { path: 'ai.openai.timeout', label: '超时（秒）', type: 'number' },
+          { path: 'ai.openai.max_retries', label: '最大重试次数', type: 'number' },
+        ]
+      },
+      {
+        title: '本地模型服务',
+        desc: 'llama.cpp server、vLLM 等本地 OpenAI 兼容服务',
+        fields: [
+          { path: 'ai.local_model.base_url', label: '服务地址', type: 'text' },
+          { path: 'ai.local_model.model', label: '模型名称', type: 'text' },
+          { path: 'ai.local_model.timeout', label: '超时（秒）', type: 'number' },
+        ]
+      },
+      {
+        title: 'LoRA 微调模型',
+        desc: '加载 LoRA 适配器进行本地推理（需要 GPU）',
+        fields: [
+          { path: 'ai.lora.adapter_path', label: '适配器路径', type: 'select', source: 'lora_adapters', desc: '选择已训练的 LoRA 适配器' },
+          { path: 'ai.lora.base_model', label: '基座模型', type: 'text', desc: 'HuggingFace 模型 ID 或本地路径' },
+          { path: 'ai.lora.load_in_4bit', label: '4-bit 量化加载', type: 'bool', desc: '节省显存，8GB 显卡推荐开启' },
+          { path: 'ai.lora.max_new_tokens', label: '最大生成 Token', type: 'number' },
+          { path: 'ai.lora.temperature', label: '温度', type: 'range', min: 0, max: 2, step: 0.05 },
+          { path: 'ai.lora.top_p', label: 'Top P', type: 'range', min: 0, max: 1, step: 0.05 },
+          { path: 'ai.lora.repetition_penalty', label: '重复惩罚', type: 'range', min: 1, max: 2, step: 0.05 },
+        ]
+      },
+    ]
   },
+
   character: {
     title: '角色卡配置',
-    fields: {
-      'character.card_path': { label: '角色卡路径', type: 'text', desc: 'JSON 或 Markdown 格式' },
-      'character.extensions.voice_style': { label: '语音风格', type: 'text' },
-      'character.extensions.personality_tags': { label: '性格标签', type: 'tags' },
-      'character.extensions.background_knowledge': { label: '背景知识目录', type: 'text' },
-    }
+    cards: [
+      {
+        title: '角色卡选择',
+        desc: '选择 AI 扮演的角色人格',
+        fields: [
+          { path: 'character.card_path', label: '角色卡文件', type: 'select', source: 'characters', desc: '从 data/characters/ 中选择' },
+        ]
+      },
+      {
+        title: '角色扩展属性',
+        desc: '控制角色的表达风格和背景知识',
+        fields: [
+          { path: 'character.extensions.voice_style', label: '语音风格', type: 'select', options: [
+            { value: '撒娇', label: '撒娇' },
+            { value: '温柔', label: '温柔' },
+            { value: '活泼', label: '活泼' },
+            { value: '冷漠', label: '冷漠' },
+            { value: '成熟', label: '成熟' },
+            { value: '知性', label: '知性' },
+          ]},
+          { path: 'character.extensions.personality_tags', label: '性格标签', type: 'tags' },
+          { path: 'character.extensions.background_knowledge', label: '背景知识目录', type: 'select', source: 'knowledge_dirs' },
+        ]
+      }
+    ]
   },
+
   expression: {
     title: '表情包系统',
-    fields: {
-      'expression.enabled': { label: '启用表情包', type: 'bool', desc: '发送消息时自动匹配表情包' },
-    }
+    cards: [
+      {
+        title: '表情包设置',
+        desc: '发送消息时自动匹配表情包',
+        fields: [
+          { path: 'expression.enabled', label: '启用表情包', type: 'bool' },
+        ]
+      }
+    ]
   },
+
   memory: {
     title: '记忆系统配置',
-    fields: {
-      '__section__:short': { label: '短期记忆', type: 'subsection' },
-      'memory.short_term.max_turns': { label: '最大轮次', type: 'number', desc: 'Ring Buffer 容量' },
-      'memory.short_term.window_size': { label: '窗口大小', type: 'number' },
-      '__section__:long': { label: '长期记忆', type: 'subsection' },
-      'memory.long_term.enabled': { label: '启用长期记忆', type: 'bool' },
-      'memory.long_term.vector_db': { label: '向量数据库', type: 'select', options: ['chroma'] },
-      'memory.long_term.persist_dir': { label: '持久化目录', type: 'text' },
-      'memory.long_term.collection_name': { label: '集合名称', type: 'text' },
-      'memory.long_term.top_k': { label: '检索 Top K', type: 'number' },
-      'memory.long_term.embedding_model': { label: 'Embedding 模型', type: 'text' },
-      'memory.long_term.auto_index': { label: '自动索引', type: 'bool' },
-      '__section__:features': { label: '功能特性开关', type: 'subsection' },
-      'memory.features.reranker.enabled': { label: 'Re-Ranker（重排序）', type: 'bool' },
-      'memory.features.composer.enabled': { label: 'Composer（去重+冲突消解）', type: 'bool' },
-      'memory.features.quality_gate.enabled': { label: 'Quality Gate（质量门）', type: 'bool' },
-      'memory.features.verifier.enabled': { label: 'Verifier（重复检测）', type: 'bool' },
-      'memory.features.lifecycle.enabled': { label: 'Lifecycle（生命周期管理）', type: 'bool' },
-      'memory.features.graph.enabled': { label: 'Graph（图记忆）', type: 'bool' },
-      'memory.features.versioning.enabled': { label: 'Versioning（多版本）', type: 'bool' },
-    }
+    cards: [
+      {
+        title: '短期记忆',
+        desc: 'Ring Buffer 结构，保存最近 N 轮对话',
+        fields: [
+          { path: 'memory.short_term.max_turns', label: '最大轮次', type: 'number', desc: 'Ring Buffer 容量' },
+          { path: 'memory.short_term.window_size', label: '窗口大小', type: 'number', desc: '送给 LLM 的上下文窗口' },
+        ]
+      },
+      {
+        title: '长期记忆',
+        desc: 'ChromaDB 向量存储，支持语义检索',
+        fields: [
+          { path: 'memory.long_term.enabled', label: '启用长期记忆', type: 'bool' },
+          { path: 'memory.long_term.vector_db', label: '向量数据库', type: 'select', options: [
+            { value: 'chroma', label: 'ChromaDB（推荐）' },
+          ]},
+          { path: 'memory.long_term.persist_dir', label: '持久化目录', type: 'text' },
+          { path: 'memory.long_term.collection_name', label: '集合名称', type: 'text' },
+          { path: 'memory.long_term.top_k', label: '检索 Top K', type: 'number', desc: '返回最相似的 K 条记忆' },
+          { path: 'memory.long_term.embedding_model', label: 'Embedding 模型', type: 'select', source: 'embedding_models' },
+          { path: 'memory.long_term.auto_index', label: '自动索引', type: 'bool', desc: '新对话自动写入向量库' },
+        ]
+      },
+      {
+        title: '功能特性开关',
+        desc: '记忆系统高级功能，按需启用',
+        fields: [
+          { path: 'memory.features.reranker.enabled', label: 'Re-Ranker（重排序）', type: 'bool', desc: 'Cross-Encoder 对检索结果重排序，提高精度' },
+          { path: 'memory.features.composer.enabled', label: 'Composer（去重+冲突消解）', type: 'bool', desc: '合并重复记忆，解决冲突信息' },
+          { path: 'memory.features.quality_gate.enabled', label: 'Quality Gate（质量门）', type: 'bool', desc: 'LLM 判断记忆是否值得保存' },
+          { path: 'memory.features.verifier.enabled', label: 'Verifier（重复检测）', type: 'bool', desc: '写入前检测是否与已有记忆重复' },
+          { path: 'memory.features.lifecycle.enabled', label: 'Lifecycle（生命周期管理）', type: 'bool', desc: '自动衰减、合并、归档旧记忆' },
+          { path: 'memory.features.graph.enabled', label: 'Graph（图记忆）', type: 'bool', desc: 'NetworkX 实体关系图，支持多跳推理' },
+          { path: 'memory.features.versioning.enabled', label: 'Versioning（多版本）', type: 'bool', desc: '记忆带版本链，支持时间感知检索' },
+        ]
+      }
+    ]
   },
+
   platforms: {
     title: '平台接入配置',
-    fields: {
-      '__section__:qq': { label: 'QQ（OneBot v11/v12）', type: 'subsection' },
-      'platforms.qq.enabled': { label: '启用 QQ', type: 'bool' },
-      'platforms.qq.adapter': { label: '适配器', type: 'select', options: ['onebot_v11', 'onebot_v12'] },
-      'platforms.qq.connection.type': { label: '连接方式', type: 'select', options: ['正向WebSocket', '反向WebSocket', 'HTTP'] },
-      'platforms.qq.connection.host': { label: '主机', type: 'text' },
-      'platforms.qq.connection.port': { label: '端口', type: 'number' },
-      'platforms.qq.access_token': { label: 'Access Token', type: 'sensitive' },
-      'platforms.qq.allowed_groups': { label: '允许的群', type: 'tags' },
-      'platforms.qq.allowed_users': { label: '允许的用户', type: 'tags' },
-      'platforms.qq.block_list': { label: '黑名单', type: 'tags' },
-      'platforms.qq.rate_limit.per_user': { label: '每用户限速', type: 'number' },
-      'platforms.qq.rate_limit.per_group': { label: '每群限速', type: 'number' },
-
-      '__section__:qq_official': { label: 'QQ 官方机器人', type: 'subsection' },
-      'platforms.qq_official.enabled': { label: '启用', type: 'bool' },
-      'platforms.qq_official.app_id': { label: 'App ID', type: 'text' },
-      'platforms.qq_official.app_secret': { label: 'App Secret', type: 'sensitive' },
-      'platforms.qq_official.callback_path': { label: '回调地址', type: 'text' },
-
-      '__section__:wechat': { label: '企业微信', type: 'subsection' },
-      'platforms.wechat.enabled': { label: '启用', type: 'bool' },
-      'platforms.wechat.wechat_work.corp_id': { label: '企业 ID', type: 'text' },
-      'platforms.wechat.wechat_work.corp_secret': { label: 'Secret', type: 'sensitive' },
-      'platforms.wechat.wechat_work.agent_id': { label: 'Agent ID', type: 'text' },
-      'platforms.wechat.wechat_work.token': { label: 'Token', type: 'sensitive' },
-      'platforms.wechat.wechat_work.encoding_aes_key': { label: 'AES Key', type: 'sensitive' },
-
-      '__section__:discord': { label: 'Discord', type: 'subsection' },
-      'platforms.discord.enabled': { label: '启用', type: 'bool' },
-      'platforms.discord.bot_token': { label: 'Bot Token', type: 'sensitive' },
-
-      '__section__:telegram': { label: 'Telegram', type: 'subsection' },
-      'platforms.telegram.enabled': { label: '启用', type: 'bool' },
-      'platforms.telegram.bot_token': { label: 'Bot Token', type: 'sensitive' },
-      'platforms.telegram.allowed_users': { label: '允许的用户', type: 'tags' },
-      'platforms.telegram.allowed_chats': { label: '允许的聊天', type: 'tags' },
-      'platforms.telegram.block_list': { label: '黑名单', type: 'tags' },
-      'platforms.telegram.rate_limit.per_user': { label: '每用户限速', type: 'number' },
-      'platforms.telegram.rate_limit.per_chat': { label: '每聊天限速', type: 'number' },
-      'platforms.telegram.parse_mode': { label: '解析模式', type: 'select', options: ['', 'HTML', 'Markdown'] },
-    }
+    cards: [
+      {
+        title: 'QQ（OneBot v11/v12）',
+        desc: '通过 OneBot 协议接入 QQ',
+        fields: [
+          { path: 'platforms.qq.enabled', label: '启用', type: 'bool' },
+          { path: 'platforms.qq.adapter', label: '协议版本', type: 'select', options: [
+            { value: 'onebot_v11', label: 'OneBot v11' },
+            { value: 'onebot_v12', label: 'OneBot v12' },
+          ]},
+          { path: 'platforms.qq.connection.type', label: '连接方式', type: 'select', options: [
+            { value: '正向WebSocket', label: '正向 WebSocket' },
+            { value: '反向WebSocket', label: '反向 WebSocket' },
+            { value: 'HTTP', label: 'HTTP' },
+          ]},
+          { path: 'platforms.qq.connection.host', label: '主机', type: 'text' },
+          { path: 'platforms.qq.connection.port', label: '端口', type: 'number' },
+          { path: 'platforms.qq.access_token', label: 'Access Token', type: 'sensitive' },
+          { path: 'platforms.qq.rate_limit.per_user', label: '每用户限速（条/分钟）', type: 'number' },
+          { path: 'platforms.qq.rate_limit.per_group', label: '每群限速（条/分钟）', type: 'number' },
+        ]
+      },
+      {
+        title: 'QQ 官方机器人',
+        desc: 'QQ 开放平台官方机器人',
+        fields: [
+          { path: 'platforms.qq_official.enabled', label: '启用', type: 'bool' },
+          { path: 'platforms.qq_official.app_id', label: 'App ID', type: 'text' },
+          { path: 'platforms.qq_official.app_secret', label: 'App Secret', type: 'sensitive' },
+          { path: 'platforms.qq_official.callback_path', label: '回调地址', type: 'text', desc: '公网可访问的回调 URL' },
+        ]
+      },
+      {
+        title: '企业微信',
+        fields: [
+          { path: 'platforms.wechat.enabled', label: '启用', type: 'bool' },
+          { path: 'platforms.wechat.wechat_work.corp_id', label: '企业 ID', type: 'text' },
+          { path: 'platforms.wechat.wechat_work.corp_secret', label: 'Secret', type: 'sensitive' },
+          { path: 'platforms.wechat.wechat_work.agent_id', label: 'Agent ID', type: 'text' },
+          { path: 'platforms.wechat.wechat_work.token', label: 'Token', type: 'sensitive' },
+          { path: 'platforms.wechat.wechat_work.encoding_aes_key', label: 'AES Key', type: 'sensitive' },
+        ]
+      },
+      {
+        title: 'Discord',
+        fields: [
+          { path: 'platforms.discord.enabled', label: '启用', type: 'bool' },
+          { path: 'platforms.discord.bot_token', label: 'Bot Token', type: 'sensitive' },
+        ]
+      },
+      {
+        title: 'Telegram',
+        fields: [
+          { path: 'platforms.telegram.enabled', label: '启用', type: 'bool' },
+          { path: 'platforms.telegram.bot_token', label: 'Bot Token', type: 'sensitive' },
+          { path: 'platforms.telegram.parse_mode', label: '消息格式', type: 'select', options: [
+            { value: '', label: '纯文本（默认）' },
+            { value: 'HTML', label: 'HTML' },
+            { value: 'Markdown', label: 'Markdown' },
+          ]},
+          { path: 'platforms.telegram.rate_limit.per_user', label: '每用户限速', type: 'number' },
+          { path: 'platforms.telegram.rate_limit.per_chat', label: '每聊天限速', type: 'number' },
+        ]
+      },
+    ]
   },
+
   pipeline: {
     title: '消息处理管道',
-    fields: {
-      'pipeline.max_context_turns': { label: '最大上下文轮次', type: 'number' },
-      'pipeline.filters.block_bots': { label: '屏蔽机器人', type: 'bool' },
-      'pipeline.filters.block_self': { label: '屏蔽自身消息', type: 'bool' },
-      'pipeline.filters.min_content_length': { label: '最小内容长度', type: 'number' },
-      'pipeline.filters.max_content_length': { label: '最大内容长度', type: 'number' },
-      'pipeline.split.enabled': { label: '启用消息拆分', type: 'bool', desc: '长回复自动拆成多条短消息' },
-      'pipeline.split.max_chunk_chars': { label: '单块最大字符', type: 'number' },
-      'pipeline.split.delay_min_ms': { label: '最小延迟（ms）', type: 'number' },
-      'pipeline.split.delay_max_ms': { label: '最大延迟（ms）', type: 'number' },
-    }
+    cards: [
+      {
+        title: '上下文与过滤',
+        fields: [
+          { path: 'pipeline.max_context_turns', label: '最大上下文轮次', type: 'number', desc: '送给 LLM 的历史对话轮数' },
+          { path: 'pipeline.filters.block_bots', label: '屏蔽机器人消息', type: 'bool' },
+          { path: 'pipeline.filters.block_self', label: '屏蔽自身消息', type: 'bool' },
+          { path: 'pipeline.filters.min_content_length', label: '最小内容长度', type: 'number' },
+          { path: 'pipeline.filters.max_content_length', label: '最大内容长度', type: 'number' },
+        ]
+      },
+      {
+        title: '消息拆分',
+        desc: '长回复自动拆成多条短消息逐条发送',
+        fields: [
+          { path: 'pipeline.split.enabled', label: '启用消息拆分', type: 'bool' },
+          { path: 'pipeline.split.max_chunk_chars', label: '单块最大字符', type: 'number' },
+          { path: 'pipeline.split.delay_min_ms', label: '最小延迟（ms）', type: 'number' },
+          { path: 'pipeline.split.delay_max_ms', label: '最大延迟（ms）', type: 'number' },
+        ]
+      }
+    ]
   },
+
   mcp: {
     title: 'MCP 工具协议',
-    fields: {
-      'mcp.enabled': { label: '启用 MCP', type: 'bool' },
-      'mcp.tool_discovery.enabled': { label: '自动发现工具', type: 'bool' },
-      'mcp.tool_discovery.auto_reload': { label: '热重载', type: 'bool' },
-      '__section__:hw': { label: '硬件集成', type: 'subsection' },
-      'mcp.hardware.enabled': { label: '启用硬件', type: 'bool' },
-      'mcp.hardware.mqtt.broker_url': { label: 'MQTT Broker', type: 'text' },
-      'mcp.hardware.mqtt.username': { label: 'MQTT 用户名', type: 'text' },
-      'mcp.hardware.mqtt.password': { label: 'MQTT 密码', type: 'sensitive' },
-    }
+    cards: [
+      {
+        title: '工具系统',
+        fields: [
+          { path: 'mcp.enabled', label: '启用 MCP 工具', type: 'bool' },
+          { path: 'mcp.tool_discovery.enabled', label: '自动发现工具', type: 'bool', desc: '扫描 tools 目录自动注册' },
+          { path: 'mcp.tool_discovery.auto_reload', label: '热重载', type: 'bool', desc: '工具文件变更后自动重新加载' },
+        ]
+      },
+      {
+        title: '硬件集成（MQTT）',
+        desc: '通过 MQTT 与 ESP32 等硬件设备通信',
+        fields: [
+          { path: 'mcp.hardware.enabled', label: '启用硬件', type: 'bool' },
+          { path: 'mcp.hardware.mqtt.broker_url', label: 'MQTT Broker', type: 'text' },
+          { path: 'mcp.hardware.mqtt.username', label: '用户名', type: 'text' },
+          { path: 'mcp.hardware.mqtt.password', label: '密码', type: 'sensitive' },
+        ]
+      }
+    ]
   },
+
   voice: {
     title: '语音模块',
-    fields: {
-      'voice.enabled': { label: '启用语音', type: 'bool' },
-      'voice.voice_response': { label: '语音回复', type: 'bool', desc: '收到语音时用语音回复' },
-      '__section__:tts': { label: 'TTS（文字转语音）', type: 'subsection' },
-      'voice.tts.provider': { label: 'TTS 引擎', type: 'select', options: ['edge', 'cosyvoice2'] },
-      'voice.tts.voice_id': { label: '音色 ID', type: 'text', desc: 'edge-tts 音色' },
-      'voice.tts.speed': { label: '语速', type: 'number', step: '0.1' },
-      'voice.tts.model_dir': { label: 'CosyVoice 模型目录', type: 'text' },
-      'voice.tts.instruct_text': { label: '音色风格描述', type: 'text' },
-      '__section__:asr': { label: 'ASR（语音识别）', type: 'subsection' },
-      'voice.asr.provider': { label: 'ASR 引擎', type: 'select', options: ['sensevoice', 'openai', 'whisper'] },
-      'voice.asr.model': { label: '模型', type: 'text' },
-      'voice.asr.language': { label: '语言', type: 'text', desc: 'auto 自动检测' },
-      'voice.asr.device': { label: '推理设备', type: 'text' },
-      'voice.asr.api_key': { label: 'Whisper API Key', type: 'sensitive' },
-    }
+    cards: [
+      {
+        title: '语音总开关',
+        fields: [
+          { path: 'voice.enabled', label: '启用语音', type: 'bool' },
+          { path: 'voice.voice_response', label: '语音回复', type: 'bool', desc: '收到语音消息时用语音回复' },
+        ]
+      },
+      {
+        title: 'TTS（文字转语音）',
+        fields: [
+          { path: 'voice.tts.provider', label: 'TTS 引擎', type: 'select', options: [
+            { value: 'edge', label: 'Edge TTS（微软云，免费）' },
+            { value: 'cosyvoice2', label: 'CosyVoice 2（本地，支持声音克隆）' },
+          ]},
+          { path: 'voice.tts.voice_id', label: '音色', type: 'select', source: 'tts_voices', desc: 'Edge TTS 音色选择' },
+          { path: 'voice.tts.speed', label: '语速', type: 'range', min: 0.5, max: 2, step: 0.1 },
+          { path: 'voice.tts.model_dir', label: 'CosyVoice 模型目录', type: 'text' },
+          { path: 'voice.tts.instruct_text', label: '音色风格描述', type: 'text', desc: 'CosyVoice instruct2 模式' },
+        ]
+      },
+      {
+        title: 'ASR（语音识别）',
+        fields: [
+          { path: 'voice.asr.provider', label: 'ASR 引擎', type: 'select', options: [
+            { value: 'sensevoice', label: 'SenseVoice（本地，推荐）' },
+            { value: 'openai', label: 'OpenAI Whisper API' },
+            { value: 'whisper', label: 'Whisper（本地）' },
+          ]},
+          { path: 'voice.asr.model', label: '模型', type: 'text' },
+          { path: 'voice.asr.language', label: '语言', type: 'select', options: [
+            { value: 'auto', label: '自动检测' },
+            { value: 'zh', label: '中文' },
+            { value: 'en', label: '英文' },
+            { value: 'ja', label: '日文' },
+          ]},
+          { path: 'voice.asr.device', label: '推理设备', type: 'select', options: [
+            { value: 'cuda:0', label: 'GPU (cuda:0)' },
+            { value: 'cpu', label: 'CPU' },
+          ]},
+          { path: 'voice.asr.api_key', label: 'Whisper API Key', type: 'sensitive' },
+        ]
+      }
+    ]
   },
+
   visual: {
     title: '视觉感知模块',
-    fields: {
-      'visual.enabled': { label: '启用视觉', type: 'bool' },
-      'visual.camera.provider': { label: '摄像头类型', type: 'select', options: ['esp32'] },
-      'visual.camera.esp32_url': { label: 'ESP32 地址', type: 'text' },
-      'visual.camera.capture_interval': { label: '采集间隔（秒）', type: 'number' },
-      'visual.vision.provider': { label: '视觉模型', type: 'select', options: ['openai'] },
-      'visual.vision.model': { label: '模型名称', type: 'text' },
-      'visual.vision.base_url': { label: 'API 地址', type: 'text' },
-      'visual.vision.max_image_size': { label: '最大图片尺寸', type: 'number' },
-    }
+    cards: [
+      {
+        title: '视觉总开关',
+        fields: [
+          { path: 'visual.enabled', label: '启用视觉', type: 'bool' },
+        ]
+      },
+      {
+        title: '摄像头',
+        fields: [
+          { path: 'visual.camera.esp32_url', label: 'ESP32 地址', type: 'text' },
+          { path: 'visual.camera.capture_interval', label: '采集间隔（秒）', type: 'number' },
+        ]
+      },
+      {
+        title: '视觉模型',
+        fields: [
+          { path: 'visual.vision.model', label: '模型名称', type: 'text' },
+          { path: 'visual.vision.base_url', label: 'API 地址', type: 'text' },
+          { path: 'visual.vision.max_image_size', label: '最大图片尺寸', type: 'number' },
+        ]
+      }
+    ]
   },
+
   web_console: {
     title: 'Web 控制台',
-    fields: {
-      'web_console.enabled': { label: '启用控制台', type: 'bool' },
-      'web_console.host': { label: '监听地址', type: 'text' },
-      'web_console.port': { label: '端口', type: 'number' },
-      '__section__:auth': { label: '认证', type: 'subsection' },
-      'web_console.auth.enabled': { label: '启用认证', type: 'bool' },
-      'web_console.auth.token': { label: 'Token', type: 'sensitive' },
-      '__section__:cors': { label: 'CORS', type: 'subsection' },
-      'web_console.cors.allow_origins': { label: '允许的来源', type: 'tags' },
-      'web_console.cors.allow_credentials': { label: '允许凭据', type: 'bool' },
-    }
+    cards: [
+      {
+        title: '服务设置',
+        fields: [
+          { path: 'web_console.enabled', label: '启用控制台', type: 'bool' },
+          { path: 'web_console.host', label: '监听地址', type: 'select', options: [
+            { value: '0.0.0.0', label: '0.0.0.0（允许外部访问）' },
+            { value: '127.0.0.1', label: '127.0.0.1（仅本机）' },
+          ]},
+          { path: 'web_console.port', label: '端口', type: 'number' },
+        ]
+      },
+      {
+        title: '认证',
+        fields: [
+          { path: 'web_console.auth.enabled', label: '启用 Token 认证', type: 'bool' },
+          { path: 'web_console.auth.token', label: 'Token', type: 'sensitive' },
+        ]
+      },
+      {
+        title: 'CORS 跨域',
+        fields: [
+          { path: 'web_console.cors.allow_origins', label: '允许的来源', type: 'tags' },
+          { path: 'web_console.cors.allow_credentials', label: '允许凭据', type: 'bool' },
+        ]
+      }
+    ]
   },
+
   security: {
     title: '安全与隐私',
-    fields: {
-      'security.log_sanitization': { label: '日志脱敏', type: 'bool', desc: '自动隐藏日志中的敏感信息' },
-      'security.encrypt_local_data': { label: '加密本地数据', type: 'bool' },
-      'security.max_tokens': { label: '最大 Token 数', type: 'number' },
-      'security.http_timeout': { label: 'HTTP 超时（秒）', type: 'number' },
-    }
+    cards: [
+      {
+        title: '安全设置',
+        fields: [
+          { path: 'security.log_sanitization', label: '日志脱敏', type: 'bool', desc: '自动隐藏日志中的敏感信息' },
+          { path: 'security.encrypt_local_data', label: '加密本地数据', type: 'bool' },
+          { path: 'security.max_tokens', label: '最大 Token 数', type: 'number', desc: '单次请求的最大 Token 限制' },
+          { path: 'security.http_timeout', label: 'HTTP 超时（秒）', type: 'number' },
+        ]
+      }
+    ]
   },
+
   proactive: {
     title: '主动消息（牵挂驱动）',
-    fields: {
-      'proactive.enabled': { label: '启用主动消息', type: 'bool' },
-      'proactive.check_interval_seconds': { label: '检查间隔（秒）', type: 'number' },
-      'proactive.min_cooldown_seconds': { label: '最小冷却（秒）', type: 'number' },
-      'proactive.max_daily_messages': { label: '每日上限', type: 'number' },
-      '__section__:concern': { label: '关怀评估', type: 'subsection' },
-      'proactive.concern.threshold': { label: '触发阈值', type: 'number', step: '0.1' },
-      'proactive.concern.llm_evaluate': { label: 'LLM 评估', type: 'bool' },
-      '__section__:expression': { label: '表达配置', type: 'subsection' },
-      'proactive.expression.max_context_memories': { label: '上下文记忆数', type: 'number' },
-      'proactive.expression.max_tokens': { label: '最大 Token', type: 'number' },
-      '__section__:targets': { label: '发送目标', type: 'subsection' },
-      'proactive.targets.telegram.chat_id': { label: 'Telegram Chat ID', type: 'text' },
-      'proactive.targets.qq.user_id': { label: 'QQ 用户号', type: 'text' },
-      'proactive.targets.qq.group_id': { label: 'QQ 群号', type: 'text' },
-      'proactive.targets.discord.channel_id': { label: 'Discord 频道 ID', type: 'text' },
-      'proactive.targets.wechat.touser': { label: '企微用户 ID', type: 'text' },
-    }
+    cards: [
+      {
+        title: '主动消息开关',
+        desc: 'AI 主动关心用户，而非被动等待',
+        fields: [
+          { path: 'proactive.enabled', label: '启用主动消息', type: 'bool' },
+          { path: 'proactive.check_interval_seconds', label: '检查间隔（秒）', type: 'number' },
+          { path: 'proactive.min_cooldown_seconds', label: '最小冷却（秒）', type: 'number', desc: '两条主动消息之间的最短间隔' },
+          { path: 'proactive.max_daily_messages', label: '每日上限', type: 'number' },
+        ]
+      },
+      {
+        title: '关怀评估',
+        desc: '决定何时发送主动消息',
+        fields: [
+          { path: 'proactive.concern.threshold', label: '触发阈值', type: 'range', min: 0, max: 1, step: 0.05, desc: '关怀分数超过此值时触发' },
+          { path: 'proactive.concern.llm_evaluate', label: 'LLM 评估', type: 'bool', desc: '用 LLM 判断是否需要关心（关闭则纯规则）' },
+        ]
+      },
+      {
+        title: '表达配置',
+        fields: [
+          { path: 'proactive.expression.max_context_memories', label: '上下文记忆数', type: 'number' },
+          { path: 'proactive.expression.max_tokens', label: '最大 Token', type: 'number' },
+        ]
+      },
+      {
+        title: '发送目标',
+        desc: '主动消息发送到哪个平台的哪个用户',
+        fields: [
+          { path: 'proactive.targets.telegram.chat_id', label: 'Telegram Chat ID', type: 'text' },
+          { path: 'proactive.targets.qq.user_id', label: 'QQ 用户号', type: 'text' },
+          { path: 'proactive.targets.qq.group_id', label: 'QQ 群号', type: 'text' },
+          { path: 'proactive.targets.discord.channel_id', label: 'Discord 频道 ID', type: 'text' },
+          { path: 'proactive.targets.wechat.touser', label: '企微用户 ID', type: 'text' },
+        ]
+      }
+    ]
   },
 };
 
@@ -380,163 +617,260 @@ const SECTION_META = {
 // API
 // =============================================================================
 
-async function fetchConfig() {
-  const [sectionsRes, hintsRes, sensitiveRes] = await Promise.all([
+async function fetchAll() {
+  const [sectionsRes, hintsRes, sensitiveRes, optionsRes] = await Promise.all([
     fetch('/api/config/sections'),
     fetch('/api/config/env-hints'),
     fetch('/api/config/sensitive-fields'),
+    fetch('/api/config/options'),
   ]);
-  const sectionsData = await sectionsRes.json();
+  configData = (await sectionsRes.json()).sections || {};
   envHints = (await hintsRes.json()).hints || {};
   sensitiveFields = (await sensitiveRes.json()).fields || [];
-  configData = sectionsData.sections || {};
+  optionsData = await optionsRes.json();
 }
 
 // =============================================================================
 // Get/Set nested values
 // =============================================================================
 
-function getNestedValue(obj, path) {
+function getVal(obj, path) {
   return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
 }
 
-function setNestedValue(obj, path, value) {
+function setVal(obj, path, value) {
   const keys = path.split('.');
-  let current = obj;
+  let cur = obj;
   for (let i = 0; i < keys.length - 1; i++) {
-    if (!current[keys[i]] || typeof current[keys[i]] !== 'object') {
-      current[keys[i]] = {};
-    }
-    current = current[keys[i]];
+    if (!cur[keys[i]] || typeof cur[keys[i]] !== 'object') cur[keys[i]] = {};
+    cur = cur[keys[i]];
   }
-  current[keys[keys.length - 1]] = value;
+  cur[keys[keys.length - 1]] = value;
 }
 
 // =============================================================================
 // Render
 // =============================================================================
 
-function renderSection(sectionKey) {
-  const meta = SECTION_META[sectionKey];
-  if (!meta) return;
-
-  document.getElementById('sectionTitle').textContent = meta.title;
+function renderSection(key) {
+  const sec = SECTIONS[key];
+  if (!sec) return;
+  document.getElementById('sectionTitle').textContent = sec.title;
   const container = document.getElementById('mainContent');
   container.innerHTML = '';
 
-  const form = document.createElement('div');
-  form.className = 'form-section active';
-  form.id = `form-${sectionKey}`;
+  for (const card of sec.cards) {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card';
 
-  for (const [fieldPath, fieldMeta] of Object.entries(meta.fields)) {
-    // Subsection divider
-    if (fieldMeta.type === 'subsection') {
-      const h = document.createElement('h3');
-      h.className = 'subsection-title';
-      h.textContent = fieldMeta.label;
-      form.appendChild(h);
-      continue;
-    }
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = card.title;
+    cardEl.appendChild(title);
 
-    const group = document.createElement('div');
-    group.className = 'field-group';
-
-    // Label
-    const label = document.createElement('label');
-    label.className = 'field-label';
-    label.textContent = fieldMeta.label;
-    group.appendChild(label);
-
-    // Description
-    if (fieldMeta.desc) {
+    if (card.desc) {
       const desc = document.createElement('div');
-      desc.className = 'field-desc';
-      desc.textContent = fieldMeta.desc;
-      group.appendChild(desc);
+      desc.className = 'card-desc';
+      desc.textContent = card.desc;
+      cardEl.appendChild(desc);
     }
 
-    const yamlPath = fieldPath;
-    const value = getNestedValue(configData, yamlPath);
-
-    // Render by type
-    if (fieldMeta.type === 'sensitive') {
-      group.appendChild(renderSensitiveField(yamlPath, value));
-    } else if (fieldMeta.type === 'bool') {
-      group.appendChild(renderToggle(yamlPath, !!value));
-    } else if (fieldMeta.type === 'select') {
-      group.appendChild(renderSelect(yamlPath, value, fieldMeta.options));
-    } else if (fieldMeta.type === 'number') {
-      group.appendChild(renderNumber(yamlPath, value, fieldMeta.step));
-    } else if (fieldMeta.type === 'tags') {
-      group.appendChild(renderTags(yamlPath, value || []));
-    } else {
-      group.appendChild(renderText(yamlPath, value));
+    for (const field of card.fields) {
+      cardEl.appendChild(renderField(field));
     }
 
-    form.appendChild(group);
+    container.appendChild(cardEl);
+  }
+}
+
+function renderField(field) {
+  const group = document.createElement('div');
+  group.className = 'field-group';
+
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  label.textContent = field.label;
+  group.appendChild(label);
+
+  if (field.desc) {
+    const desc = document.createElement('div');
+    desc.className = 'field-desc';
+    desc.textContent = field.desc;
+    group.appendChild(desc);
   }
 
-  container.appendChild(form);
+  const value = getVal(configData, field.path);
+
+  switch (field.type) {
+    case 'sensitive': group.appendChild(mkSensitive(field.path, value)); break;
+    case 'bool': group.appendChild(mkToggle(field.path, !!value)); break;
+    case 'select':
+      if (field.source) {
+        group.appendChild(mkDynamicSelect(field.path, value, field.source));
+      } else {
+        group.appendChild(mkSelect(field.path, value, field.options));
+      }
+      break;
+    case 'number': group.appendChild(mkNumber(field.path, value)); break;
+    case 'range': group.appendChild(mkRange(field.path, value, field)); break;
+    case 'tags': group.appendChild(mkTags(field.path, value || [])); break;
+    default: group.appendChild(mkText(field.path, value));
+  }
+
+  return group;
 }
 
-function renderText(path, value) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.dataset.path = path;
-  input.value = value ?? '';
-  return input;
+// --- Field builders ---
+
+function mkText(path, value) {
+  const el = document.createElement('input');
+  el.type = 'text'; el.dataset.path = path; el.value = value ?? '';
+  return el;
 }
 
-function renderNumber(path, value, step) {
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.dataset.path = path;
-  input.value = value ?? '';
-  if (step) input.step = step;
-  return input;
+function mkNumber(path, value) {
+  const el = document.createElement('input');
+  el.type = 'number'; el.dataset.path = path; el.value = value ?? '';
+  return el;
 }
 
-function renderSelect(path, value, options) {
-  const select = document.createElement('select');
-  select.dataset.path = path;
+function mkSelect(path, value, options) {
+  const el = document.createElement('select');
+  el.dataset.path = path;
   for (const opt of options) {
-    const option = document.createElement('option');
-    option.value = opt;
-    option.textContent = opt || '(空)';
-    if (String(value) === String(opt)) option.selected = true;
-    select.appendChild(option);
+    const o = document.createElement('option');
+    o.value = opt.value; o.textContent = opt.label;
+    if (String(value) === String(opt.value)) o.selected = true;
+    el.appendChild(o);
   }
-  return select;
+  return el;
 }
 
-function renderToggle(path, value) {
+function mkDynamicSelect(path, value, source) {
+  const el = document.createElement('select');
+  el.dataset.path = path;
+  el.dataset.source = source;
+
+  const items = optionsData[source] || [];
+
+  // Empty option
+  const emptyOpt = document.createElement('option');
+  emptyOpt.value = '';
+  emptyOpt.textContent = '-- 请选择 --';
+  el.appendChild(emptyOpt);
+
+  for (const item of items) {
+    const o = document.createElement('option');
+    if (source === 'characters') {
+      o.value = item.path;
+      o.textContent = `${item.name}（${item.file}）`;
+      o.dataset.name = item.name;
+      o.dataset.filePath = item.path;
+    } else if (source === 'lora_adapters') {
+      o.value = item.path;
+      o.textContent = item.name;
+    } else if (source === 'tts_voices') {
+      o.value = item.id;
+      o.textContent = `${item.name}`;
+    } else if (source === 'embedding_models') {
+      o.value = item.id;
+      o.textContent = item.name;
+    } else if (source === 'knowledge_dirs') {
+      o.value = item;
+      o.textContent = item;
+    }
+    if (String(value) === String(o.value)) o.selected = true;
+    el.appendChild(o);
+  }
+
+  // Character card preview
+  if (source === 'characters') {
+    const preview = document.createElement('div');
+    preview.className = 'char-preview';
+    preview.id = `preview-${path.replace(/\./g, '-')}`;
+    const selected = items.find(i => i.path === value);
+    if (selected) {
+      preview.innerHTML = `<span class="char-preview-name">${esc(selected.name)}</span><span class="char-preview-path">${esc(selected.path)}</span>`;
+    } else {
+      preview.style.display = 'none';
+    }
+    el.addEventListener('change', () => {
+      const opt = el.options[el.selectedIndex];
+      const p = document.getElementById(`preview-${path.replace(/\./g, '-')}`);
+      if (opt.dataset.name) {
+        p.style.display = 'flex';
+        p.innerHTML = `<span class="char-preview-name">${esc(opt.dataset.name)}</span><span class="char-preview-path">${esc(opt.value)}</span>`;
+      } else {
+        p.style.display = 'none';
+      }
+    });
+    const wrap = document.createElement('div');
+    wrap.appendChild(el);
+    wrap.appendChild(preview);
+    return wrap;
+  }
+
+  return el;
+}
+
+function mkToggle(path, value) {
   const wrap = document.createElement('div');
   wrap.className = 'toggle-wrap';
   const label = document.createElement('label');
   label.className = 'toggle';
   const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.dataset.path = path;
-  input.checked = !!value;
+  input.type = 'checkbox'; input.dataset.path = path; input.checked = !!value;
   const slider = document.createElement('span');
   slider.className = 'toggle-slider';
-  label.appendChild(input);
-  label.appendChild(slider);
+  label.appendChild(input); label.appendChild(slider);
   const text = document.createElement('span');
   text.className = 'toggle-label';
   text.textContent = value ? '已启用' : '已关闭';
   input.addEventListener('change', () => { text.textContent = input.checked ? '已启用' : '已关闭'; });
-  wrap.appendChild(label);
-  wrap.appendChild(text);
+  wrap.appendChild(label); wrap.appendChild(text);
   return wrap;
 }
 
-function renderTags(path, value) {
+function mkRange(path, value, field) {
+  const wrap = document.createElement('div');
+  wrap.className = 'range-wrap';
+  const input = document.createElement('input');
+  input.type = 'range'; input.dataset.path = path;
+  input.min = field.min ?? 0; input.max = field.max ?? 1; input.step = field.step ?? 0.01;
+  input.value = value ?? field.min ?? 0;
+  const val = document.createElement('span');
+  val.className = 'range-val';
+  val.textContent = Number(input.value).toFixed(2);
+  input.addEventListener('input', () => { val.textContent = Number(input.value).toFixed(2); });
+  wrap.appendChild(input); wrap.appendChild(val);
+  return wrap;
+}
+
+function mkSensitive(path, value) {
+  const wrap = document.createElement('div');
+  const row = document.createElement('div');
+  row.className = 'sensitive-field';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value || '***未设置***';
+  input.readOnly = true;
+  row.appendChild(input);
+  wrap.appendChild(row);
+  const envVar = envHints[path];
+  const hint = document.createElement('div');
+  hint.className = 'env-hint';
+  hint.innerHTML = envVar
+    ? `通过环境变量设置: <code>${esc(envVar)}</code>`
+    : '此字段仅支持环境变量或手动编辑 config.yaml';
+  wrap.appendChild(hint);
+  return wrap;
+}
+
+function mkTags(path, value) {
   const container = document.createElement('div');
   container.className = 'tags-container';
   container.dataset.path = path;
-
-  const items = Array.isArray(value) ? [...value] : [];
+  const items = [...(Array.isArray(value) ? value : [])];
 
   function render() {
     container.querySelectorAll('.tag').forEach(t => t.remove());
@@ -544,7 +878,7 @@ function renderTags(path, value) {
     for (const item of items) {
       const tag = document.createElement('span');
       tag.className = 'tag';
-      tag.innerHTML = `<span>${escHtml(item)}</span><span class="tag-remove" data-val="${escAttr(item)}">&times;</span>`;
+      tag.innerHTML = `<span>${esc(item)}</span><span class="tag-remove" data-val="${esc(item)}">&times;</span>`;
       container.insertBefore(tag, input);
     }
   }
@@ -552,150 +886,88 @@ function renderTags(path, value) {
   const input = document.createElement('input');
   input.className = 'tags-input';
   input.placeholder = '输入后按 Enter 添加...';
-
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && input.value.trim()) {
-      e.preventDefault();
-      items.push(input.value.trim());
-      input.value = '';
-      render();
+      e.preventDefault(); items.push(input.value.trim()); input.value = ''; render();
     }
-    if (e.key === 'Backspace' && !input.value && items.length) {
-      items.pop();
-      render();
-    }
+    if (e.key === 'Backspace' && !input.value && items.length) { items.pop(); render(); }
   });
-
   container.addEventListener('click', (e) => {
     if (e.target.classList.contains('tag-remove')) {
-      const val = e.target.dataset.val;
-      const idx = items.indexOf(val);
+      const idx = items.indexOf(e.target.dataset.val);
       if (idx >= 0) items.splice(idx, 1);
       render();
     }
     input.focus();
   });
-
-  // Store items getter on the container
   container._getItems = () => items;
-
   container.appendChild(input);
   render();
   return container;
-}
-
-function renderSensitiveField(path, value) {
-  const wrap = document.createElement('div');
-  const row = document.createElement('div');
-  row.className = 'sensitive-field';
-
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = value || '***未设置***';
-  input.readOnly = true;
-  row.appendChild(input);
-  wrap.appendChild(row);
-
-  // Env hint
-  const envVar = envHints[path];
-  if (envVar) {
-    const hint = document.createElement('div');
-    hint.className = 'env-hint';
-    hint.innerHTML = `通过环境变量设置: <code>${escHtml(envVar)}</code>`;
-    wrap.appendChild(hint);
-  } else {
-    const hint = document.createElement('div');
-    hint.className = 'env-hint';
-    hint.innerHTML = '此字段仅支持环境变量或手动编辑 config.yaml';
-    wrap.appendChild(hint);
-  }
-
-  return wrap;
 }
 
 // =============================================================================
 // Collect & Save
 // =============================================================================
 
-function collectSectionData(sectionKey) {
-  const meta = SECTION_META[sectionKey];
-  if (!meta) return {};
-
+function collectData(sectionKey) {
+  const sec = SECTIONS[sectionKey];
+  if (!sec) return {};
   const data = {};
-  for (const [fieldPath, fieldMeta] of Object.entries(meta.fields)) {
-    if (fieldMeta.type === 'subsection' || fieldMeta.type === 'sensitive') continue;
 
-    const yamlPath = fieldPath;
-    let el;
+  for (const card of sec.cards) {
+    for (const field of card.fields) {
+      if (field.type === 'sensitive') continue;
 
-    if (fieldMeta.type === 'tags') {
-      const container = document.querySelector(`.tags-container[data-path="${yamlPath}"]`);
-      if (container && container._getItems) {
-        setNestedValue(data, yamlPath, container._getItems());
-      }
-    } else if (fieldMeta.type === 'bool') {
-      el = document.querySelector(`input[type="checkbox"][data-path="${yamlPath}"]`);
-      if (el) setNestedValue(data, yamlPath, el.checked);
-    } else if (fieldMeta.type === 'select') {
-      el = document.querySelector(`select[data-path="${yamlPath}"]`);
-      if (el) {
-        let val = el.value;
-        // Convert numeric strings
-        if (val !== '' && !isNaN(val) && fieldMeta.options.every(o => typeof o === 'number' || o === '')) {
-          val = Number(val);
+      if (field.type === 'tags') {
+        const el = document.querySelector(`.tags-container[data-path="${field.path}"]`);
+        if (el && el._getItems) setVal(data, field.path, el._getItems());
+      } else if (field.type === 'bool') {
+        const el = document.querySelector(`input[type="checkbox"][data-path="${field.path}"]`);
+        if (el) setVal(data, field.path, el.checked);
+      } else if (field.type === 'select') {
+        const el = document.querySelector(`select[data-path="${field.path}"]`);
+        if (el) {
+          let val = el.value;
+          if (val !== '' && !isNaN(val)) val = Number(val);
+          setVal(data, field.path, val);
         }
-        setNestedValue(data, yamlPath, val);
+      } else if (field.type === 'range') {
+        const el = document.querySelector(`input[type="range"][data-path="${field.path}"]`);
+        if (el) setVal(data, field.path, Number(el.value));
+      } else if (field.type === 'number') {
+        const el = document.querySelector(`input[type="number"][data-path="${field.path}"]`);
+        if (el && el.value !== '') setVal(data, field.path, Number(el.value));
+      } else {
+        const el = document.querySelector(`input[type="text"][data-path="${field.path}"]`);
+        if (el) setVal(data, field.path, el.value);
       }
-    } else if (fieldMeta.type === 'number') {
-      el = document.querySelector(`input[type="number"][data-path="${yamlPath}"]`);
-      if (el && el.value !== '') setNestedValue(data, yamlPath, Number(el.value));
-    } else {
-      el = document.querySelector(`input[type="text"][data-path="${yamlPath}"]`);
-      if (el) setNestedValue(data, yamlPath, el.value);
     }
   }
 
-  // Return only the top-level section key's data
-  const sectionYamlKey = SECTION_KEYS_MAP[sectionKey] || sectionKey;
-  return data[sectionYamlKey] || data;
+  const yamlKey = sectionKey;
+  return data[yamlKey] || data;
 }
-
-const SECTION_KEYS_MAP = {
-  app: 'app', ai: 'ai', character: 'character', expression: 'expression',
-  memory: 'memory', platforms: 'platforms', pipeline: 'pipeline', mcp: 'mcp',
-  voice: 'voice', visual: 'visual', web_console: 'web_console',
-  security: 'security', proactive: 'proactive',
-};
 
 async function saveSection() {
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.textContent = '保存中...';
-
+  btn.disabled = true; btn.textContent = '保存中...';
   try {
-    const body = collectSectionData(currentSection);
+    const body = collectData(currentSection);
     const res = await fetch(`/api/config/sections/${currentSection}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || '保存失败');
-    }
-
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || '保存失败'); }
     const result = await res.json();
     showToast(`保存成功: ${result.updated_fields?.join(', ') || '无变更'}`, 'success');
-
-    // Refresh config data
-    await fetchConfig();
+    await fetchAll();
     renderSection(currentSection);
   } catch (e) {
     showToast(e.message, 'error');
   } finally {
-    btn.disabled = false;
-    btn.textContent = '保存更改';
+    btn.disabled = false; btn.textContent = '保存更改';
   }
 }
 
@@ -703,50 +975,39 @@ async function saveSection() {
 // Navigation
 // =============================================================================
 
-function switchSection(sectionKey) {
-  currentSection = sectionKey;
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.section === sectionKey);
-  });
-  renderSection(sectionKey);
-}
-
 document.getElementById('navList').addEventListener('click', (e) => {
   const item = e.target.closest('.nav-item');
-  if (item && item.dataset.section) {
-    switchSection(item.dataset.section);
+  if (item?.dataset.section) {
+    currentSection = item.dataset.section;
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el === item));
+    renderSection(currentSection);
   }
 });
 
 // =============================================================================
-// Utilities
+// Utils
 // =============================================================================
 
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 }
 
-function escHtml(s) {
+function esc(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
-}
-
-function escAttr(s) {
-  return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 // =============================================================================
 // Init
 // =============================================================================
 
-(async function init() {
+(async () => {
   try {
-    await fetchConfig();
+    await fetchAll();
     renderSection('app');
   } catch (e) {
     showToast('加载配置失败: ' + e.message, 'error');
