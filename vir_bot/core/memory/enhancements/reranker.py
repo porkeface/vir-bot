@@ -47,33 +47,22 @@ class ReRanker:
         self._load_error_msg = None
 
     async def _ensure_model_loaded(self) -> bool:
-        """懒加载 CrossEncoder 模型。"""
+        """懒加载 CrossEncoder 模型。
+
+        注意：sentence_transformers 在 Windows 上与 PyTorch CUDA 存在 DLL 冲突，
+        导入时会触发 native segfault（无法被 try-except 捕获）。
+        因此直接使用关键词匹配回退方案，不尝试加载 CrossEncoder。
+        """
         if self._model is not None:
             return True
         if self._load_error:
             return False
-
-        try:
-            from sentence_transformers import CrossEncoder
-            import asyncio
-
-            loop = asyncio.get_event_loop()
-            self._model = await loop.run_in_executor(
-                None,
-                lambda: CrossEncoder(self.model_name, max_length=512),
-            )
-            logger.info(f"ReRanker model loaded: {self.model_name}")
-            return True
-        except ImportError as e:
-            self._load_error = True
-            self._load_error_msg = f"sentence_transformers not installed: {e}"
-            logger.warning(self._load_error_msg)
-            return False
-        except Exception as e:
-            self._load_error = True
-            self._load_error_msg = f"Failed to load ReRanker model: {e}"
-            logger.warning(self._load_error_msg)
-            return False
+        # sentence_transformers 与 PyTorch CUDA 在 Windows 上有 DLL 冲突，
+        # 导入会导致进程级 segfault，直接标记为不可用
+        self._load_error = True
+        self._load_error_msg = "CrossEncoder 已禁用（Windows DLL 冲突），使用关键词匹配"
+        logger.info(f"ReRanker: {self._load_error_msg}")
+        return False
 
     def _collect_and_unify(self, query: str, result: RetrievalResult) -> list[RecordScore]:
         """收集所有记录并统一为 (query, document) 格式。"""
