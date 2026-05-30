@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
 
 from vir_bot.config import get_config
@@ -37,7 +37,7 @@ async def list_log_files():
 
 
 @router.get("/{filename}")
-async def read_log(filename: str, lines: int = 200):
+async def read_log(filename: str, lines: int = Query(default=200, ge=1, le=10000)):
     config = get_config()
     log_dir = Path(config.app.log_dir)
     # 校验文件名防止路径遍历
