@@ -98,11 +98,11 @@ class RetrievalResult:
             time_str = self._format_time(record.created_at)
             detail = f"- 用户{pred_map.get(record.predicate, record.predicate)}：{record.object}"
             if record.source_text:
-                detail += f"（原话：「{record.source_text}」，{time_str}）"
+                src = record.source_text[:50] + "…" if len(record.source_text) > 50 else record.source_text
+                detail += f"（原话：「{src}」，{time_str}）"
             else:
                 detail += f"（{time_str}）"
             grouped.setdefault(label, []).append(detail)
-            logger.debug(f"[Memory] 格式化语义记忆: {detail}")
 
         for label in ["身份信息", "偏好", "习惯", "事件"]:
             entries = grouped.pop(label, None)
@@ -111,7 +111,6 @@ class RetrievalResult:
                 lines.extend(entries)
 
         result = "\n".join(lines)
-        logger.debug(f"[Memory] 语义记忆格式化结果:\n{result}")
         return result
 
     def _format_episodic(self) -> str:

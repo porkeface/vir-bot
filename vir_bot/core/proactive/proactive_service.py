@@ -207,7 +207,7 @@ class ProactiveService:
 
                 # 每日上限检查（粗粒度保护）
                 daily_sent = self._ensure_daily_count(user_id)
-                if daily_sent >= getattr(self._config, 'max_daily_messages', 20):
+                if daily_sent >= self._config.max_daily_messages:
                     logger.debug(f"[v4] 今日已发 {daily_sent} 条，达到上限")
                     continue
 
