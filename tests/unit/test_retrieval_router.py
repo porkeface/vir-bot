@@ -44,18 +44,21 @@ class TestClassifyQueryAsync:
             content='{"query_type": "habit", "needs_memory_lookup": true}'
         )
 
-        await retrieval_router.classify_query_async("我平时做什么")
+        # Use a query long enough (>15 chars) to trigger AI classification
+        query = "我想了解一下你平时的生活习惯是什么样的"
+        await retrieval_router.classify_query_async(query)
 
-        # Simulate cache expiry
+        # Simulate cache expiry by modifying the cached timestamp
         import time
 
-        old_entry = retrieval_router._intent_cache.get("我平时做什么什么")
-        if old_entry:
-            old_entry["_timestamp"] = time.time() - 400  # Exceed TTL
+        old_entry = retrieval_router._intent_cache.get(query)
+        assert old_entry is not None, "Cache entry should exist after first call"
+        old_entry["_timestamp"] = time.time() - 400  # Exceed TTL (300s)
 
-        await retrieval_router.classify_query_async("我平时做什么")
+        await retrieval_router.classify_query_async(query)
 
-        assert mock_ai_provider.chat.call_count >= 1
+        # AI should be called twice: once for initial classification, once after cache expired
+        assert mock_ai_provider.chat.call_count >= 2
 
     @pytest.mark.asyncio
     async def test_classify_ai_failure_fallback(self, retrieval_router, mock_ai_provider):

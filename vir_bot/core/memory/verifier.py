@@ -128,6 +128,13 @@ class WriteVerifier:
         if not candidates:
             return None
 
+        # 精确匹配：优先检查完全相同的 object 值
+        for rec in candidates:
+            if rec.object.strip() == op.object.strip():
+                logger.info(f"Found exact match: {rec.object}")
+                return rec
+
+        # 语义相似度匹配（依赖 embedding 模型）
         best = None
         best_sim = 0.0
         for rec in candidates:

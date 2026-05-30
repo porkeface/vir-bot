@@ -542,7 +542,7 @@ class MessagePipeline:
                 messages=conversation,
                 system=system_prompt
                 + "\n\n[Tool Results]\n"
-                + "\n".join(f"Tool {tc.role}: {tc.content}" for tc in tool_messages),
+                + "\n".join(f"Tool {tc['role']}: {tc['content']}" for tc in tool_messages),
             )
             return await self._handle_tool_calls(
                 new_response,

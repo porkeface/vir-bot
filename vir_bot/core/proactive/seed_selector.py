@@ -148,14 +148,16 @@ class SeedSelector:
             return None
         try:
             if hasattr(self._memory, "retrieval_router"):
-                memories = await self._memory.retrieval_router.retrieve(
-                    query="用户兴趣爱好 喜欢什么", top_k=3
+                result = await self._memory.retrieval_router.retrieve(
+                    query="用户兴趣爱好 喜欢什么", user_id="default", top_k=3
                 )
-                if memories:
-                    mem = memories[0]
+                records = result.semantic_records or result.long_term_records
+                if records:
+                    mem = records[0]
+                    content = mem.object if hasattr(mem, "object") else getattr(mem, "content", "")[:100]
                     return ContentSeed(
                         seed_type="interest",
-                        content=mem.content[:100],
+                        content=content[:100],
                         context="来自记忆",
                         priority=6,
                     )
@@ -169,14 +171,16 @@ class SeedSelector:
             return None
         try:
             if hasattr(self._memory, "retrieval_router"):
-                memories = await self._memory.retrieval_router.retrieve(
-                    query="一起做过的事 共同回忆", top_k=3
+                result = await self._memory.retrieval_router.retrieve(
+                    query="一起做过的事 共同回忆", user_id="default", top_k=3
                 )
-                if memories:
-                    mem = memories[0]
+                records = result.semantic_records or result.episodic_records or result.long_term_records
+                if records:
+                    mem = records[0]
+                    content = mem.object if hasattr(mem, "object") else getattr(mem, "content", "")[:100]
                     return ContentSeed(
                         seed_type="shared_memory",
-                        content=mem.content[:100],
+                        content=content[:100],
                         context="共同回忆",
                         priority=8,
                     )

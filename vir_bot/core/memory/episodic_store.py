@@ -59,13 +59,20 @@ class EpisodicMemoryStore:
 
         try:
             data = json.loads(self.persist_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             logger.warning(f"Episodic memory file is invalid JSON: {self.persist_path}")
             return
 
+        if not isinstance(data, dict):
+            logger.warning(f"Episodic memory file has unexpected structure (not a dict): {self.persist_path}")
+            return
+
         for item in data.get("records", []):
-            record = EpisodeRecord.from_dict(item)
-            self._records[record.episode_id] = record
+            try:
+                record = EpisodeRecord.from_dict(item)
+                self._records[record.episode_id] = record
+            except (TypeError, KeyError, ValueError) as e:
+                logger.warning(f"Skipping malformed episodic memory record: {e}")
 
     def _save(self) -> None:
         payload = {

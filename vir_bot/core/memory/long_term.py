@@ -76,13 +76,29 @@ class MemoryRecord:
             importance=float(metadata.get("importance", 0.5)),
             timestamp=float(metadata.get("timestamp", time.time())),
             entities=metadata.get("entities", "").split(",") if metadata.get("entities") else [],
-            sentiment=eval(metadata.get("sentiment", "{}")),
+            sentiment=_safe_parse_sentiment(metadata.get("sentiment", "{}")),
             metadata={
                 k: v
                 for k, v in metadata.items()
                 if k not in ["type", "importance", "timestamp", "entities", "sentiment"]
             },
         )
+
+
+# =============================================================================
+# 安全解析辅助
+# =============================================================================
+
+
+def _safe_parse_sentiment(raw: str) -> dict:
+    """安全解析 sentiment 字符串，拒绝使用 eval()。"""
+    if not raw or not isinstance(raw, str):
+        return {}
+    try:
+        import json as _json
+        return _json.loads(raw)
+    except (ValueError, TypeError):
+        return {}
 
 
 # =============================================================================

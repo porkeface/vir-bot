@@ -390,15 +390,26 @@ def load_config(path: str | Path | None = None) -> Config:
 
     # 读取 YAML
     if config_path.exists():
-        with open(config_path, encoding="utf-8") as f:
-            raw = yaml.safe_load(f) or {}
+        try:
+            with open(config_path, encoding="utf-8") as f:
+                raw = yaml.safe_load(f) or {}
+        except yaml.YAMLError as e:
+            raise ValueError(
+                f"配置文件 YAML 语法错误: {config_path}\n{e}"
+            ) from e
     else:
         raw = {}
 
     # 环境变量覆盖（VIRBOT_AI_API_KEY, VIRBOT_DISCORD_TOKEN 等）
     raw = _apply_env_overrides(raw)
 
-    _CONFIG = Config.model_validate(raw)
+    try:
+        _CONFIG = Config.model_validate(raw)
+    except Exception as e:
+        raise ValueError(
+            f"配置文件验证失败: {config_path}\n"
+            f"请检查字段类型和结构是否正确。\n{e}"
+        ) from e
     return _CONFIG
 
 

@@ -82,6 +82,7 @@ class InspirationTrigger:
             char_name=self._character.name if self._character else "我"
         )
 
+        response = None
         try:
             response = await self._ai.chat(
                 messages=[{"role": "user", "content": prompt}],
@@ -112,8 +113,9 @@ class InspirationTrigger:
 
         except json.JSONDecodeError as e:
             # JSON 解析失败，尝试从文本推断
+            raw_text = response.content if response is not None else ""
             logger.warning(f"[灵感] JSON 解析失败: {e}, 尝试文本推断")
-            return self._fallback_parse(response.content if 'response' in dir() else "")
+            return self._fallback_parse(raw_text)
 
         except Exception as e:
             logger.error(f"[灵感] LLM 调用失败: {e}")

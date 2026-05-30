@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING
 
 from vir_bot.core.memory.memory_writer import MemoryOperation
 from vir_bot.core.memory.semantic_store import SemanticMemoryStore
+from vir_bot.utils.logger import logger
 
 if TYPE_CHECKING:
     from .verifier import WriteVerifier

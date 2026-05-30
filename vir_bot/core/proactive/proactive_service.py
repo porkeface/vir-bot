@@ -132,8 +132,8 @@ class ProactiveService:
             logger.info("主动消息系统未启用")
             return
         self._running = True
-        self._task = asyncio.get_event_loop().create_task(self._inspiration_loop())
-        self._fact_task = asyncio.get_event_loop().create_task(self._fact_extraction_loop())
+        self._task = asyncio.create_task(self._inspiration_loop())
+        self._fact_task = asyncio.create_task(self._fact_extraction_loop())
         logger.info("v4 主动消息服务已启动（内驱力 + 灵感触发）")
 
     async def stop(self) -> None:
@@ -156,7 +156,7 @@ class ProactiveService:
                 await asyncio.sleep(6 * 3600)
                 if self._memory_manager and hasattr(self._memory_manager, "retrieval_router"):
                     memories = await self._memory_manager.retrieval_router.retrieve(
-                        query="用户最近说的话", top_k=20
+                        query="用户最近说的话", user_id="default", top_k=20
                     )
                     if memories:
                         messages = [{"role": "user", "content": m.content[:200]} for m in memories]
@@ -308,6 +308,9 @@ class ProactiveService:
                     state_hint=inspire.reason,
                     user_id=user_id,
                 )
+                if not message2:
+                    logger.warning("[v4] 重试消息生成为空")
+                    return
                 result2 = await self._reflector.reflect(
                     message=message2,
                     seed_content=seed2.content,

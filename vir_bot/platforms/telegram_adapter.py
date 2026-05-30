@@ -21,17 +21,21 @@ class TelegramAdapter(PlatformAdapter):
     _HEALTH_CHECK_INTERVAL = 60
     _MAX_SILENCE_SECONDS = 180
 
+    # 消息队列上限，防止处理慢时内存无限增长
+    _QUEUE_MAX_SIZE = 1000
+
     def __init__(self, pipeline, config):
         super().__init__(pipeline)
         self.config = config
         self._app = None
-        self._queue: asyncio.Queue[PlatformMessage] = asyncio.Queue()
+        self._queue: asyncio.Queue[PlatformMessage] = asyncio.Queue(maxsize=self._QUEUE_MAX_SIZE)
         self._pending_messages: dict[str, dict] = {}
         self._rate_limiter: dict[str, list[float]] = {}
         self._temp_dir = Path("./data/temp/telegram")
         self._temp_dir.mkdir(parents=True, exist_ok=True)
         self._last_poll_activity: float = time.time()
         self._health_task: asyncio.Task | None = None
+        self._restart_lock: asyncio.Lock = asyncio.Lock()
 
     @property
     def platform(self) -> Platform:
@@ -73,6 +77,13 @@ class TelegramAdapter(PlatformAdapter):
         self._app.add_handler(voice_handler)
 
         logger.info("[Telegram] 正在启动 polling...")
+
+    def _enqueue_message(self, msg: PlatformMessage) -> None:
+        """非阻塞入队，队满时丢弃并告警（避免阻塞 polling 线程）"""
+        try:
+            self._queue.put_nowait(msg)
+        except asyncio.QueueFull:
+            logger.warning(f"[Telegram] 消息队列已满（{self._QUEUE_MAX_SIZE}），丢弃消息: {msg.msg_id}")
 
     async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """处理收到的 Telegram 消息"""
@@ -118,7 +129,8 @@ class TelegramAdapter(PlatformAdapter):
             timestamp=time.time(),
         )
 
-        await self._queue.put(platform_msg)
+        self._enqueue_message(platform_msg)
+        self._last_poll_activity = time.time()
 
     async def _handle_media(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """处理收到的图片/表情包消息"""
@@ -196,7 +208,8 @@ class TelegramAdapter(PlatformAdapter):
                 timestamp=time.time(),
             )
 
-            await self._queue.put(platform_msg)
+            self._enqueue_message(platform_msg)
+            self._last_poll_activity = time.time()
             logger.info(f"[Telegram] 收到图片/表情包: {file_name}")
 
         except Exception as e:
@@ -271,7 +284,8 @@ class TelegramAdapter(PlatformAdapter):
                 timestamp=time.time(),
             )
 
-            await self._queue.put(platform_msg)
+            self._enqueue_message(platform_msg)
+            self._last_poll_activity = time.time()
             logger.info(f"[Telegram] 收到语音消息: {file_name}")
 
         except Exception as e:
@@ -351,38 +365,49 @@ class TelegramAdapter(PlatformAdapter):
 
     async def _health_check_loop(self) -> None:
         """定期检查 polling 连接是否存活，断线自动重连"""
-        while self._running:
-            await asyncio.sleep(self._HEALTH_CHECK_INTERVAL)
-            if not self._running:
-                break
+        try:
+            while self._running:
+                await asyncio.sleep(self._HEALTH_CHECK_INTERVAL)
+                if not self._running:
+                    break
 
-            silence = time.time() - self._last_poll_activity
-            if silence < self._MAX_SILENCE_SECONDS:
-                continue
+                silence = time.time() - self._last_poll_activity
+                if silence < self._MAX_SILENCE_SECONDS:
+                    continue
 
-            logger.warning(
-                f"[Telegram] polling 已静默 {int(silence)}s（阈值 {self._MAX_SILENCE_SECONDS}s），尝试重启..."
-            )
-            await self._restart_polling()
+                logger.warning(
+                    f"[Telegram] polling 已静默 {int(silence)}s（阈值 {self._MAX_SILENCE_SECONDS}s），尝试重启..."
+                )
+                await self._restart_polling()
+        except asyncio.CancelledError:
+            logger.info("[Telegram] 健康检查循环被取消")
+        except Exception as e:
+            import traceback
+            logger.error(f"[Telegram] 健康检查循环异常退出:\n{''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
 
     async def _restart_polling(self) -> None:
-        """安全重启 Telegram polling"""
-        if not self._app:
-            logger.error("[Telegram] 重启失败: _app 为空")
+        """安全重启 Telegram polling（带锁防止并发重启）"""
+        if self._restart_lock.locked():
+            logger.info("[Telegram] 重启正在进行中，跳过")
             return
 
-        try:
-            await self._app.updater.stop()
-            logger.info("[Telegram] updater.stop() 完成")
-        except Exception as e:
-            logger.warning(f"[Telegram] updater.stop() 出错（可忽略）: {e}")
+        async with self._restart_lock:
+            if not self._app:
+                logger.error("[Telegram] 重启失败: _app 为空")
+                return
 
-        try:
-            await self._app.updater.start_polling(drop_pending_updates=True)
-            self._last_poll_activity = time.time()
-            logger.info("[Telegram] polling 已重启")
-        except Exception as e:
-            logger.error(f"[Telegram] polling 重启失败: {e}")
+            try:
+                await self._app.updater.stop()
+                logger.info("[Telegram] updater.stop() 完成")
+            except Exception as e:
+                logger.warning(f"[Telegram] updater.stop() 出错（可忽略）: {e}")
+
+            try:
+                await self._app.updater.start_polling(drop_pending_updates=True)
+                self._last_poll_activity = time.time()
+                logger.info("[Telegram] polling 已重启")
+            except Exception as e:
+                logger.error(f"[Telegram] polling 重启失败: {e}")
 
     async def send_message(self, response: PlatformResponse) -> None:
         """通过 Telegram 发送消息"""

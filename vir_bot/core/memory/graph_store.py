@@ -159,19 +159,29 @@ class MemoryGraphStore:
 
         try:
             data = json.loads(self.persist_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, FileNotFoundError):
+        except (json.JSONDecodeError, FileNotFoundError, ValueError):
             logger.warning(f"Memory graph file is invalid JSON: {self.persist_path}")
+            return
+
+        if not isinstance(data, dict):
+            logger.warning(f"Memory graph file has unexpected structure (not a dict): {self.persist_path}")
             return
 
         self.graph = nx.DiGraph()
 
         # 添加节点
         for node_data in data.get("nodes", []):
-            node_id = node_data.pop("id")
-            self.graph.add_node(node_id, **node_data)
+            try:
+                node_id = node_data.pop("id")
+                self.graph.add_node(node_id, **node_data)
+            except (TypeError, KeyError) as e:
+                logger.warning(f"Skipping malformed graph node: {e}")
 
         # 添加边
         for edge_data in data.get("edges", []):
-            s = edge_data.pop("subject")
-            o = edge_data.pop("object")
-            self.graph.add_edge(s, o, **edge_data)
+            try:
+                s = edge_data.pop("subject")
+                o = edge_data.pop("object")
+                self.graph.add_edge(s, o, **edge_data)
+            except (TypeError, KeyError) as e:
+                logger.warning(f"Skipping malformed graph edge: {e}")

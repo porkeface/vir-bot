@@ -1001,7 +1001,7 @@ class MemoryManager:
         处理用户纠正（如"我不是叫张三"、"早就不喜欢火锅了"）。
         返回处理结果：'confidence_reduced' | 'updated' | 'noop'
         """
-        result = self.feedback_handler.handle_correction(
+        result = await self.feedback_handler.handle_correction(
             user_id=user_id,
             predicate=predicate,
             new_value=new_value,
