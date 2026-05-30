@@ -57,6 +57,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if path == "/api/platforms/qq/callback" and request.method == "POST":
             return await call_next(request)
 
+        # CORS preflight 豁免（OPTIONS 请求不携带 Authorization 头）
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         # 提取 Bearer token
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
@@ -67,8 +71,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         token = auth_header[7:]  # 去掉 "Bearer " 前缀
 
-        # 时序安全比较
+        # 空 token 检查（防止空字符串绕过）
         expected = config.web_console.auth.token
+        if not expected:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Auth token not configured"},
+            )
+
+        # 时序安全比较
         if not hmac.compare_digest(token, expected):
             return JSONResponse(
                 status_code=401,

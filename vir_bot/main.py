@@ -358,6 +358,10 @@ def create_app() -> FastAPI:
 
         app.add_middleware(AuthMiddleware)
 
+        # 警告默认 token
+        if config.web_console.auth.token == "vir-bot-console-token":
+            logger.warning("⚠️ Web 控制台使用默认 token，请通过 config.yaml 或 VIRBOT_CONSOLE_TOKEN 环境变量修改")
+
     from vir_bot.api.routers import (
         character,
         chat,

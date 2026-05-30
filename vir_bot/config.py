@@ -170,7 +170,7 @@ class TelegramConfig(BaseModel):
     block_list: list[str] = Field(default_factory=list)
     rate_limit: TelegramRateLimitConfig = Field(default_factory=TelegramRateLimitConfig)
     parse_mode: str = ""  # "HTML" or "Markdown" or ""
-    proxy: Optional[str] = None
+    proxy: str | None = None
 
 
 class PlatformsConfig(BaseModel):
