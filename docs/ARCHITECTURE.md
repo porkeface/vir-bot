@@ -151,7 +151,7 @@ graph TB
 
 ### 第二层：记忆检索与推理层（核心升级区）
 
-- **Retrieval Router**：用轻量级意图分类（preference / identity / habit / episodic / time_query / problem_query）决定**激活哪些记忆源及分配权重**。不依赖 LLM 做实时分类，而是用小模型或规则+缓存的 hybrid 方式，降低延迟。
+- **Retrieval Router**：用意图分类（preference / identity / habit / episodic / time_query / problem_query / conversation / general）决定**激活哪些记忆源及分配权重**。使用 LLM 做分类，失败时降级为规则+缓存的 hybrid 方式。
 - **多路检索**：并行查询 Semantic、Episodic、Question、Graph 四个存储，每路返回 Top-K 候选。
 - **Re-Ranker**：对所有候选统一用 Cross-Encoder 重排序，产出带 relevance score 的排序列表。
 - **Memory Composer**：执行去重（相似度 >0.95 保留高置信度者）、冲突消解（同一事实有矛盾时，按时间新近和来源可靠性择优，或标记为待确认）、Token Budget 分配（按相关性截断），最终输出一个干净、上下文融合后的记忆片段集合，不超过 LLM 上下文窗口的 30%。
@@ -220,36 +220,33 @@ graph TB
 
 ## 目录结构
 
+> 注：以下为实际代码结构，部分模块因体量较小采用扁平组织而非子目录。
+
 ```
 vir_bot/core/memory/
-├── short_term.py                   # 短期记忆
-├── long_term.py                    # ChromaDB 向量存储
-├── semantic_store.py               # 结构化语义记忆存储
-├── episodic_store.py               # 事件记忆存储
-├── question_store.py               # 问题记忆存储
-├── graph_store.py                  # 图记忆存储
 ├── memory_manager.py               # 总协调器，暴露统一接口
-├── retrieval/
-│   ├── router.py                   # 意图分类 + 权重分配
-│   ├── re_ranker.py                # Cross-Encoder 重排序
+├── short_term.py                   # 短期记忆（Ring Buffer）
+├── long_term.py                    # ChromaDB 向量存储
+├── semantic_store.py               # 结构化语义记忆存储（含版本管理）
+├── episodic_store.py               # 事件记忆存储
+├── question_memory.py              # 问题记忆存储（倒排索引）
+├── graph_store.py                  # 图记忆存储（NetworkX）
+├── graph_extractor.py              # 图谱关系抽取（LLM 驱动）
+├── retrieval_router.py             # 意图分类 + 多路并行检索
+├── memory_writer.py                # LLM 记忆提取器
+├── memory_updater.py               # 多版本更新器
+├── quality_gate.py                 # 规则+LLM 质量门
+├── verifier.py                     # 重复/冲突检测
+├── feedback_handler.py             # 用户反馈处理
+├── monitoring.py                   # 线上监控（命中率/冲突率/纠正率）
+├── debug_tools.py                  # 调试工具（时间线回放/版本回溯）
+├── enhancements/
+│   ├── reranker.py                 # Cross-Encoder 重排序
 │   └── composer.py                 # 去重、冲突消解、Token 预算
-├── writing/
-│   ├── extractor.py                # 记忆提取器
-│   ├── quality_gate.py             # 规则+LLM 质量门
-│   ├── verifier.py                 # 重复/冲突检测
-│   ├── updater.py                  # 多版本更新器
-│   └── feedback_handler.py         # 用户反馈处理
-├── lifecycle/
-│   ├── janitor.py                  # 生命周期管理器
-│   ├── decay.py                    # 衰减算法
-│   └── merge.py                    # 记忆合并逻辑
-├── eval/
-│   ├── benchmark.py                # 评测主入口
-│   ├── metrics.py                  # 五项指标计算
-│   ├── runner.py                   # 自动跑分脚本
-│   └── datasets/                   # 测试用例集
-└── profile/
-    └── user_profile.py             # 动态用户画像生成
+└── lifecycle/
+    ├── janitor.py                  # 生命周期管理器
+    ├── decay.py                    # 衰减算法
+    └── merge.py                    # 记忆合并逻辑
 ```
 
 ---
@@ -545,5 +542,5 @@ memory:
 
 ---
 
-*文档版本：2.0 — 合并自记忆架构分层详解、改造计划、改造进度三份文档*
-*最后更新：2026-04-27*
+*文档版本：2.1 — 合并自记忆架构分层详解、改造计划、改造进度三份文档*
+*最后更新：2026-05-30*

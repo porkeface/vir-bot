@@ -17,6 +17,10 @@ from vir_bot.utils.logger import logger
 class TelegramAdapter(PlatformAdapter):
     """Telegram 适配器（polling 模式）"""
 
+    # 健康检查间隔（秒）和最大静默时间（秒）
+    _HEALTH_CHECK_INTERVAL = 60
+    _MAX_SILENCE_SECONDS = 180
+
     def __init__(self, pipeline, config):
         super().__init__(pipeline)
         self.config = config
@@ -26,6 +30,8 @@ class TelegramAdapter(PlatformAdapter):
         self._rate_limiter: dict[str, list[float]] = {}
         self._temp_dir = Path("./data/temp/telegram")
         self._temp_dir.mkdir(parents=True, exist_ok=True)
+        self._last_poll_activity: float = time.time()
+        self._health_task: asyncio.Task | None = None
 
     @property
     def platform(self) -> Platform:
@@ -33,7 +39,15 @@ class TelegramAdapter(PlatformAdapter):
 
     async def connect(self) -> None:
         from telegram.request import HTTPXRequest
-        request = HTTPXRequest(connect_timeout=15, read_timeout=15, write_timeout=15)
+        proxy_url = getattr(self.config, 'proxy', None) or "http://127.0.0.1:7890"
+        request = HTTPXRequest(
+            connect_timeout=30,
+            read_timeout=30,
+            write_timeout=30,
+            pool_timeout=180,
+            connection_pool_size=100,
+            proxy=proxy_url,
+        )
         builder = ApplicationBuilder().token(self.config.bot_token).request(request)
         self._app = builder.build()
 
@@ -292,7 +306,12 @@ class TelegramAdapter(PlatformAdapter):
         # 启动消息处理循环（存储引用防止 GC 和静默丢失异常）
         self._run_task = asyncio.create_task(self._run())
         self._run_task.add_done_callback(self._on_task_done)
-        logger.info(f"[{self.platform.value}] 平台适配器已启动")
+
+        # 启动健康检查（监控 polling 连接，断线自动重连）
+        self._last_poll_activity = time.time()
+        self._health_task = asyncio.create_task(self._health_check_loop())
+        self._health_task.add_done_callback(self._on_task_done)
+        logger.info(f"[{self.platform.value}] 平台适配器已启动（含健康检查）")
 
     @staticmethod
     def _on_task_done(task: asyncio.Task) -> None:
@@ -308,6 +327,9 @@ class TelegramAdapter(PlatformAdapter):
     async def stop(self) -> None:
         """停止适配器"""
         self._running = False
+        if self._health_task:
+            self._health_task.cancel()
+            self._health_task = None
         if self._app:
             try:
                 await self._app.updater.stop()
@@ -322,9 +344,45 @@ class TelegramAdapter(PlatformAdapter):
         while self._running:
             try:
                 msg = await asyncio.wait_for(self._queue.get(), timeout=1.0)
+                self._last_poll_activity = time.time()
                 yield msg
             except asyncio.TimeoutError:
                 continue
+
+    async def _health_check_loop(self) -> None:
+        """定期检查 polling 连接是否存活，断线自动重连"""
+        while self._running:
+            await asyncio.sleep(self._HEALTH_CHECK_INTERVAL)
+            if not self._running:
+                break
+
+            silence = time.time() - self._last_poll_activity
+            if silence < self._MAX_SILENCE_SECONDS:
+                continue
+
+            logger.warning(
+                f"[Telegram] polling 已静默 {int(silence)}s（阈值 {self._MAX_SILENCE_SECONDS}s），尝试重启..."
+            )
+            await self._restart_polling()
+
+    async def _restart_polling(self) -> None:
+        """安全重启 Telegram polling"""
+        if not self._app:
+            logger.error("[Telegram] 重启失败: _app 为空")
+            return
+
+        try:
+            await self._app.updater.stop()
+            logger.info("[Telegram] updater.stop() 完成")
+        except Exception as e:
+            logger.warning(f"[Telegram] updater.stop() 出错（可忽略）: {e}")
+
+        try:
+            await self._app.updater.start_polling(drop_pending_updates=True)
+            self._last_poll_activity = time.time()
+            logger.info("[Telegram] polling 已重启")
+        except Exception as e:
+            logger.error(f"[Telegram] polling 重启失败: {e}")
 
     async def send_message(self, response: PlatformResponse) -> None:
         """通过 Telegram 发送消息"""

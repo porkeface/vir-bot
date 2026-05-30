@@ -95,9 +95,14 @@ class RetrievalResult:
         grouped: dict[str, list[str]] = {}
         for record in self.semantic_records:
             label = ns_labels.get(record.namespace, record.namespace)
-            grouped.setdefault(label, []).append(
-                f"- 用户{pred_map.get(record.predicate, record.predicate)}：{record.object}"
-            )
+            time_str = self._format_time(record.created_at)
+            detail = f"- 用户{pred_map.get(record.predicate, record.predicate)}：{record.object}"
+            if record.source_text:
+                detail += f"（原话：「{record.source_text}」，{time_str}）"
+            else:
+                detail += f"（{time_str}）"
+            grouped.setdefault(label, []).append(detail)
+            logger.debug(f"[Memory] 格式化语义记忆: {detail}")
 
         for label in ["身份信息", "偏好", "习惯", "事件"]:
             entries = grouped.pop(label, None)
@@ -105,7 +110,9 @@ class RetrievalResult:
                 lines.append(f"【{label}】")
                 lines.extend(entries)
 
-        return "\n".join(lines)
+        result = "\n".join(lines)
+        logger.debug(f"[Memory] 语义记忆格式化结果:\n{result}")
+        return result
 
     def _format_episodic(self) -> str:
         lines = ["【事件记忆】"]

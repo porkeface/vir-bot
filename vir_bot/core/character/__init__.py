@@ -143,6 +143,11 @@ def build_system_prompt(
     if extra_context:
         parts.append(f"\n额外信息：\n{extra_context}")
 
+    # 行为约束（从角色卡扩展读取）
+    constraints = card.extensions.get("behavioral_constraints", [])
+    if constraints:
+        parts.append("行为约束：" + "；".join(constraints))
+
     # 主动行为指引（从角色卡扩展读取）
     proactive = card.extensions.get("proactive_behavior", {})
     avoid = proactive.get("避免的表达", [])

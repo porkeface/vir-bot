@@ -1,14 +1,39 @@
 # vir-bot 记忆系统使用文档
 
 > 架构设计、实施计划、进度追踪见 [ARCHITECTURE.md](./ARCHITECTURE.md)
+> 主动消息系统见 [proactive/](./proactive/)
 
 ## 目录
 
+- [概述](#概述)
 - [快速开始](#快速开始)
 - [配置说明](#配置说明)
 - [API 使用指南](#api-使用指南)
+- [知识图谱](#知识图谱)
+- [质量门控与查重](#质量门控与查重)
 - [测试与验证](#测试与验证)
 - [常见问题](#常见问题)
+
+---
+
+## 概述
+
+AI 数字分身的记忆系统采用 8 层架构：
+
+| 层 | 组件 | 存储 | 用途 |
+|----|------|------|------|
+| L1 短期记忆 | `ShortTermMemory` | 内存 deque | 最近 20 轮对话上下文 |
+| L2 长期记忆 | `LongTermMemory` | ChromaDB | 历史对话的向量检索 |
+| L3 语义记忆 | `SemanticMemoryStore` | JSON | 结构化事实（偏好、习惯、身份、事件） |
+| L4 事件记忆 | `EpisodicMemoryStore` | JSON | 事件记录（今天/昨天/最近发生了什么） |
+| L5 问题记忆 | `QuestionMemory` | JSON | 用户问题追踪（倒排索引、追问计数） |
+| L6 知识图谱 | `MemoryGraphStore` | NetworkX+JSON | 实体关系三元组（多跳查询） |
+| L7 版本管理 | semantic_store 内置 | — | valid_from/valid_to 版本链 |
+| L8 生命周期 | `MemoryJanitor` | — | 衰减/合并/归档/清理 |
+
+检索入口为 **RetrievalRouter**，根据查询意图分类后并行搜索多个记忆层，通过 **MemoryComposer** 去重+冲突解决+token预算分配。
+
+所有记忆写入都经过 **Quality Gate**（质量门控）和 **WriteVerifier**（写入查重），低信息量、不可靠或重复的内容会被拦截。
 
 ---
 
@@ -40,10 +65,10 @@ uv run python -m vir_bot.main
 看到如下输出表示启动成功：
 
 ```
-=== vir-bot 0.1.0 启动 ===
-AI Provider: openai/deepseek-v4-flash (健康: True)
-记忆系统就绪
-Wiki 系统已初始化，当前角色: 陈暖树
+vir-bot 0.1.0 启动
+AI Provider: openai/mimo-v2.5-pro (健康: True)
+Wiki 系统已初始化，角色: 陈暖树
+主动消息系统已启动（v4 驱动+灵感）
 Web 控制台: http://0.0.0.0:7860
 API 文档: http://0.0.0.0:7860/docs
 ```
@@ -86,64 +111,42 @@ memory:
 ```yaml
 memory:
   features:
-    # Phase 3: Re-Ranker（重排序）
+    # Re-Ranker（重排序）— CrossEncoder 重排检索结果
     reranker:
-      enabled: false          # 建议：先 false，验证后开启
+      enabled: true
       model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
       top_k: 5
 
-    # Phase 4: Composer（记忆组合）
+    # Composer（记忆组合）— 去重/冲突解决/token预算
     composer:
-      enabled: false
-      max_tokens: 2000      # 分配给记忆的 Token 预算
+      enabled: true
+      max_tokens: 2000
 
-    # Phase 5: Quality Gate + Verifier
+    # Quality Gate — 规则+LLM 质量门控
     quality_gate:
-      enabled: false          # 拦截低质量记忆
+      enabled: true
+
+    # Verifier — 写入前查重（语义相似度+文本匹配）
     verifier:
-      enabled: false          # 检测重复/冲突
+      enabled: true
 
-    # Phase 6: Versioning（版本管理）
+    # Versioning — 多版本时间感知
     versioning:
-      enabled: false
-      max_versions: 10        # 每个记忆保留的最大版本数
+      enabled: true
+      max_versions: 10
 
-    # Phase 7: Memory Graph（关系图谱）
+    # Memory Graph — 知识图谱（NetworkX 三元组）
     graph:
-      enabled: false
+      enabled: true
       persist_path: "./data/memory/memory_graph.json"
 
-    # Phase 8: Lifecycle Manager（生命周期）
+    # Lifecycle Manager — 衰减/合并/归档
     lifecycle:
-      enabled: false
-      interval_hours: 24       # 后台任务执行间隔
+      enabled: true
+      interval_hours: 24
 ```
 
-### 渐进式启用建议
-
-```bash
-# 1. 先启用版本管理（Phase 6 基础）
-# config.yaml: versioning.enabled: true
-
-# 2. 再启用质量门 + 验证器（Phase 5）
-# config.yaml: quality_gate.enabled: true, verifier.enabled: true
-
-# 3. 启用关系图谱（Phase 7）
-# config.yaml: graph.enabled: true
-
-# 4. 最后启用生命周期管理（Phase 8）
-# config.yaml: lifecycle.enabled: true
-
-# 5. 可选：Re-Ranker 和 Composer（Phase 3-4）
-# config.yaml: reranker.enabled: true, composer.enabled: true
-```
-
-**每次开启一个功能后，运行评测验证效果：**
-
-```bash
-cd "D:/code Project/vir-bot"
-uv run python -m tests.eval.benchmark
-```
+> **注意**：在 Windows 上，`reranker` 和 `verifier` 的语义匹配功能因 DLL 冲突自动降级为关键词匹配。详见 [已知问题](#已知问题)。
 
 ---
 
@@ -228,6 +231,110 @@ curl http://localhost:7860/api/memory/
 curl -X DELETE http://localhost:7860/api/memory/
 ```
 
+### 6. 配置管理
+
+**GET** `/api/config/sections/{section}`
+
+```bash
+# 获取记忆配置（敏感字段自动脱敏）
+curl http://localhost:7860/api/config/sections/memory
+```
+
+**PUT** `/api/config/sections/{section}`
+
+```bash
+# 更新配置
+curl -X PUT http://localhost:7860/api/config/sections/memory \
+  -H "Content-Type: application/json" \
+  -d '{"features": {"reranker": {"enabled": true}}}'
+```
+
+### 7. 主动消息
+
+**GET** `/api/proactive`
+
+```bash
+# 获取主动消息状态
+curl http://localhost:7860/api/proactive
+```
+
+**POST** `/api/proactive`
+
+```bash
+# 手动触发主动消息
+curl -X POST http://localhost:7860/api/proactive \
+  -H "Content-Type: application/json" \
+  -d '{"action": "trigger"}'
+```
+
+---
+
+## 知识图谱
+
+知识图谱使用 NetworkX 存储实体关系三元组（subject-predicate-object），弥补向量检索无法处理多跳关系推理的缺陷。
+
+### 自动抽取
+
+每轮对话结束后，`GraphRelationExtractor` 会调用 LLM 从对话中抽取实体关系，自动写入图谱。
+
+### 手动查询
+
+```python
+from vir_bot.core.memory.graph_store import MemoryGraphStore
+
+store = MemoryGraphStore(persist_path="data/memory/memory_graph.json")
+
+# 添加关系
+store.add_relation("user:user1", "likes", "火锅")
+store.add_relation("火锅", "属于", "川菜")
+
+# 查询实体的所有关系
+edges = store.query_entity("user:user1")
+
+# 多跳查询
+paths = store.query_multi_hop("user:user1", max_hops=2)
+```
+
+### 配置
+
+```yaml
+memory:
+  features:
+    graph:
+      enabled: true
+      persist_path: "./data/memory/memory_graph.json"
+```
+
+---
+
+## 质量门控与查重
+
+### Quality Gate
+
+写入记忆前的规则引擎 + LLM 二次判断：
+
+| 规则 | 示例 | 处理 |
+|------|------|------|
+| 时间模糊词 | "我最近好像..." | 拦截，置信度 ×0.3 |
+| 情绪化表达 | "我超级超级喜欢！" | 拦截，置信度 ×0.5 |
+| 信息不足 | 短于 5 字符 | 拦截，拒绝写入 |
+| 纯疑问词 | "什么"、"吗" | 拦截，不写入 |
+
+灰色地带（置信度 0.5-0.7）会调用 LLM 二次判断。
+
+### Write Verifier
+
+写入前与已有记忆做比对：
+
+- **重复检测**：语义相似度 > 0.95 的记忆会被标记为重复
+- **冲突检测**：与现有高置信度记忆矛盾时，标记为 `candidate` 待确认
+
+### 用户纠正
+
+用户纠正/否认会触发 `FeedbackHandler`：
+- 第一次纠正：置信度降低 70%
+- 24 小时内第二次纠正同一事实：自动触发 UPDATE 操作
+
 ---
 
 ## 测试与验证
@@ -245,7 +352,7 @@ uv run pytest tests/unit/test_versioning.py -v
 uv run pytest tests/unit/lifecycle/ -v
 ```
 
-**当前测试覆盖**：~70 个测试，全部通过。
+**当前测试覆盖**：16 个测试文件，覆盖记忆系统各组件。
 
 ### 2. 运行评测系统
 
@@ -395,9 +502,24 @@ rm data/memory/semantic_memory.json
 rm -rf data/memory/chroma_db/
 rm data/memory/episodic_memory.json
 rm data/memory/question_memory.json
+rm data/memory/memory_graph.json
 ```
+
+### Q7: Windows 上 sentence_transformers 导致段错误（segfault）
+
+**原因**：`sentence-transformers` 5.5.0 与 PyTorch CUDA 在 Windows 上存在 DLL 加载冲突。
+
+**表现**：服务在处理第一条消息时崩溃，faulthandler.log 显示 `Windows fatal exception: access violation`。
+
+**解决**：当前代码已自动禁用受影响组件，降级为替代方案：
+- CrossEncoder 重排器 → 关键词匹配
+- 写入查重器 → 文本匹配
+- SentenceTransformer Embedding → Ollama Embedding 或哈希向量
+
+**影响**：记忆检索精度降低，但核心功能正常运行。Linux/Docker 环境不受影响。
 
 ---
 
-*文档版本：2.0 — 精简自原 memory-system-usage.md，移除与 ARCHITECTURE.md 重复内容*
+*文档版本：2.1 — 更新至 8 层架构 + 知识图谱 + 质量门控*
+*最后更新：2026-05-30*
 *最后更新：2026-04-27*
