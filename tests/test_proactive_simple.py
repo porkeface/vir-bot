@@ -39,6 +39,13 @@ class MockMemory:
 
 class MockCharacter:
     name = "测试角色"
+    personality = "温柔、活泼、关心用户"
+    extensions = {
+        "emotional_patterns": {
+            "关心": "温柔地询问对方近况",
+            "想念": "表达想念和牵挂",
+        }
+    }
 
 async def test_proactive_flow():
     """测试主动消息流程"""

@@ -42,6 +42,7 @@ class SeedSelector:
         mood_vector: dict[str, float] | None = None,
         conv_state: str = "IDLE",
         last_user_msg_ts: float = 0,
+        user_id: str = "default",
     ) -> ContentSeed | None:
         """选择一个内容种子，None 表示没有可用种子"""
 
@@ -57,7 +58,7 @@ class SeedSelector:
         sorted_types = sorted(weights.items(), key=lambda x: x[1], reverse=True)
 
         for seed_type, _ in sorted_types:
-            seed = await self._try_seed_type(seed_type, last_user_msg_ts)
+            seed = await self._try_seed_type(seed_type, last_user_msg_ts, user_id)
             if seed:
                 self._recent_seed_types.append(seed_type)
                 if len(self._recent_seed_types) > self._max_history:
@@ -67,7 +68,7 @@ class SeedSelector:
         return None
 
     async def _try_seed_type(
-        self, seed_type: str, last_user_msg_ts: float
+        self, seed_type: str, last_user_msg_ts: float, user_id: str = "default"
     ) -> ContentSeed | None:
         """尝试获取某种类型的种子"""
         if seed_type == "callback":
@@ -75,9 +76,9 @@ class SeedSelector:
         if seed_type == "situation":
             return self._situation_seed(last_user_msg_ts)
         if seed_type == "interest":
-            return await self._interest_seed()
+            return await self._interest_seed(user_id)
         if seed_type == "shared_memory":
-            return await self._shared_memory_seed()
+            return await self._shared_memory_seed(user_id)
         if seed_type == "observation":
             return self._observation_seed(last_user_msg_ts)
         return None
@@ -142,14 +143,14 @@ class SeedSelector:
             priority=5,
         )
 
-    async def _interest_seed(self) -> ContentSeed | None:
+    async def _interest_seed(self, user_id: str = "default") -> ContentSeed | None:
         """从记忆中找用户的兴趣点"""
         if not self._memory:
             return None
         try:
             if hasattr(self._memory, "retrieval_router"):
                 result = await self._memory.retrieval_router.retrieve(
-                    query="用户兴趣爱好 喜欢什么", user_id="default", top_k=3
+                    query="用户兴趣爱好 喜欢什么", user_id=user_id, top_k=3
                 )
                 records = result.semantic_records or result.long_term_records
                 if records:
@@ -165,14 +166,14 @@ class SeedSelector:
             logger.debug(f"[SeedSelector] 兴趣种子查询失败: {e}")
         return None
 
-    async def _shared_memory_seed(self) -> ContentSeed | None:
+    async def _shared_memory_seed(self, user_id: str = "default") -> ContentSeed | None:
         """从记忆中找共享的回忆"""
         if not self._memory:
             return None
         try:
             if hasattr(self._memory, "retrieval_router"):
                 result = await self._memory.retrieval_router.retrieve(
-                    query="一起做过的事 共同回忆", user_id="default", top_k=3
+                    query="一起做过的事 共同回忆", user_id=user_id, top_k=3
                 )
                 records = result.semantic_records or result.episodic_records or result.long_term_records
                 if records:

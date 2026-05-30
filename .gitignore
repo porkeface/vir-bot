@@ -66,3 +66,4 @@ tools/
 
 # 工作报告等个人文档
 docs/2026-*.md
+test_cosyvoice_quality.py

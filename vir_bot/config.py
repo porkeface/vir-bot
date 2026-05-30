@@ -198,6 +198,7 @@ class MessageSplitConfig(BaseModel):
 
 class PipelineConfig(BaseModel):
     max_context_turns: int = 20
+    long_term_top_k: int = 5
     handlers: list[str] = Field(default_factory=lambda: ["text"])
     filters: PipelineFiltersConfig = Field(default_factory=PipelineFiltersConfig)
     split: MessageSplitConfig = Field(default_factory=MessageSplitConfig)

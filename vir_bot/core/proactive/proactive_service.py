@@ -256,6 +256,7 @@ class ProactiveService:
         seed = await self._seed_selector.select(
             mood_vector={"care": drives.care_drive, "joy": 0.5, "clingy": drives.loneliness * 0.5, "irritated": 0.0, "sad": 0.0},
             last_user_msg_ts=context.last_user_msg_ts,
+            user_id=user_id,
         )
         if not seed:
             logger.debug("[v4] 无可用内容种子")
@@ -299,6 +300,7 @@ class ProactiveService:
             seed2 = await self._seed_selector.select(
                 mood_vector={"care": drives.care_drive, "joy": 0.5, "clingy": drives.loneliness * 0.5, "irritated": 0.0, "sad": 0.0},
                 last_user_msg_ts=context.last_user_msg_ts,
+                user_id=user_id,
             )
             if seed2 and seed2.content != seed.content:
                 message2 = await self._expression.generate_message(

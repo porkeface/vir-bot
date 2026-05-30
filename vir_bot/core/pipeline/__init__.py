@@ -491,7 +491,7 @@ class MessagePipeline:
                 current_query=msg.content,
                 system_prompt=self._build_system_prompt(),
                 character_name=self.character.name,
-                long_term_top_k=5,
+                long_term_top_k=self.config.long_term_top_k,
                 user_id=msg.user_id,
             )
         else:
