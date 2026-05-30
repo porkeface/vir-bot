@@ -69,6 +69,7 @@ DATA_DIR = Path(_config.app.data_dir)
 CHAT_DIR = DATA_DIR / "chat_records"
 JOBS_DIR = DATA_DIR / "distillation" / "jobs"
 ARTIFACTS_DIR = DATA_DIR / "wiki" / "characters"
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
 
 for d in (CHAT_DIR, JOBS_DIR, ARTIFACTS_DIR):
     os.makedirs(d, exist_ok=True)
@@ -359,6 +360,8 @@ async def upload_chat(file: UploadFile = File(...)):
         safe_name = f"{file_id}{ext}"
         target = CHAT_DIR / safe_name
         content = await file.read()
+        if len(content) > MAX_UPLOAD_SIZE:
+            return JSONResponse(status_code=413, content={"detail": "File too large (max 10MB)"})
         target.write_bytes(content)
         logger.info("Saved uploaded chat file: %s", target)
         return UploadResp(file_id=file_id, filename=str(target.relative_to(DATA_DIR)))

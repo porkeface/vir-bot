@@ -1,7 +1,6 @@
 """日志查看 API"""
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 from fastapi import APIRouter, HTTPException

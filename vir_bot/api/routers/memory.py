@@ -1,7 +1,7 @@
 """记忆管理 API"""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from vir_bot.main import _get_app_state
@@ -18,7 +18,7 @@ async def get_memory_stats():
 
 
 @router.get("/recent")
-async def get_recent_memory(limit: int = 10):
+async def get_recent_memory(limit: int = Query(default=10, ge=1, le=100)):
     state = _get_app_state()
     if state.memory_manager is None:
         return []
@@ -27,7 +27,7 @@ async def get_recent_memory(limit: int = 10):
 
 
 @router.get("/search")
-async def search_memory(query: str, top_k: int = 5):
+async def search_memory(query: str, top_k: int = Query(default=5, ge=1, le=50)):
     state = _get_app_state()
     if state.memory_manager is None:
         return []
@@ -61,7 +61,7 @@ async def get_semantic_memory(user_id: str, namespace: str | None = None):
 
 
 @router.get("/semantic/search")
-async def search_semantic_memory(query: str, user_id: str, top_k: int = 5):
+async def search_semantic_memory(query: str, user_id: str, top_k: int = Query(default=5, ge=1, le=50)):
     state = _get_app_state()
     if state.memory_manager is None:
         return []

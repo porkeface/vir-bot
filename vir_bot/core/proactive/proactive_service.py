@@ -192,7 +192,7 @@ class ProactiveService:
                 try:
                     await asyncio.sleep(sleep_seconds)
                 except asyncio.CancelledError:
-                    continue
+                    raise  # 允许任务被正常取消
 
                 # 4. 概率快速过滤（0 LLM 成本）
                 should, prob = self._drives.should_consider_sending(drives)
@@ -238,7 +238,7 @@ class ProactiveService:
                 )
 
             except asyncio.CancelledError:
-                continue
+                raise  # 允许任务被正常取消
             except Exception as e:
                 logger.error(f"[v4] 灵感循环错误: {e}")
                 await asyncio.sleep(60)

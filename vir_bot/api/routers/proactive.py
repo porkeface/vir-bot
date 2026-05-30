@@ -29,7 +29,6 @@ class ProactiveResponse(BaseModel):
 @router.get("/", tags=["主动消息"], response_model=ProactiveResponse)
 async def get_proactive_status():
     """获取主动消息状态"""
-    import sys
     from vir_bot.main import app_state
 
     if not app_state.proactive_service:
@@ -42,7 +41,6 @@ async def get_proactive_status():
 @router.post("/enable", tags=["主动消息"])
 async def enable_proactive():
     """启用主动消息"""
-    import sys
     from vir_bot.main import app_state
 
     if not app_state.proactive_service:
@@ -56,7 +54,6 @@ async def enable_proactive():
 @router.post("/disable", tags=["主动消息"])
 async def disable_proactive():
     """禁用主动消息"""
-    import sys
     from vir_bot.main import app_state
 
     if not app_state.proactive_service:
@@ -70,7 +67,6 @@ async def disable_proactive():
 @router.post("/send", tags=["主动消息"])
 async def trigger_proactive_send():
     """手动触发一次主动消息（测试用）"""
-    import sys
     from vir_bot.main import app_state
 
     if not app_state.proactive_service:
@@ -80,14 +76,13 @@ async def trigger_proactive_send():
     if not service._enabled:
         raise HTTPException(status_code=400, detail="主动消息服务未启用")
 
-    asyncio.get_event_loop().create_task(service.run_once())
+    task = asyncio.create_task(service.run_once())
     return {"status": "triggered"}
 
 
 @router.get("/stats", tags=["主动消息"])
 async def get_proactive_stats():
     """获取主动消息统计"""
-    import sys
     from vir_bot.main import app_state
 
     if not app_state.proactive_service:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from vir_bot.core.character import CharacterCard, load_character_card
@@ -63,10 +64,15 @@ async def update_character(req: CharacterUpdateRequest):
     return {"status": "ok", "message": "角色卡已更新"}
 
 
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+
+
 @router.post("/upload")
 async def upload_character(file: UploadFile = File(...)):
     import json
     content = await file.read()
+    if len(content) > MAX_UPLOAD_SIZE:
+        return JSONResponse(status_code=413, content={"detail": "File too large (max 10MB)"})
     try:
         data = json.loads(content)
         card = CharacterCard.from_json(data)
