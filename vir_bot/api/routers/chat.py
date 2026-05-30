@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from vir_bot.core.pipeline import PlatformMessage, Platform, PlatformResponse
 from vir_bot.main import _get_app_state
@@ -11,9 +11,9 @@ router = APIRouter()
 
 
 class ChatRequest(BaseModel):
-    content: str
-    user_id: str = "web_user"
-    user_name: str = "Web用户"
+    content: str = Field(..., min_length=1, max_length=10000)
+    user_id: str = Field("web_user", min_length=1, max_length=128)
+    user_name: str = Field("Web用户", min_length=1, max_length=128)
 
 
 @router.post("/")

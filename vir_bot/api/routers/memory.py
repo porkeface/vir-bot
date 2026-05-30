@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from vir_bot.main import _get_app_state
 
@@ -86,7 +86,7 @@ async def search_semantic_memory(query: str, user_id: str, top_k: int = 5):
 
 
 class AddMemoryRequest(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, max_length=10000)
     metadata: dict | None = None
 
 

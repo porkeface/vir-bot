@@ -1,6 +1,8 @@
 """主动消息管理 API"""
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -78,7 +80,7 @@ async def trigger_proactive_send():
     if not service._enabled:
         raise HTTPException(status_code=400, detail="主动消息服务未启用")
 
-    asyncio.get_event_loop().create_task(service._run_once())
+    asyncio.get_event_loop().create_task(service.run_once())
     return {"status": "triggered"}
 
 

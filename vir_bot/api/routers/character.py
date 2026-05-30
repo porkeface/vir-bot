@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from vir_bot.core.character import CharacterCard, load_character_card
 from vir_bot.config import get_config
@@ -22,13 +22,13 @@ class CharacterCardResponse(BaseModel):
 
 
 class CharacterUpdateRequest(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    personality: str | None = None
-    world_info: str | None = None
-    scenario: str | None = None
-    first_message: str | None = None
-    example_dialogue: str | None = None
+    name: str | None = Field(None, min_length=1, max_length=256)
+    description: str | None = Field(None, max_length=5000)
+    personality: str | None = Field(None, max_length=5000)
+    world_info: str | None = Field(None, max_length=10000)
+    scenario: str | None = Field(None, max_length=5000)
+    first_message: str | None = Field(None, max_length=5000)
+    example_dialogue: str | None = Field(None, max_length=10000)
     extensions: dict | None = None
 
 

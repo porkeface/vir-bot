@@ -395,6 +395,56 @@ class ProactiveService:
             except Exception as e:
                 logger.error(f"[v4] {name} 发送失败: {e}")
 
+    async def run_once(self) -> None:
+        """手动触发一次主动消息流程（供 API 调用）"""
+        if not self._enabled:
+            logger.warning("[v4] run_once 被调用但服务未启用")
+            return
+
+        user_id = "default"
+
+        try:
+            drives = self._drives.snapshot()
+
+            state = self._get_conv_state(user_id)
+            if state == ConversationState.RECENTLY_SENT:
+                logger.info("[v4] run_once: 刚发过消息，跳过")
+                return
+
+            daily_sent = self._ensure_daily_count(user_id)
+            if daily_sent >= self._config.max_daily_messages:
+                logger.info(f"[v4] run_once: 今日已发 {daily_sent} 条，达到上限")
+                return
+
+            from vir_bot.core.proactive.inspiration_trigger import ContextSnapshot
+            ctx = ContextSnapshot(
+                last_user_msg_ts=self._last_user_msg_ts.get(user_id, 0),
+                last_user_msg_content=self._last_user_msg_content.get(user_id, ""),
+                last_proactive_ts=self._last_proactive_ts.get(user_id, 0),
+                proactive_count_today=daily_sent,
+                proactive_count_unanswered=self._proactive_count_unanswered.get(user_id, 0),
+                recent_sent_messages=self._recent_messages.get(user_id, []),
+            )
+
+            # 手动触发时，生成一个"用户主动要求"的灵感
+            from vir_bot.core.proactive.inspiration_trigger import InspireResult
+            inspire = InspireResult(
+                want_to_send=True,
+                reason="用户手动触发",
+                tone_hint="",
+            )
+
+            await self._run_pipeline(
+                user_id=user_id,
+                drives=drives,
+                inspire=inspire,
+                context=ctx,
+            )
+            logger.info("[v4] run_once 完成")
+
+        except Exception as e:
+            logger.error(f"[v4] run_once 失败: {e}")
+
     def get_stats(self) -> dict:
         if not self._enabled:
             return {"enabled": False}

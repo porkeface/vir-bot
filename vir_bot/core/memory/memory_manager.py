@@ -137,6 +137,7 @@ class MemoryManager:
 
         # 初始化生命周期管理器（如果启用）
         self.janitor = None
+        self._janitor_task = None
         if self._is_feature_enabled("lifecycle"):
             from .lifecycle.decay import DecayConfig, MemoryDecay
             from .lifecycle.merge import MemoryMerger
@@ -160,7 +161,7 @@ class MemoryManager:
         """启动后台任务（如 janitor）。"""
         if self.janitor and self._is_feature_enabled("lifecycle"):
             import asyncio
-            asyncio.create_task(self.janitor.start())
+            self._janitor_task = asyncio.create_task(self.janitor.start())
             logger.info("Janitor background task started")
 
     def _is_feature_enabled(self, feature_name: str) -> bool:

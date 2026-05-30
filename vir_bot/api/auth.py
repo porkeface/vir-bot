@@ -20,9 +20,8 @@ _EXEMPT_PATHS: set[str] = {
 
 # 豁免路径前缀（静态文件等）
 _EXEMPT_PREFIXES: tuple[str, ...] = (
-    "/distillation",
-    "/config",
     "/docs/",
+    "/static/",
 )
 
 
@@ -55,6 +54,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         # QQ 回调豁免（有独立签名验证）
         if path == "/api/platforms/qq/callback" and request.method == "POST":
+            return await call_next(request)
+
+        # Distillation 特定端点豁免
+        if path == "/api/distillation/upload" and request.method == "POST":
+            return await call_next(request)
+        if path == "/api/distillation/ws":
             return await call_next(request)
 
         # CORS preflight 豁免（OPTIONS 请求不携带 Authorization 头）
