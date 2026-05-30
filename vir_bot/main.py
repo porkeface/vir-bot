@@ -352,6 +352,12 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
+    # 认证中间件（CORS 之后、路由之前）
+    if config.web_console.auth.enabled:
+        from vir_bot.api.auth import AuthMiddleware
+
+        app.add_middleware(AuthMiddleware)
+
     from vir_bot.api.routers import (
         character,
         chat,
