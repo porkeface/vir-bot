@@ -39,7 +39,7 @@ class TelegramAdapter(PlatformAdapter):
 
     async def connect(self) -> None:
         from telegram.request import HTTPXRequest
-        proxy_url = getattr(self.config, 'proxy', None) or "http://127.0.0.1:7890"
+        proxy_url = getattr(self.config, 'proxy', None)
         request = HTTPXRequest(
             connect_timeout=30,
             read_timeout=30,

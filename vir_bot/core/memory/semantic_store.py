@@ -441,6 +441,24 @@ class SemanticMemoryStore:
                 return record
         return None
 
+    def _find_by_predicate(
+        self,
+        user_id: str,
+        namespace: str,
+        predicate: str,
+    ) -> SemanticMemoryRecord | None:
+        """查找同 predicate 的活跃记录（不匹配 object 值）。"""
+        for record in self._records.values():
+            if not record.is_active:
+                continue
+            if (
+                record.user_id == user_id
+                and record.namespace == namespace
+                and record.predicate == predicate
+            ):
+                return record
+        return None
+
     def cleanup_invalid_records(self) -> int:
         """清理明确无效的记录（仅在手动调用时）"""
         removed = 0

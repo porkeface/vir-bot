@@ -474,7 +474,7 @@ class MessagePipeline:
         f = self.config.filters
         if f.block_self and msg.user_id == "self":
             return False
-        if not f.block_bots and msg.raw_data.get("is_bot", False):
+        if f.block_bots and msg.raw_data.get("is_bot", False):
             return False
         content_len = len(msg.content.strip())
         if content_len < f.min_content_length:
@@ -491,7 +491,7 @@ class MessagePipeline:
                 current_query=msg.content,
                 system_prompt=self._build_system_prompt(),
                 character_name=self.character.name,
-                long_term_top_k=6,
+                long_term_top_k=5,
                 user_id=msg.user_id,
             )
         else:
