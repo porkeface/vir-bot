@@ -550,11 +550,30 @@ class MessagePipeline:
         from vir_bot.core.character import build_system_prompt
 
         ext = self.character.extensions
-        return build_system_prompt(
+        system_prompt = build_system_prompt(
             card=self.character,
             voice_style=ext.get("voice_style", ""),
             personality_tags=ext.get("personality_tags", []),
         )
+
+        # 当 voice_decision == "ai" 时，追加语音决策指令
+        if hasattr(self, "voice_config") and self.voice_config and self.voice_config.voice_decision == "ai":
+            system_prompt += """
+
+当你想用语音回复用户时，在回复末尾加上 [VOICE] 标记。
+
+适合用语音的场景：
+- 情感表达（关心、安慰、开心、撒娇）
+- 日常问候和闲聊
+- 简短的回复（< 200 字）
+
+适合用文字的场景：
+- 代码、技术说明
+- 列表、表格
+- 长文（> 200 字）
+"""
+
+        return system_prompt
 
     async def _handle_tool_calls(
         self,
