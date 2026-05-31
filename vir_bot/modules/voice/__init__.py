@@ -2,15 +2,18 @@
 
 架构：
   ASR: SenseVoice (主) → OpenAI Whisper API (备) → Vosk (离线备)
-  TTS: CosyVoice 2 (主，支持声音克隆) → edge-tts (备) → Piper (离线备)
+  TTS: MiMo-V2.5-TTS (主，云端 API) → edge-tts (备) → Piper (离线备)
 """
 from __future__ import annotations
 
 import asyncio
+import base64
 import os
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
+
+import httpx
 
 from vir_bot.utils.logger import logger
 
@@ -24,7 +27,7 @@ class TTSProvider(ABC):
     """TTS 抽象接口"""
 
     @abstractmethod
-    async def synthesize(self, text: str, output_path: str) -> str:
+    async def synthesize(self, text: str, output_path: str, **kwargs) -> str:
         """将文字转为语音，返回音频文件路径"""
         ...
 
@@ -289,7 +292,7 @@ class CosyVoice2TTSProvider(TTSProvider):
 
         return str(ref_wav)
 
-    async def synthesize(self, text: str, output_path: str) -> str:
+    async def synthesize(self, text: str, output_path: str, **kwargs) -> str:
         try:
             model = self._get_model()
             loop = asyncio.get_event_loop()
@@ -354,6 +357,70 @@ class CosyVoice2TTSProvider(TTSProvider):
 
 
 # ============================================================================
+# MiMo TTS（云端 API）
+# ============================================================================
+
+
+class MiMoTTSProvider(TTSProvider):
+    """MiMo-V2.5-TTS API Provider（通过 tp-api.com 调用）"""
+
+    def __init__(self, config):
+        from vir_bot.config import get_config
+
+        app_config = get_config()
+        self.api_key = app_config.ai.openai.api_key
+        self.base_url = app_config.ai.openai.base_url.rstrip("/")
+        self.model = config.mimo_model or "mimo-v2.5-tts"
+        self.voice = config.mimo_voice or "冰糖"
+        self.speed = config.speed
+        self.timeout = 10
+
+    async def synthesize(self, text: str, output_path: str, **kwargs) -> str | None:
+        """合成语音，返回输出文件路径"""
+        style_hint = kwargs.get("style_hint", "")
+        messages = []
+        if style_hint:
+            messages.append({"role": "user", "content": style_hint})
+        messages.append({"role": "assistant", "content": text})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "audio": {"format": "wav", "voice": self.voice},
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={"api-key": self.api_key},
+                    json=payload,
+                )
+                resp.raise_for_status()
+
+            data = resp.json()
+            audio_b64 = data["choices"][0]["message"]["audio"]["data"]
+            audio_bytes = base64.b64decode(audio_b64)
+
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "wb") as f:
+                f.write(audio_bytes)
+
+            logger.info(f"MiMo TTS synthesized: {output_path} ({len(audio_bytes)} bytes)")
+            return output_path
+
+        except httpx.TimeoutException:
+            logger.warning("MiMo TTS timeout")
+            return None
+        except httpx.HTTPStatusError as e:
+            logger.warning(f"MiMo TTS HTTP error: {e.response.status_code}")
+            return None
+        except Exception as e:
+            logger.warning(f"MiMo TTS error: {e}")
+            return None
+
+
+# ============================================================================
 # Edge TTS（轻量备选）
 # ============================================================================
 
@@ -365,7 +432,7 @@ class EdgeTTSProvider(TTSProvider):
         self.voice_id = voice_id
         self.speed = speed
 
-    async def synthesize(self, text: str, output_path: str) -> str:
+    async def synthesize(self, text: str, output_path: str, **kwargs) -> str:
         try:
             import edge_tts
 
@@ -501,28 +568,24 @@ class PorcupineWakeWordProvider(WakeWordProvider):
 
 
 def create_tts(config) -> TTSProvider | None:
-    """TTS 工厂函数。优先级：cosyvoice2 > edge > piper"""
+    """TTS 工厂函数。优先级：mimo > cosyvoice2 > edge > piper"""
     if not config.enabled:
         return None
 
     provider = config.tts.provider
 
-    if provider == "cosyvoice2":
+    if provider == "mimo":
         try:
-            return CosyVoice2TTSProvider(
-                model_dir=getattr(config.tts, "model_dir", "pretrained_models/CosyVoice2-0.5B"),
-                speed=config.tts.speed,
-                voice_sample_path=getattr(config.tts, "voice_sample_path", ""),
-                voice_sample_text=getattr(config.tts, "voice_sample_text", ""),
-                instruct_text=getattr(config.tts, "instruct_text", "用温柔甜美的女声说话"),
-            )
+            return MiMoTTSProvider(config.tts)
         except Exception as e:
-            logger.error(f"[TTS] CosyVoice2 初始化失败: {e}，回退到 edge-tts")
+            logger.error(f"[TTS] MiMo 初始化失败: {e}，回退到 edge-tts")
+            return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
 
-    if provider == "edge" or provider == "cosyvoice2":
-        # edge 作为主选或 CosyVoice2 失败的回退
-        if provider == "cosyvoice2":
-            logger.info("[TTS] 回退到 edge-tts")
+    if provider == "cosyvoice2":
+        logger.warning("[TTS] cosyvoice2 provider 已弃用，回退到 edge-tts")
+        return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
+
+    if provider == "edge":
         return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
 
     return None
