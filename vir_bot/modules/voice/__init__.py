@@ -2,7 +2,7 @@
 
 架构：
   ASR: SenseVoice (主) → OpenAI Whisper API (备) → Vosk (离线备)
-  TTS: MiMo-V2.5-TTS (主，云端 API) → edge-tts (备) → Piper (离线备)
+  TTS: MiMo-V2.5-TTS (主，API) → edge-tts (备)
 """
 from __future__ import annotations
 
@@ -166,6 +166,7 @@ class SenseVoiceASRProvider(ASRProvider):
 # ============================================================================
 
 
+# @deprecated - CosyVoice2 已被 MiMo TTS 替换，保留代码供参考
 class CosyVoice2TTSProvider(TTSProvider):
     """阿里 CosyVoice 2 TTS（本地推理，零样本声音克隆）
 
@@ -191,17 +192,8 @@ class CosyVoice2TTSProvider(TTSProvider):
         self._prompt_speech = None
         self._ready = False
 
-    def _ensure_paths(self):
-        """确保 CosyVoice 和 Matcha-TTS 在 sys.path 中"""
-        cosyvoice_root = str(Path(__file__).resolve().parents[3] / "third_party" / "CosyVoice")
-        matcha_root = str(Path(__file__).resolve().parents[3] / "third_party" / "CosyVoice" / "third_party" / "Matcha-TTS")
-        for p in [cosyvoice_root, matcha_root]:
-            if p not in sys.path:
-                sys.path.insert(0, p)
-
     def _get_model(self):
         if self._model is None:
-            self._ensure_paths()
             from cosyvoice.cli.cosyvoice import CosyVoice2
 
             model_path = self.model_dir
