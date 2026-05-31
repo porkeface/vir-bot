@@ -152,10 +152,11 @@ class TestVoiceDecision:
 
 
 class TestVoiceSuitability:
-    def test_suitable_short_text(self):
+    @patch("vir_bot.modules.voice.random.random", return_value=0.1)
+    def test_suitable_short_text(self, _mock):
         suitable, reason = analyze_voice_suitability("今天心情超好呀～")
         assert suitable is True
-        assert reason == "suitable"
+        assert "len=" in reason
 
     def test_not_suitable_code_block(self):
         suitable, reason = analyze_voice_suitability("看这段代码\n```python\nprint('hi')\n```")
@@ -192,10 +193,18 @@ class TestVoiceSuitability:
         assert suitable is False
         assert reason == "too_long"
 
-    def test_suitable_medium_text(self):
+    @patch("vir_bot.modules.voice.random.random", return_value=0.1)
+    def test_suitable_medium_text(self, _mock):
         text = "嘿嘿刚刚看到一个超搞笑的视频，笑死我了哈哈，你知道吗那个小猫居然会跳舞"
         suitable, reason = analyze_voice_suitability(text)
         assert suitable is True
+
+    @patch("vir_bot.modules.voice.random.random", return_value=0.9)
+    def test_probability_rejects(self, _mock):
+        """高 roll 值 → 拒绝语音"""
+        suitable, reason = analyze_voice_suitability("今天心情超好呀～")
+        assert suitable is False
+        assert "roll=" in reason
 
 
 # ============================================================================

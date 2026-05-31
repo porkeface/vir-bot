@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import random
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -609,11 +610,13 @@ def _parse_voice_decision(content: str) -> tuple[str, bool]:
 
 
 def analyze_voice_suitability(content: str) -> tuple[bool, str]:
-    """分析内容是否适合语音朗读。
+    """分析内容是否适合语音朗读，并通过概率模拟"凭心情"选择。
 
-    返回 (是否适合, 原因)。
+    返回 (是否使用语音, 原因)。
     硬排除：代码、列表、链接、表格、过长。
+    软决策：通过的概率根据文本长度加权（短→高概率，长→低概率）。
     """
+
     # 含代码块或行内代码
     if re.search(r"```[\s\S]*?```", content) or re.search(r"`[^`]+`", content):
         return False, "contains_code"
@@ -639,10 +642,23 @@ def analyze_voice_suitability(content: str) -> tuple[bool, str]:
 
     # 过长
     clean_text = re.sub(r"[^\w\s]", "", content)
-    if len(clean_text) > 300:
+    word_count = len(clean_text)
+    if word_count > 300:
         return False, "too_long"
 
-    return True, "suitable"
+    # 概率决策：短文本高概率语音，长文本低概率
+    if word_count < 30:
+        threshold = 0.7
+    elif word_count < 80:
+        threshold = 0.5
+    elif word_count < 150:
+        threshold = 0.3
+    else:
+        threshold = 0.15
+
+    roll = random.random()
+    use_voice = roll < threshold
+    return use_voice, f"len={word_count}, threshold={threshold}, roll={roll:.2f}"
 
 
 def _build_style_hint(character, voice_config) -> str:
