@@ -13,6 +13,8 @@ import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+import re
+
 import httpx
 
 from vir_bot.utils.logger import logger
@@ -560,6 +562,29 @@ class PorcupineWakeWordProvider(WakeWordProvider):
     async def listen(self) -> str:
         logger.info("Wake word detection started (placeholder)")
         return ""
+
+
+# ============================================================================
+# AI 语音决策
+# ============================================================================
+
+
+def _parse_voice_decision(content: str) -> tuple[str, bool]:
+    """解析 LLM 回复中的 [VOICE] 标记。返回 (清理后文本, 是否使用语音)。"""
+    use_voice = "[VOICE]" in content
+    clean_content = content.replace("[VOICE]", "").strip()
+    clean_content = re.sub(r"\n{3,}", "\n\n", clean_content)
+    return clean_content, use_voice
+
+
+def _build_style_hint(character, config) -> str:
+    """从角色 personality 推断 TTS 风格指令。"""
+    if config.voice.tts.mimo_style:
+        return config.voice.tts.mimo_style
+    personality = getattr(character, "personality", "")
+    if not personality:
+        return "用温柔自然的语调说话"
+    return f"用{personality}的语调说话"
 
 
 # ============================================================================
