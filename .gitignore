@@ -45,6 +45,15 @@ data/logs/
 
 # Claude Code 工作目录
 .claude/
+skills-lock.json
+
+# MCP 工具临时文件
+.playwright-mcp/
+
+# Comet/OpenSpec 内部状态文件
+openspec/changes/**/.comet.yaml
+openspec/changes/**/.comet/
+openspec/changes/**/.openspec.yaml
 
 # 蒸馏产物 & 个人数据（防止泄露聊天记录和角色卡）
 data/characters/
