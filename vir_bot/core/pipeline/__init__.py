@@ -297,6 +297,14 @@ class MessagePipeline:
             chunk_count = 0
             timeout_seconds = 20  # 单个 chunk 超时
 
+            # 当 voice_mode=replace 且 TTS 开启时，流式不发文字（最后只发语音）
+            _suppress_text = (
+                self.tts is not None
+                and self.voice_config is not None
+                and getattr(self.voice_config, "voice_mode", "replace") == "replace"
+                and send_callback is not None
+            )
+
             logger.info("[Pipeline] 开始流式 AI 调用...")
             stream = self.ai.chat_stream(
                 messages=conversation,
@@ -319,7 +327,7 @@ class MessagePipeline:
                         nl_pos = buffer.find("\n")
                         line = buffer[:nl_pos].strip()
                         buffer = buffer[nl_pos + 1:]
-                        if line:
+                        if line and not _suppress_text:
                             # 流式发送时清理 [VOICE] 标记，避免用户看到
                             clean_line = line.replace("[VOICE]", "").strip()
                             if clean_line:
@@ -329,8 +337,8 @@ class MessagePipeline:
             except Exception as e:
                 logger.warning(f"[Pipeline] 流式读取异常: {e}")
 
-            # 发送剩余内容（清理 [VOICE] 标记）
-            if buffer.strip():
+            # 发送剩余内容（清理 [VOICE] 标记，voice_mode=replace 时不发送）
+            if buffer.strip() and not _suppress_text:
                 clean_buffer = buffer.strip().replace("[VOICE]", "").strip()
                 if clean_buffer:
                     await send_callback(
@@ -384,6 +392,12 @@ class MessagePipeline:
 
             metadata["voice_file"] = voice_file
             metadata["use_voice"] = should_synthesize
+
+            # 如果文字被抑制但最终没有生成语音，回退发送文字
+            if _suppress_text and not should_synthesize and content.strip():
+                await send_callback(
+                    PlatformResponse(msg_id=msg.msg_id, content=content, reply=True)
+                )
 
             return PlatformResponse(
                 msg_id=msg.msg_id,
