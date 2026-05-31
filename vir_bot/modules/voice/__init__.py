@@ -589,10 +589,10 @@ def _parse_voice_decision(content: str) -> tuple[str, bool]:
     return clean_content, use_voice
 
 
-def _build_style_hint(character, config) -> str:
-    """从角色 personality 推断 TTS 风格指令。"""
-    if config.voice.tts.mimo_style:
-        return config.voice.tts.mimo_style
+def _build_style_hint(character, voice_config) -> str:
+    """从角色 personality 推断 TTS 风格指令。voice_config 是 VoiceConfig 对象。"""
+    if voice_config.tts.mimo_style:
+        return voice_config.tts.mimo_style
     personality = getattr(character, "personality", "")
     if not personality:
         return "用温柔自然的语调说话"

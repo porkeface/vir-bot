@@ -260,7 +260,7 @@ class MessagePipeline:
 
         voice_file = None
         if should_synthesize:
-            style = _build_style_hint(self.character, self.config)
+            style = _build_style_hint(self.character, self.voice_config)
             voice_file = await self._synthesize_tts(content, style)
             if voice_file and self.voice_config.tts.output_format != "wav":
                 ogg_path = voice_file.rsplit(".", 1)[0] + ".ogg"
@@ -274,8 +274,6 @@ class MessagePipeline:
 
         metadata["voice_file"] = voice_file
         metadata["use_voice"] = should_synthesize
-        # 更新 content 为清理后的文本
-        response = response.model_copy(update={"content": content})
 
         return PlatformResponse(
             msg_id=msg.msg_id,
@@ -322,17 +320,22 @@ class MessagePipeline:
                         line = buffer[:nl_pos].strip()
                         buffer = buffer[nl_pos + 1:]
                         if line:
-                            await send_callback(
-                                PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
-                            )
+                            # 流式发送时清理 [VOICE] 标记，避免用户看到
+                            clean_line = line.replace("[VOICE]", "").strip()
+                            if clean_line:
+                                await send_callback(
+                                    PlatformResponse(msg_id=msg.msg_id, content=clean_line, reply=True)
+                                )
             except Exception as e:
                 logger.warning(f"[Pipeline] 流式读取异常: {e}")
 
-            # 发送剩余内容
+            # 发送剩余内容（清理 [VOICE] 标记）
             if buffer.strip():
-                await send_callback(
-                    PlatformResponse(msg_id=msg.msg_id, content=buffer.strip(), reply=True)
-                )
+                clean_buffer = buffer.strip().replace("[VOICE]", "").strip()
+                if clean_buffer:
+                    await send_callback(
+                        PlatformResponse(msg_id=msg.msg_id, content=clean_buffer, reply=True)
+                    )
 
             logger.info(f"[Pipeline] 流式循环结束, chunks={chunk_count}, 总长度={len(full_content)}")
 
@@ -367,7 +370,7 @@ class MessagePipeline:
 
             voice_file = None
             if should_synthesize:
-                style = _build_style_hint(self.character, self.config)
+                style = _build_style_hint(self.character, self.voice_config)
                 voice_file = await self._synthesize_tts(content, style)
                 if voice_file and self.voice_config.tts.output_format != "wav":
                     ogg_path = voice_file.rsplit(".", 1)[0] + ".ogg"
