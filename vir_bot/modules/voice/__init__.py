@@ -423,6 +423,26 @@ class MiMoTTSProvider(TTSProvider):
 
 
 # ============================================================================
+# TTS Fallback 链
+# ============================================================================
+
+
+class TTSFallbackProvider(TTSProvider):
+    """带 Fallback 的 TTS Provider。主 Provider 失败时自动切换到备选。"""
+
+    def __init__(self, primary: TTSProvider, fallback: TTSProvider):
+        self.primary = primary
+        self.fallback = fallback
+
+    async def synthesize(self, text: str, output_path: str, **kwargs) -> str | None:
+        result = await self.primary.synthesize(text, output_path, **kwargs)
+        if result:
+            return result
+        logger.warning("Primary TTS failed, falling back to backup provider")
+        return await self.fallback.synthesize(text, output_path, **kwargs)
+
+
+# ============================================================================
 # Edge TTS（轻量备选）
 # ============================================================================
 
@@ -627,27 +647,26 @@ async def convert_audio(input_path: str, output_path: str,
 
 
 def create_tts(config) -> TTSProvider | None:
-    """TTS 工厂函数。优先级：mimo > cosyvoice2 > edge > piper"""
+    """TTS 工厂函数。优先级：mimo(fallback→edge) > cosyvoice2 > edge"""
     if not config.enabled:
         return None
 
-    provider = config.tts.provider
+    provider = config.tts.provider.lower()
 
-    if provider == "mimo":
-        try:
-            return MiMoTTSProvider(config.tts)
-        except Exception as e:
-            logger.error(f"[TTS] MiMo 初始化失败: {e}，回退到 edge-tts")
+    try:
+        if provider == "mimo":
+            primary = MiMoTTSProvider(config.tts)
+            fallback = EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
+            return TTSFallbackProvider(primary, fallback)
+
+        if provider == "cosyvoice2":
+            logger.warning("[TTS] cosyvoice2 provider 已弃用，回退到 edge-tts")
             return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
 
-    if provider == "cosyvoice2":
-        logger.warning("[TTS] cosyvoice2 provider 已弃用，回退到 edge-tts")
         return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
-
-    if provider == "edge":
-        return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
-
-    return None
+    except Exception as e:
+        logger.error(f"[TTS] Provider 初始化失败: {e}")
+        return None
 
 
 def create_asr(config, ai_config=None) -> ASRProvider | None:
