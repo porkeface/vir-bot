@@ -567,6 +567,40 @@ class PorcupineWakeWordProvider(WakeWordProvider):
 # ============================================================================
 
 
+async def convert_audio(input_path: str, output_path: str,
+                        output_format: str = "ogg",
+                        ffmpeg_path: str = "ffmpeg") -> str | None:
+    """通过 ffmpeg 转换音频格式。成功返回输出路径，失败返回原始路径。"""
+    if output_format in ("wav", ""):
+        return input_path
+
+    if output_format == "ogg":
+        cmd = [ffmpeg_path, "-i", input_path, "-c:a", "libopus",
+               "-b:a", "64k", output_path, "-y"]
+    elif output_format == "mp3":
+        cmd = [ffmpeg_path, "-i", input_path, "-c:a", "libmp3lame",
+               "-b:a", "128k", output_path, "-y"]
+    else:
+        return input_path
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        await proc.wait()
+        if proc.returncode == 0:
+            logger.info(f"Audio converted: {input_path} → {output_path}")
+            return output_path
+        else:
+            logger.warning(f"ffmpeg conversion failed (exit code {proc.returncode})")
+            return input_path
+    except FileNotFoundError:
+        logger.warning("ffmpeg not found, sending original format")
+        return input_path
+
+
 def create_tts(config) -> TTSProvider | None:
     """TTS 工厂函数。优先级：mimo > cosyvoice2 > edge > piper"""
     if not config.enabled:
