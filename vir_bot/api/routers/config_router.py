@@ -304,23 +304,12 @@ async def get_config_options():
                     "name": d.name,
                 })
 
-    # Edge-TTS 常用中文音色
+    # MiMo TTS 音色
     tts_voices = [
-        {"id": "zh-CN-XiaoxiaoNeural", "name": "晓晓（女，温暖）"},
-        {"id": "zh-CN-XiaoyiNeural", "name": "晓伊（女，活泼）"},
-        {"id": "zh-CN-YunxiNeural", "name": "云希（男，阳光）"},
-        {"id": "zh-CN-YunjianNeural", "name": "云健（男，沉稳）"},
-        {"id": "zh-CN-YunxiaNeural", "name": "云夏（男，少年）"},
-        {"id": "zh-CN-XiaochenNeural", "name": "晓辰（女，知性）"},
-        {"id": "zh-CN-XiaohanNeural", "name": "晓涵（女，温柔）"},
-        {"id": "zh-CN-XiaomengNeural", "name": "晓梦（女，甜美）"},
-        {"id": "zh-CN-XiaomoNeural", "name": "晓墨（女，文艺）"},
-        {"id": "zh-CN-XiaoqiuNeural", "name": "晓秋（女，成熟）"},
-        {"id": "zh-CN-XiaorouNeural", "name": "晓柔（女，柔和）"},
-        {"id": "zh-CN-XiaoshuangNeural", "name": "晓双（女，童声）"},
-        {"id": "zh-CN-XiaoxuanNeural", "name": "晓萱（女，活泼）"},
-        {"id": "zh-CN-XiaoyanNeural", "name": "晓颜（女，优雅）"},
-        {"id": "zh-CN-XiaozhenNeural", "name": "晓甄（女，端庄）"},
+        {"id": "冰糖", "name": "冰糖（中文女声·温柔甜美）"},
+        {"id": "茉莉", "name": "茉莉（中文女声·清新自然）"},
+        {"id": "苏打", "name": "苏打（中文男声·阳光开朗）"},
+        {"id": "白桦", "name": "白桦（中文男声·沉稳磁性）"},
     ]
 
     # Embedding 模型选项
