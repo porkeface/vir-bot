@@ -245,17 +245,15 @@ class MessagePipeline:
                 metadata["expression"] = str(expression_path)
                 logger.debug(f"[Pipeline] 检测到表情: {expression_path.name}")
 
-        # 解析 [VOICE] 标记，决定是否合成语音
-        content, use_voice = _parse_voice_decision(response.content)
+        # 解析 [VOICE] 标记（兼容旧格式）
+        content, _ = _parse_voice_decision(response.content)
 
+        # 根据 voice_decision 决定是否合成语音
         voice_decision = getattr(self.voice_config, "voice_decision", "always")
         should_synthesize = (
             self.tts is not None
             and self.voice_config is not None
-            and (
-                voice_decision == "always"
-                or (voice_decision == "ai" and use_voice)
-            )
+            and voice_decision != "never"
         )
 
         voice_file = None
@@ -297,14 +295,6 @@ class MessagePipeline:
             chunk_count = 0
             timeout_seconds = 20  # 单个 chunk 超时
 
-            # 当 voice_mode=replace 且 TTS 开启时，流式不发文字（最后只发语音）
-            _suppress_text = (
-                self.tts is not None
-                and self.voice_config is not None
-                and getattr(self.voice_config, "voice_mode", "replace") == "replace"
-                and send_callback is not None
-            )
-
             logger.info("[Pipeline] 开始流式 AI 调用...")
             stream = self.ai.chat_stream(
                 messages=conversation,
@@ -327,7 +317,7 @@ class MessagePipeline:
                         nl_pos = buffer.find("\n")
                         line = buffer[:nl_pos].strip()
                         buffer = buffer[nl_pos + 1:]
-                        if line and not _suppress_text:
+                        if line:
                             # 流式发送时清理 [VOICE] 标记，避免用户看到
                             clean_line = line.replace("[VOICE]", "").strip()
                             if clean_line:
@@ -337,8 +327,8 @@ class MessagePipeline:
             except Exception as e:
                 logger.warning(f"[Pipeline] 流式读取异常: {e}")
 
-            # 发送剩余内容（清理 [VOICE] 标记，voice_mode=replace 时不发送）
-            if buffer.strip() and not _suppress_text:
+            # 发送剩余内容（清理 [VOICE] 标记）
+            if buffer.strip():
                 clean_buffer = buffer.strip().replace("[VOICE]", "").strip()
                 if clean_buffer:
                     await send_callback(
@@ -363,17 +353,15 @@ class MessagePipeline:
                     metadata["expression"] = str(expression_path)
                     logger.debug(f"[Pipeline] 流式输出检测到表情: {expression_path.name}")
 
-            # 解析 [VOICE] 标记，决定是否合成语音
-            content, use_voice = _parse_voice_decision(full_content)
+            # 解析 [VOICE] 标记（兼容旧格式）
+            content, _ = _parse_voice_decision(full_content)
 
+            # 根据 voice_decision 决定是否合成语音
             voice_decision = getattr(self.voice_config, "voice_decision", "always")
             should_synthesize = (
                 self.tts is not None
                 and self.voice_config is not None
-                and (
-                    voice_decision == "always"
-                    or (voice_decision == "ai" and use_voice)
-                )
+                and voice_decision != "never"
             )
 
             voice_file = None
@@ -392,12 +380,6 @@ class MessagePipeline:
 
             metadata["voice_file"] = voice_file
             metadata["use_voice"] = should_synthesize
-
-            # 如果文字被抑制但最终没有生成语音，回退发送文字
-            if _suppress_text and not should_synthesize and content.strip():
-                await send_callback(
-                    PlatformResponse(msg_id=msg.msg_id, content=content, reply=True)
-                )
 
             return PlatformResponse(
                 msg_id=msg.msg_id,
@@ -573,22 +555,6 @@ class MessagePipeline:
             personality_tags=ext.get("personality_tags", []),
         )
 
-        # 当 voice_decision == "ai" 时，追加语音决策指令
-        if hasattr(self, "voice_config") and self.voice_config and self.voice_config.voice_decision == "ai":
-            system_prompt += """
-
-当你想用语音回复用户时，在回复末尾加上 [VOICE] 标记。
-
-适合用语音的场景：
-- 情感表达（关心、安慰、开心、撒娇）
-- 日常问候和闲聊
-- 简短的回复（< 200 字）
-
-适合用文字的场景：
-- 代码、技术说明
-- 列表、表格
-- 长文（> 200 字）
-"""
 
         return system_prompt
 
