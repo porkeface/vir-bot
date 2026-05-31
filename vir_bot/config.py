@@ -232,9 +232,15 @@ class MCPConfig(BaseModel):
 
 
 class VoiceTTSConfig(BaseModel):
-    provider: str = "edge"  # edge | cosyvoice2
+    provider: str = "mimo"  # mimo | edge | cosyvoice2
     voice_id: str = "zh-CN-XiaoxiaoNeural"  # edge-tts 音色
     speed: float = 1.0
+    # MiMo TTS 专用配置
+    mimo_voice: str = "冰糖"  # MiMo 音色
+    mimo_style: str = ""  # 风格指令（空=从 personality 推断）
+    mimo_model: str = "mimo-v2.5-tts"  # MiMo 模型
+    ffmpeg_path: str = "ffmpeg"  # ffmpeg 路径
+    output_format: str = "ogg"  # 输出格式
     # CosyVoice2 专用配置
     model_dir: str = "pretrained_models/CosyVoice2-0.5B"
     voice_sample_path: str = ""  # 声音克隆样本路径（10s wav），留空则用 instruct2 模式
@@ -259,6 +265,8 @@ class VoiceWakeWordConfig(BaseModel):
 class VoiceConfig(BaseModel):
     enabled: bool = False
     voice_response: bool = True   # 是否用语音回复
+    voice_mode: str = "replace"   # replace | both | voice_only
+    voice_decision: str = "ai"    # always | ai | never
     tts: VoiceTTSConfig = Field(default_factory=VoiceTTSConfig)
     asr: VoiceASRConfig = Field(default_factory=VoiceASRConfig)
     wake_word: VoiceWakeWordConfig = Field(default_factory=VoiceWakeWordConfig)
