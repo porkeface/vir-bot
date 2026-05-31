@@ -128,25 +128,25 @@ class TestVoiceDecision:
 
 class TestStyleHint:
     def test_manual_style_priority(self):
-        config = MagicMock()
-        config.voice.tts.mimo_style = "用磁性的声音说话"
-        result = _build_style_hint(MagicMock(), config)
+        voice_config = MagicMock()
+        voice_config.tts.mimo_style = "用磁性的声音说话"
+        result = _build_style_hint(MagicMock(), voice_config)
         assert result == "用磁性的声音说话"
 
     def test_auto_from_personality(self):
-        config = MagicMock()
-        config.voice.tts.mimo_style = ""
+        voice_config = MagicMock()
+        voice_config.tts.mimo_style = ""
         character = MagicMock()
         character.personality = "温柔活泼"
-        result = _build_style_hint(character, config)
+        result = _build_style_hint(character, voice_config)
         assert "温柔活泼" in result
 
     def test_default_when_no_personality(self):
-        config = MagicMock()
-        config.voice.tts.mimo_style = ""
+        voice_config = MagicMock()
+        voice_config.tts.mimo_style = ""
         character = MagicMock()
         character.personality = ""
-        result = _build_style_hint(character, config)
+        result = _build_style_hint(character, voice_config)
         assert "温柔" in result
 
 

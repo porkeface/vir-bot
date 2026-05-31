@@ -182,10 +182,21 @@ class MessagePipeline:
             logger.debug(f"[Pipeline] 最后一条消息: {conversation[-1]}")
 
         # 流式输出：有回调时启用
+        # replace 语音模式下需要缓冲文本，等语音合成完成后再决定发送什么
+        voice_mode = getattr(self.voice_config, "voice_mode", "both") if self.voice_config else "both"
+        voice_decision = getattr(self.voice_config, "voice_decision", "always") if self.voice_config else "always"
+        buffer_mode = (
+            voice_mode == "replace"
+            and voice_decision != "never"
+            and self.tts is not None
+            and self.voice_config is not None
+        )
+
         if send_callback is not None:
             logger.info("[Pipeline] 尝试流式输出...")
             result = await self._process_streaming(
                 msg, conversation, system_prompt, tools_schema, send_callback,
+                buffer_mode=buffer_mode,
             )
             if result is not None:
                 logger.info("[Pipeline] 流式输出成功，异步更新记忆")
@@ -256,6 +267,9 @@ class MessagePipeline:
             and voice_decision != "never"
         )
 
+        # 语音模式
+        voice_mode = getattr(self.voice_config, "voice_mode", "both") if self.voice_config else "both"
+
         voice_file = None
         if should_synthesize:
             style = _build_style_hint(self.character, self.voice_config)
@@ -272,6 +286,7 @@ class MessagePipeline:
 
         metadata["voice_file"] = voice_file
         metadata["use_voice"] = should_synthesize
+        metadata["voice_mode"] = voice_mode
 
         return PlatformResponse(
             msg_id=msg.msg_id,
@@ -287,13 +302,17 @@ class MessagePipeline:
         system_prompt: str,
         tools_schema: list[dict],
         send_callback: Any,
+        *,
+        buffer_mode: bool = False,
     ) -> PlatformResponse | None:
-        """流式处理：逐句生成并发送。返回 None 表示回退到普通模式。"""
+        """流式处理：逐句生成并发送。返回 None 表示回退到普通模式。
+        buffer_mode=True 时不通过 callback 发送文本，改为缓冲（用于 replace 语音模式）。"""
         try:
             buffer = ""
             full_content = ""
             chunk_count = 0
             timeout_seconds = 20  # 单个 chunk 超时
+            buffered_lines: list[str] = []  # buffer_mode 下暂存文本行
 
             logger.info("[Pipeline] 开始流式 AI 调用...")
             stream = self.ai.chat_stream(
@@ -321,19 +340,25 @@ class MessagePipeline:
                             # 流式发送时清理 [VOICE] 标记，避免用户看到
                             clean_line = line.replace("[VOICE]", "").strip()
                             if clean_line:
-                                await send_callback(
-                                    PlatformResponse(msg_id=msg.msg_id, content=clean_line, reply=True)
-                                )
+                                if buffer_mode:
+                                    buffered_lines.append(clean_line)
+                                else:
+                                    await send_callback(
+                                        PlatformResponse(msg_id=msg.msg_id, content=clean_line, reply=True)
+                                    )
             except Exception as e:
                 logger.warning(f"[Pipeline] 流式读取异常: {e}")
 
-            # 发送剩余内容（清理 [VOICE] 标记）
+            # 处理剩余内容（清理 [VOICE] 标记）
             if buffer.strip():
                 clean_buffer = buffer.strip().replace("[VOICE]", "").strip()
                 if clean_buffer:
-                    await send_callback(
-                        PlatformResponse(msg_id=msg.msg_id, content=clean_buffer, reply=True)
-                    )
+                    if buffer_mode:
+                        buffered_lines.append(clean_buffer)
+                    else:
+                        await send_callback(
+                            PlatformResponse(msg_id=msg.msg_id, content=clean_buffer, reply=True)
+                        )
 
             logger.info(f"[Pipeline] 流式循环结束, chunks={chunk_count}, 总长度={len(full_content)}")
 
@@ -380,6 +405,24 @@ class MessagePipeline:
 
             metadata["voice_file"] = voice_file
             metadata["use_voice"] = should_synthesize
+
+            # buffer_mode：语音成功则只发语音（丢弃缓冲文本），语音失败则补发文本
+            voice_mode = getattr(self.voice_config, "voice_mode", "both") if self.voice_config else "both"
+            metadata["voice_mode"] = voice_mode
+            if buffer_mode:
+                if voice_file:
+                    # 语音合成成功 → 不发文本，只发语音
+                    logger.info(f"[Pipeline] replace 模式: 语音合成成功，丢弃 {len(buffered_lines)} 条缓冲文本")
+                    metadata["already_streamed"] = True  # 阻止 adapter 再发文本
+                else:
+                    # 语音合成失败 → 补发缓冲的文本行，清掉 voice_file 防止 adapter 重复发
+                    logger.info(f"[Pipeline] replace 模式: 语音合成失败，补发 {len(buffered_lines)} 条缓冲文本")
+                    for line in buffered_lines:
+                        await send_callback(
+                            PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
+                        )
+                    metadata["already_streamed"] = True  # 文本已通过 callback 发送
+                    metadata["voice_file"] = None  # 清掉，防止 adapter 再发语音
 
             return PlatformResponse(
                 msg_id=msg.msg_id,
