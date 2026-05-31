@@ -137,6 +137,17 @@ class PlatformAdapter(ABC):
             await self.send_message(response)
             return
 
+        # 判断是否为 voice both 模式：文字分片发送，语音最后单独发一次
+        voice_file = response.metadata.get("voice_file")
+        voice_mode = response.metadata.get("voice_mode") or getattr(self, "voice_mode", None)
+        is_voice_both = voice_file and voice_mode == "both"
+
+        # both 模式下，分片不携带 voice metadata，避免每个分片重复发语音
+        chunk_metadata = dict(response.metadata)
+        if is_voice_both:
+            chunk_metadata.pop("voice_file", None)
+            chunk_metadata.pop("voice_mode", None)
+
         logger.info(f"[{self.platform.value}] AI 回复拆分为 {len(chunks)} 条")
         for i, chunk in enumerate(chunks):
             chunk_response = PlatformResponse(
@@ -144,13 +155,23 @@ class PlatformAdapter(ABC):
                 content=chunk,
                 reply=response.reply,
                 quote=response.quote and i == 0,
-                metadata=response.metadata,
+                metadata=chunk_metadata,
             )
             logger.info(f"[{self.platform.value}] [{i+1}/{len(chunks)}] {chunk[:80]}")
             await self.send_message(chunk_response)
             if i < len(chunks) - 1:
                 delay = get_split_delay_ms(self._split_config)
                 await asyncio.sleep(delay / 1000.0)
+
+        # both 模式：所有文字分片发完后，单独发送一次语音
+        if is_voice_both:
+            voice_response = PlatformResponse(
+                msg_id=response.msg_id,
+                content="",
+                reply=True,
+                metadata={"voice_file": voice_file, "chat_id": response.metadata.get("chat_id")},
+            )
+            await self.send_message(voice_response)
 
     async def _send_loop(self) -> None:
         """发送循环"""

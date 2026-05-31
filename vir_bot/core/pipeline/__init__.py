@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from vir_bot.core.mcp import ToolRegistry
     from vir_bot.core.memory.memory_manager import MemoryManager
 
+from vir_bot.modules.voice import _parse_voice_decision, _build_style_hint, convert_audio
 from vir_bot.utils.logger import logger
 
 
@@ -244,15 +245,41 @@ class MessagePipeline:
                 metadata["expression"] = str(expression_path)
                 logger.debug(f"[Pipeline] 检测到表情: {expression_path.name}")
 
-        # TTS 合成语音回复
-        if self.tts and self.voice_config and getattr(self.voice_config, "voice_response", False):
-            voice_file = await self._synthesize_tts(response.content)
-            if voice_file:
-                metadata["voice_file"] = voice_file
+        # 解析 [VOICE] 标记，决定是否合成语音
+        content, use_voice = _parse_voice_decision(response.content)
+
+        voice_decision = getattr(self.voice_config, "voice_decision", "always")
+        should_synthesize = (
+            self.tts is not None
+            and self.voice_config is not None
+            and (
+                voice_decision == "always"
+                or (voice_decision == "ai" and use_voice)
+            )
+        )
+
+        voice_file = None
+        if should_synthesize:
+            style = _build_style_hint(self.character, self.config)
+            voice_file = await self._synthesize_tts(content, style)
+            if voice_file and self.voice_config.tts.output_format != "wav":
+                ogg_path = voice_file.rsplit(".", 1)[0] + ".ogg"
+                converted = await convert_audio(
+                    voice_file, ogg_path,
+                    self.voice_config.tts.output_format,
+                    self.voice_config.tts.ffmpeg_path,
+                )
+                if converted:
+                    voice_file = converted
+
+        metadata["voice_file"] = voice_file
+        metadata["use_voice"] = should_synthesize
+        # 更新 content 为清理后的文本
+        response = response.model_copy(update={"content": content})
 
         return PlatformResponse(
             msg_id=msg.msg_id,
-            content=response.content,
+            content=content,
             reply=True,
             metadata=metadata,
         )
@@ -325,15 +352,39 @@ class MessagePipeline:
                     metadata["expression"] = str(expression_path)
                     logger.debug(f"[Pipeline] 流式输出检测到表情: {expression_path.name}")
 
-            # TTS 合成语音回复
-            if self.tts and self.voice_config and getattr(self.voice_config, "voice_response", False):
-                voice_file = await self._synthesize_tts(full_content)
-                if voice_file:
-                    metadata["voice_file"] = voice_file
+            # 解析 [VOICE] 标记，决定是否合成语音
+            content, use_voice = _parse_voice_decision(full_content)
+
+            voice_decision = getattr(self.voice_config, "voice_decision", "always")
+            should_synthesize = (
+                self.tts is not None
+                and self.voice_config is not None
+                and (
+                    voice_decision == "always"
+                    or (voice_decision == "ai" and use_voice)
+                )
+            )
+
+            voice_file = None
+            if should_synthesize:
+                style = _build_style_hint(self.character, self.config)
+                voice_file = await self._synthesize_tts(content, style)
+                if voice_file and self.voice_config.tts.output_format != "wav":
+                    ogg_path = voice_file.rsplit(".", 1)[0] + ".ogg"
+                    converted = await convert_audio(
+                        voice_file, ogg_path,
+                        self.voice_config.tts.output_format,
+                        self.voice_config.tts.ffmpeg_path,
+                    )
+                    if converted:
+                        voice_file = converted
+
+            metadata["voice_file"] = voice_file
+            metadata["use_voice"] = should_synthesize
 
             return PlatformResponse(
                 msg_id=msg.msg_id,
-                content=full_content.strip(),
+                content=content,
                 reply=True,
                 metadata=metadata,
             )
@@ -429,26 +480,19 @@ class MessagePipeline:
 
         return await self._process_text_message(msg, send_callback)
 
-    async def _synthesize_tts(self, text: str) -> str | None:
-        """将文字合成为语音文件，返回文件路径。"""
-        import time as _time
-
+    async def _synthesize_tts(self, text: str, style_hint: str = "") -> str | None:
+        """合成语音"""
         try:
-            logger.info(f"[Pipeline] 开始 TTS 合成, 文本长度: {len(text)}")
-            cache_dir = Path("./data/cache")
-            cache_dir.mkdir(parents=True, exist_ok=True)
-            output_path = str(cache_dir / f"voice_{int(_time.time())}_{id(text) % 10000}.mp3")
+            import hashlib
+            import time as _time
 
-            result = await self.tts.synthesize(text, output_path)
-            if result and Path(result).exists():
-                file_size = Path(result).stat().st_size
-                logger.info(f"[Pipeline] TTS 合成完成: {result} ({file_size} bytes)")
-                return result
-            else:
-                logger.warning(f"[Pipeline] TTS 合成返回空结果: {result}")
+            text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+            output_path = f"./data/cache/voice_{int(_time.time())}_{text_hash}.wav"
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            return await self.tts.synthesize(text, output_path, style_hint=style_hint)
         except Exception as e:
-            logger.error(f"[Pipeline] TTS 合成失败: {e}")
-        return None
+            logger.error(f"TTS synthesis failed: {e}")
+            return None
 
     async def _detect_emotion_from_context(self, msg: PlatformMessage) -> str:
         """根据上下文推断表情包的情绪分类"""
@@ -506,11 +550,30 @@ class MessagePipeline:
         from vir_bot.core.character import build_system_prompt
 
         ext = self.character.extensions
-        return build_system_prompt(
+        system_prompt = build_system_prompt(
             card=self.character,
             voice_style=ext.get("voice_style", ""),
             personality_tags=ext.get("personality_tags", []),
         )
+
+        # 当 voice_decision == "ai" 时，追加语音决策指令
+        if hasattr(self, "voice_config") and self.voice_config and self.voice_config.voice_decision == "ai":
+            system_prompt += """
+
+当你想用语音回复用户时，在回复末尾加上 [VOICE] 标记。
+
+适合用语音的场景：
+- 情感表达（关心、安慰、开心、撒娇）
+- 日常问候和闲聊
+- 简短的回复（< 200 字）
+
+适合用文字的场景：
+- 代码、技术说明
+- 列表、表格
+- 长文（> 200 字）
+"""
+
+        return system_prompt
 
     async def _handle_tool_calls(
         self,

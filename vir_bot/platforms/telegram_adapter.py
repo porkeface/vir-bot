@@ -43,7 +43,7 @@ class TelegramAdapter(PlatformAdapter):
 
     async def connect(self) -> None:
         from telegram.request import HTTPXRequest
-        proxy_url = getattr(self.config, 'proxy', None)
+        proxy_url = getattr(self.config, 'proxy', None) or "http://127.0.0.1:7890"
         request = HTTPXRequest(
             connect_timeout=30,
             read_timeout=30,
@@ -427,24 +427,32 @@ class TelegramAdapter(PlatformAdapter):
             if expression_path:
                 await self._send_photo(chat_id, expression_path)
 
-            # 发送语音回复
+            # 语音发送逻辑
             voice_file = response.metadata.get("voice_file")
-            if voice_file:
-                logger.info(f"[Telegram] 准备发送语音 -> chat_id={chat_id}, file={voice_file}")
-                await self._send_voice(chat_id, voice_file)
+            use_voice = bool(voice_file)
+
+            if use_voice and voice_file:
+                # voice_mode 优先从 metadata 读取，其次从 config 读取，默认 "replace"
+                voice_mode = response.metadata.get("voice_mode") or getattr(self.config, "voice_mode", "replace")
+                logger.info(f"[Telegram] 语音模式={voice_mode}, chat_id={chat_id}, file={voice_file}")
+
+                if voice_mode == "both":
+                    # 先发文字
+                    if response.content:
+                        await self._send_text(chat_id, response.content)
+                    # 再发语音
+                    await self._send_voice(chat_id, voice_file)
+                elif voice_mode == "voice_only":
+                    # 只发语音，不发文字
+                    await self._send_voice(chat_id, voice_file)
+                else:
+                    # replace 模式：语音替换文字（向后兼容）
+                    await self._send_voice(chat_id, voice_file)
                 return
 
-            # 发送文字消息
+            # 纯文字回复
             if response.content:
-                kwargs = {
-                    "chat_id": int(chat_id),
-                    "text": response.content,
-                }
-                if self.config.parse_mode:
-                    kwargs["parse_mode"] = self.config.parse_mode
-
-                await self._app.bot.send_message(**kwargs)
-                logger.info(f"[Telegram] 发送消息 -> {chat_id}: {response.content[:100]}")
+                await self._send_text(chat_id, response.content)
         except Exception as e:
             logger.error(f"[Telegram] 发送失败: {e}")
 
@@ -488,6 +496,18 @@ class TelegramAdapter(PlatformAdapter):
             logger.info(f"[Telegram] 发送表情 -> {chat_id}: {path.name}")
         except Exception as e:
             logger.error(f"[Telegram] 发送表情失败: {e}")
+
+    async def _send_text(self, chat_id: str, content: str) -> None:
+        """发送文字消息"""
+        kwargs = {
+            "chat_id": int(chat_id),
+            "text": content,
+        }
+        if self.config.parse_mode:
+            kwargs["parse_mode"] = self.config.parse_mode
+
+        await self._app.bot.send_message(**kwargs)
+        logger.info(f"[Telegram] 发送消息 -> {chat_id}: {content[:100]}")
 
     async def _send_voice(self, chat_id: str, voice_path: str) -> None:
         """发送语音消息"""

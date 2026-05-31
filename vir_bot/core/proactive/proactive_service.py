@@ -30,9 +30,13 @@ class ProactiveService:
         character_card: Any,
         config: Any,
         platform_adapters: dict | None = None,
+        tts: Any | None = None,
+        voice_config: Any | None = None,
     ):
         self._config = config.proactive
         self._platform_adapters = platform_adapters or {}
+        self._tts = tts
+        self._voice_config = voice_config
         self._running = False
         self._task = None
         self._fact_task = None
@@ -381,19 +385,45 @@ class ProactiveService:
             logger.info(f"[v4] 无平台: {message}")
             return
 
+        # TTS 合成（在发送前统一处理）
+        voice_file = None
+        use_voice = False
+        if self._tts and self._voice_config and self._voice_config.voice_response:
+            voice_file = await self._synthesize_tts(message)
+            use_voice = voice_file is not None
+
         for name, adapter in self._platform_adapters.items():
             target = self._targets.get(name, {})
             try:
+                metadata = {**target, "voice_file": voice_file, "use_voice": use_voice}
                 if hasattr(adapter, "send_proactive_message"):
-                    await adapter.send_proactive_message(message, target)
+                    await adapter.send_proactive_message(message, target, voice_file=voice_file)
                     logger.info(f"[v4] 已通过 {name} 发送")
                 elif hasattr(adapter, "send_message"):
                     from vir_bot.core.pipeline import PlatformResponse
-                    response = PlatformResponse(msg_id="", content=message, metadata=target)
+                    response = PlatformResponse(msg_id="", content=message, metadata=metadata)
                     await adapter.send_message(response)
                     logger.info(f"[v4] 已通过 {name} 发送")
             except Exception as e:
                 logger.error(f"[v4] {name} 发送失败: {e}")
+
+    async def _synthesize_tts(self, text: str) -> str | None:
+        """合成语音，返回音频文件路径"""
+        try:
+            import hashlib
+            import time as _time
+            from pathlib import Path as _Path
+
+            text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+            output_path = f"./data/cache/proactive_{int(_time.time())}_{text_hash}.wav"
+            _Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            result = await self._tts.synthesize(text, output_path)
+            if result:
+                logger.info(f"[v4] TTS 合成完成: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"[v4] TTS 合成失败: {e}")
+            return None
 
     async def run_once(self) -> None:
         """手动触发一次主动消息流程（供 API 调用）"""
