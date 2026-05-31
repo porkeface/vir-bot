@@ -104,6 +104,7 @@ def build_system_prompt(
     voice_style: str = "",
     personality_tags: list[str] | None = None,
     extra_context: str = "",
+    voice_preference: str = "",
 ) -> str:
     """
     从角色卡构建 System Prompt。
@@ -159,6 +160,10 @@ def build_system_prompt(
         style_parts = [f"{k}：{v}" for k, v in response_style.items() if isinstance(v, str)]
         if style_parts:
             parts.append("说话方式：" + "；".join(style_parts))
+
+    # 语音偏好指引（仅 ai 模式注入）
+    if voice_preference:
+        parts.append(voice_preference)
 
     # 通用消息格式指令（所有角色统一，不写在角色卡里）
     parts.append(

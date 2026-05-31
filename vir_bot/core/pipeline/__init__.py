@@ -182,21 +182,10 @@ class MessagePipeline:
             logger.debug(f"[Pipeline] 最后一条消息: {conversation[-1]}")
 
         # 流式输出：有回调时启用
-        # replace 语音模式下需要缓冲文本，等语音合成完成后再决定发送什么
-        voice_mode = getattr(self.voice_config, "voice_mode", "both") if self.voice_config else "both"
-        voice_decision = getattr(self.voice_config, "voice_decision", "always") if self.voice_config else "always"
-        buffer_mode = (
-            voice_mode == "replace"
-            and voice_decision != "never"
-            and self.tts is not None
-            and self.voice_config is not None
-        )
-
         if send_callback is not None:
             logger.info("[Pipeline] 尝试流式输出...")
             result = await self._process_streaming(
                 msg, conversation, system_prompt, tools_schema, send_callback,
-                buffer_mode=buffer_mode,
             )
             if result is not None:
                 logger.info("[Pipeline] 流式输出成功，异步更新记忆")
@@ -256,16 +245,30 @@ class MessagePipeline:
                 metadata["expression"] = str(expression_path)
                 logger.debug(f"[Pipeline] 检测到表情: {expression_path.name}")
 
-        # 解析 [VOICE] 标记（兼容旧格式）
-        content, _ = _parse_voice_decision(response.content)
+        # 解析 [VOICE] 标记
+        from vir_bot.modules.voice import analyze_voice_suitability
+
+        content, use_voice_tag = _parse_voice_decision(response.content)
 
         # 根据 voice_decision 决定是否合成语音
         voice_decision = getattr(self.voice_config, "voice_decision", "always")
-        should_synthesize = (
-            self.tts is not None
-            and self.voice_config is not None
-            and voice_decision != "never"
-        )
+        if voice_decision == "never":
+            should_synthesize = False
+        elif voice_decision == "always":
+            should_synthesize = self.tts is not None and self.voice_config is not None
+        elif voice_decision == "ai":
+            if self.tts is None or self.voice_config is None:
+                should_synthesize = False
+            elif use_voice_tag:
+                # AI 选了语音 → 内容安全兜底
+                suitable, reason = analyze_voice_suitability(content)
+                should_synthesize = suitable
+                if not suitable:
+                    logger.info(f"[Pipeline] AI 选了语音但内容不适合 ({reason})，降级为文本")
+            else:
+                should_synthesize = False
+        else:
+            should_synthesize = False
 
         # 语音模式
         voice_mode = getattr(self.voice_config, "voice_mode", "both") if self.voice_config else "both"
@@ -302,19 +305,38 @@ class MessagePipeline:
         system_prompt: str,
         tools_schema: list[dict],
         send_callback: Any,
-        *,
-        buffer_mode: bool = False,
     ) -> PlatformResponse | None:
         """流式处理：逐句生成并发送。返回 None 表示回退到普通模式。
-        buffer_mode=True 时不通过 callback 发送文本，改为缓冲（用于 replace 语音模式）。"""
+
+        AI 决策模式下，流式开始时缓冲文本等待 [VOICE] 标记：
+        - 检测到首行 [VOICE] → 语音模式，继续缓冲，结束后合成语音
+        - 未检测到 → 文本模式，释放缓冲，即时流式发送
+        - 2 秒超时 → 降级为文本模式
+        """
+        from vir_bot.modules.voice import analyze_voice_suitability
+
+        voice_decision = getattr(self.voice_config, "voice_decision", "always") if self.voice_config else "always"
+        voice_mode = getattr(self.voice_config, "voice_mode", "replace") if self.voice_config else "replace"
+
+        # 只有 ai 模式才需要动态检测；always/never 走固定逻辑
+        detect_voice = voice_decision == "ai" and self.tts is not None and self.voice_config is not None
+        # always 模式：始终缓冲等语音；never 模式：始终即时发文本
+        always_buffer = voice_decision == "always" and self.tts is not None and self.voice_config is not None
+
         try:
             buffer = ""
             full_content = ""
             chunk_count = 0
             timeout_seconds = 20  # 单个 chunk 超时
-            buffered_lines: list[str] = []  # buffer_mode 下暂存文本行
 
-            logger.info("[Pipeline] 开始流式 AI 调用...")
+            # 动态检测状态
+            decision_made = not detect_voice and not always_buffer  # 非 ai/always 模式直接标记已决策
+            decided_voice = always_buffer  # always 模式默认走语音
+            buffered_lines: list[str] = []
+            stream_start = time.time()
+            VOICE_DECISION_TIMEOUT = 2.0  # 最多等 2 秒
+
+            logger.info(f"[Pipeline] 开始流式 AI 调用... (voice_decision={voice_decision})")
             stream = self.ai.chat_stream(
                 messages=conversation,
                 system=system_prompt,
@@ -331,16 +353,52 @@ class MessagePipeline:
                     buffer += chunk.delta
                     full_content += chunk.delta
 
+                    # 决策阶段：检测首行 [VOICE] 标记
+                    if not decision_made and "\n" in buffer:
+                        first_line_end = buffer.find("\n")
+                        first_line = buffer[:first_line_end].strip()
+                        if first_line == "[VOICE]":
+                            decision_made = True
+                            decided_voice = True
+                            # 跳过 [VOICE] 行，保留剩余内容
+                            buffer = buffer[first_line_end + 1:].lstrip("\n")
+                            logger.info("[Pipeline] 流式决策: AI 选择语音模式")
+                        else:
+                            # 首行不是 [VOICE]，AI 选择了文本
+                            decision_made = True
+                            decided_voice = False
+                            # 释放已缓冲的行
+                            for line in buffered_lines:
+                                await send_callback(
+                                    PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
+                                )
+                            buffered_lines.clear()
+                            logger.info("[Pipeline] 流式决策: AI 选择文本模式")
+
+                    # 超时降级
+                    if not decision_made:
+                        elapsed = time.time() - stream_start
+                        if elapsed > VOICE_DECISION_TIMEOUT:
+                            decision_made = True
+                            decided_voice = False
+                            for line in buffered_lines:
+                                await send_callback(
+                                    PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
+                                )
+                            buffered_lines.clear()
+                            logger.info(f"[Pipeline] 流式决策: 超时降级为文本模式 ({elapsed:.1f}s)")
+
                     # 只按换行拆分（AI 被引导用换行分隔消息）
                     while "\n" in buffer:
                         nl_pos = buffer.find("\n")
                         line = buffer[:nl_pos].strip()
                         buffer = buffer[nl_pos + 1:]
                         if line:
-                            # 流式发送时清理 [VOICE] 标记，避免用户看到
                             clean_line = line.replace("[VOICE]", "").strip()
                             if clean_line:
-                                if buffer_mode:
+                                if not decision_made:
+                                    buffered_lines.append(clean_line)
+                                elif decided_voice:
                                     buffered_lines.append(clean_line)
                                 else:
                                     await send_callback(
@@ -349,11 +407,13 @@ class MessagePipeline:
             except Exception as e:
                 logger.warning(f"[Pipeline] 流式读取异常: {e}")
 
-            # 处理剩余内容（清理 [VOICE] 标记）
+            # 处理剩余内容
             if buffer.strip():
                 clean_buffer = buffer.strip().replace("[VOICE]", "").strip()
                 if clean_buffer:
-                    if buffer_mode:
+                    if not decision_made:
+                        buffered_lines.append(clean_buffer)
+                    elif decided_voice:
                         buffered_lines.append(clean_buffer)
                     else:
                         await send_callback(
@@ -365,30 +425,34 @@ class MessagePipeline:
             if not full_content.strip():
                 return None
 
-            logger.info(f"[Pipeline] 流式输出完成, 总长度: {len(full_content)}")
+            # 解析 [VOICE] 标记（兼容内联格式）
+            content, use_voice_tag = _parse_voice_decision(full_content)
+
+            # 内容安全兜底：即使 AI 选了语音，内容不适合就降级为文本
+            if decided_voice and detect_voice:
+                suitable, reason = analyze_voice_suitability(content)
+                if not suitable:
+                    logger.info(f"[Pipeline] 内容不适合语音 ({reason})，降级为文本")
+                    decided_voice = False
+                    # 补发缓冲的文本行
+                    for line in buffered_lines:
+                        await send_callback(
+                            PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
+                        )
+                    buffered_lines.clear()
 
             # 检测情绪并获取表情
             metadata = {"already_streamed": True}
-            # 透传平台原始数据中的 chat_id，供语音/表情发送使用
             if "chat_id" in msg.raw_data:
                 metadata["chat_id"] = msg.raw_data["chat_id"]
             if self.expressions:
-                expression_path = await self.expressions.get_expression_async(text=full_content)
+                expression_path = await self.expressions.get_expression_async(text=content)
                 if expression_path:
                     metadata["expression"] = str(expression_path)
                     logger.debug(f"[Pipeline] 流式输出检测到表情: {expression_path.name}")
 
-            # 解析 [VOICE] 标记（兼容旧格式）
-            content, _ = _parse_voice_decision(full_content)
-
-            # 根据 voice_decision 决定是否合成语音
-            voice_decision = getattr(self.voice_config, "voice_decision", "always")
-            should_synthesize = (
-                self.tts is not None
-                and self.voice_config is not None
-                and voice_decision != "never"
-            )
-
+            # 语音合成
+            should_synthesize = decided_voice
             voice_file = None
             if should_synthesize:
                 style = _build_style_hint(self.character, self.voice_config)
@@ -405,24 +469,20 @@ class MessagePipeline:
 
             metadata["voice_file"] = voice_file
             metadata["use_voice"] = should_synthesize
-
-            # buffer_mode：语音成功则只发语音（丢弃缓冲文本），语音失败则补发文本
-            voice_mode = getattr(self.voice_config, "voice_mode", "both") if self.voice_config else "both"
             metadata["voice_mode"] = voice_mode
-            if buffer_mode:
+
+            if decided_voice:
                 if voice_file:
-                    # 语音合成成功 → 不发文本，只发语音
-                    logger.info(f"[Pipeline] replace 模式: 语音合成成功，丢弃 {len(buffered_lines)} 条缓冲文本")
-                    metadata["already_streamed"] = True  # 阻止 adapter 再发文本
+                    # 语音成功 → 只发语音，丢弃缓冲文本
+                    logger.info(f"[Pipeline] 语音合成成功，丢弃 {len(buffered_lines)} 条缓冲文本")
                 else:
-                    # 语音合成失败 → 补发缓冲的文本行，清掉 voice_file 防止 adapter 重复发
-                    logger.info(f"[Pipeline] replace 模式: 语音合成失败，补发 {len(buffered_lines)} 条缓冲文本")
+                    # 语音失败 → 补发缓冲文本
+                    logger.info(f"[Pipeline] TTS 失败，降级为文本发送 ({len(buffered_lines)} 条)")
                     for line in buffered_lines:
                         await send_callback(
                             PlatformResponse(msg_id=msg.msg_id, content=line, reply=True)
                         )
-                    metadata["already_streamed"] = True  # 文本已通过 callback 发送
-                    metadata["voice_file"] = None  # 清掉，防止 adapter 再发语音
+                    metadata["voice_file"] = None
 
             return PlatformResponse(
                 msg_id=msg.msg_id,
@@ -584,20 +644,62 @@ class MessagePipeline:
             system_prompt = self._build_system_prompt()
             conversation = self.memory.get_context_messages(n=20)
 
+        # 检测用户语音偏好并注入 system prompt
+        preference = self._detect_voice_preference(conversation)
+        if preference:
+            hint = "\n用户最近表示想听你用语音说话。" if preference == "voice" else "\n用户最近表示想看你打字。"
+            system_prompt = system_prompt + hint
+
         conversation.append({"role": "user", "content": msg.content})
         return system_prompt, conversation
+
+    @staticmethod
+    def _detect_voice_preference(conversation: list[dict]) -> str | None:
+        """从最近的用户消息中检测语音偏好。返回 'voice' | 'text' | None。"""
+        recent = [m for m in conversation[-6:] if m.get("role") == "user"][-3:]
+        for m in recent:
+            content = m.get("content", "")
+            if any(kw in content for kw in ("发语音", "语音说", "说给我听", "用语音")):
+                return "voice"
+            if any(kw in content for kw in ("打字", "文字", "别发语音", "看文字")):
+                return "text"
+        return None
 
     def _build_system_prompt(self) -> str:
         """从角色卡构建系统提示词"""
         from vir_bot.core.character import build_system_prompt
 
         ext = self.character.extensions
+
+        # AI 语音决策指引（仅 ai 模式注入）
+        voice_preference = ""
+        voice_decision = getattr(self.voice_config, "voice_decision", "always") if self.voice_config else "always"
+        if voice_decision == "ai":
+            voice_preference = (
+                "关于语音和文字的选择——你有一种直觉，像真人朋友聊天时的感觉：\n"
+                "大部分时候你习惯打字，这是你的默认状态。但有些时刻，你会觉得"这句话用语音说出来更好"：\n"
+                "- 你在撒娇、安慰、表达开心或者带点小情绪的时候，声音比文字更有温度\n"
+                "- 你想说的内容很短很随意，两三句话的事，打字反而显得正式\n"
+                "- 你犹豫了一下、或者想用反问/感叹的语气，文字很难传递那个味道\n"
+                "- 你就是突然想发语音了，没有特别的理由，就像人有时候就是不想打字\n"
+                "\n"
+                "反过来，你会坚持打字的情况：\n"
+                "- 内容比较长，或者有条理的信息（对方需要回看的那种）\n"
+                "- 你发了两三条语音了，再发语音就像刷屏了\n"
+                "- 对方明确说了想看文字或者想听语音，尊重对方的偏好\n"
+                "\n"
+                "用法：当你决定这条回复用语音时，在回复的最开头单独放一行标记：\n"
+                "[VOICE]\n"
+                "然后空一行再写你要说的内容。不要在其他地方提这个标记，它只是一个内部信号。\n"
+                "如果你决定用文字，就像平时一样回复，什么都不用加。"
+            )
+
         system_prompt = build_system_prompt(
             card=self.character,
             voice_style=ext.get("voice_style", ""),
             personality_tags=ext.get("personality_tags", []),
+            voice_preference=voice_preference,
         )
-
 
         return system_prompt
 

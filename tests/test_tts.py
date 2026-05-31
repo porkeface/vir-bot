@@ -10,6 +10,7 @@ from vir_bot.modules.voice import (
     _parse_voice_decision,
     _build_style_hint,
     convert_audio,
+    analyze_voice_suitability,
 )
 
 
@@ -119,6 +120,82 @@ class TestVoiceDecision:
         content, use_voice = _parse_voice_decision("")
         assert use_voice is False
         assert content == ""
+
+    def test_parse_first_line_voice_tag(self):
+        """首行独立 [VOICE] 标记"""
+        content, use_voice = _parse_voice_decision("[VOICE]\n\n今天心情超好呀～")
+        assert use_voice is True
+        assert "今天心情超好呀" in content
+        assert "[VOICE]" not in content
+
+    def test_parse_first_line_voice_no_blank(self):
+        """首行 [VOICE] 后直接跟内容（无空行）"""
+        content, use_voice = _parse_voice_decision("[VOICE]\n嘿嘿刚刚看到一个视频")
+        assert use_voice is True
+        assert "嘿嘿" in content
+
+    def test_parse_first_line_voice_empty_after(self):
+        """首行 [VOICE] 但后面为空 → 不算语音"""
+        content, use_voice = _parse_voice_decision("[VOICE]\n\n")
+        assert use_voice is False
+
+    def test_parse_inline_voice_backward_compat(self):
+        """内联 [VOICE] 向后兼容"""
+        content, use_voice = _parse_voice_decision("今天心情超好呀 [VOICE]\n嘿嘿")
+        assert use_voice is True
+        assert "[VOICE]" not in content
+
+
+# ============================================================================
+# 内容语音适合性分析
+# ============================================================================
+
+
+class TestVoiceSuitability:
+    def test_suitable_short_text(self):
+        suitable, reason = analyze_voice_suitability("今天心情超好呀～")
+        assert suitable is True
+        assert reason == "suitable"
+
+    def test_not_suitable_code_block(self):
+        suitable, reason = analyze_voice_suitability("看这段代码\n```python\nprint('hi')\n```")
+        assert suitable is False
+        assert reason == "contains_code"
+
+    def test_not_suitable_inline_code(self):
+        suitable, reason = analyze_voice_suitability("用 `print()` 函数")
+        assert suitable is False
+        assert reason == "contains_code"
+
+    def test_not_suitable_list(self):
+        suitable, reason = analyze_voice_suitability("步骤：\n- 第一步\n- 第二步")
+        assert suitable is False
+        assert reason == "contains_list"
+
+    def test_not_suitable_numbered_list(self):
+        suitable, reason = analyze_voice_suitability("步骤：\n1. 第一步\n2. 第二步")
+        assert suitable is False
+        assert reason == "contains_numbered_list"
+
+    def test_not_suitable_url(self):
+        suitable, reason = analyze_voice_suitability("看看这个 https://example.com")
+        assert suitable is False
+        assert reason == "contains_url"
+
+    def test_not_suitable_table(self):
+        suitable, reason = analyze_voice_suitability("| 名字 | 年龄 |\n| 小明 | 18 |")
+        assert suitable is False
+        assert reason == "contains_table"
+
+    def test_not_suitable_too_long(self):
+        suitable, reason = analyze_voice_suitability("哈哈" * 200)
+        assert suitable is False
+        assert reason == "too_long"
+
+    def test_suitable_medium_text(self):
+        text = "嘿嘿刚刚看到一个超搞笑的视频，笑死我了哈哈，你知道吗那个小猫居然会跳舞"
+        suitable, reason = analyze_voice_suitability(text)
+        assert suitable is True
 
 
 # ============================================================================

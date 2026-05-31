@@ -582,11 +582,67 @@ class PorcupineWakeWordProvider(WakeWordProvider):
 
 
 def _parse_voice_decision(content: str) -> tuple[str, bool]:
-    """解析 LLM 回复中的 [VOICE] 标记。返回 (清理后文本, 是否使用语音)。"""
+    """解析 LLM 回复中的 [VOICE] 标记。
+
+    支持两种格式：
+    1. 首行独立标记：[VOICE]\\n\\n内容...
+    2. 内联标记（向后兼容）：内容 [VOICE]
+
+    返回 (清理后文本, 是否使用语音)。
+    """
+    stripped = content.lstrip()
+
+    # 格式1：首行 [VOICE]（独占一行）
+    if stripped.startswith("[VOICE]"):
+        rest = stripped[7:].lstrip("\n")
+        clean = re.sub(r"\n{3,}", "\n\n", rest).strip()
+        if clean:  # 标记后面有实际内容
+            return clean, True
+        # [VOICE] 后面没有实际内容 → 不算语音
+        return "", False
+
+    # 格式2：内联 [VOICE]（向后兼容）
     use_voice = "[VOICE]" in content
     clean_content = content.replace("[VOICE]", "").strip()
     clean_content = re.sub(r"\n{3,}", "\n\n", clean_content)
     return clean_content, use_voice
+
+
+def analyze_voice_suitability(content: str) -> tuple[bool, str]:
+    """分析内容是否适合语音朗读。
+
+    返回 (是否适合, 原因)。
+    硬排除：代码、列表、链接、表格、过长。
+    """
+    # 含代码块或行内代码
+    if re.search(r"```[\s\S]*?```", content) or re.search(r"`[^`]+`", content):
+        return False, "contains_code"
+
+    # 含列表
+    if re.search(r"^[\s]*[-*+]\s", content, re.MULTILINE):
+        return False, "contains_list"
+    if re.search(r"^\s*\d+[.)]\s", content, re.MULTILINE):
+        return False, "contains_numbered_list"
+
+    # 含链接
+    if re.search(r"https?://\S+", content):
+        return False, "contains_url"
+
+    # 含表格
+    if re.search(r"\|.*\|.*\|", content):
+        return False, "contains_table"
+
+    # 大量格式符号
+    format_chars = sum(1 for c in content if c in "|{}[]#<>")
+    if len(content) > 0 and format_chars > len(content) * 0.05:
+        return False, "too_formatted"
+
+    # 过长
+    clean_text = re.sub(r"[^\w\s]", "", content)
+    if len(clean_text) > 300:
+        return False, "too_long"
+
+    return True, "suitable"
 
 
 def _build_style_hint(character, voice_config) -> str:
