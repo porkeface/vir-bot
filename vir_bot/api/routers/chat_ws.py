@@ -1,14 +1,21 @@
 """WebSocket 聊天端点"""
 from __future__ import annotations
 
+import base64
+import hashlib
 import hmac
 import json
 import logging
+import re
+import tempfile
+import time as _time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
 
 from vir_bot.core.pipeline import MessageType, Platform, PlatformMessage
 from vir_bot.main import _get_app_state
@@ -106,6 +113,29 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     await ws.send_json({"type": "status", "state": "idle"})
     content = full_content if full_content else "[无回复]"
     await ws.send_json({"type": "text_done", "content": content})
+    await _synthesize_and_send(ws, content)
+
+
+async def _synthesize_and_send(ws: WebSocket, text: str) -> None:
+    """合成语音并发送音频 URL"""
+    app_state = _get_app_state()
+    if not app_state.pipeline or not app_state.pipeline.tts:
+        return
+
+    try:
+        text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+        output_path = f"./data/cache/voice_{text_hash}_{int(_time.time())}.wav"
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+        result_path = await app_state.pipeline.tts.synthesize(text, output_path)
+        if result_path:
+            filename = Path(result_path).name
+            await ws.send_json({
+                "type": "voice_url",
+                "url": f"/api/chat/ws/voice/{filename}",
+            })
+    except Exception as e:
+        logger.error(f"[WS] TTS 合成失败: {e}")
 
 
 async def _handle_interrupt(ws: WebSocket) -> None:
@@ -115,11 +145,57 @@ async def _handle_interrupt(ws: WebSocket) -> None:
 
 
 async def _handle_voice(ws: WebSocket, msg: ChatMessage) -> None:
-    """处理语音消息（占位，后续实现）。"""
-    await ws.send_json({
-        "type": "error",
-        "content": "语音消息暂不支持，敬请期待。",
-    })
+    """处理语音消息：base64 音频 → ASR 转文字 → 流式回复"""
+    app_state = _get_app_state()
+    if app_state.pipeline is None:
+        await ws.send_json({"type": "error", "content": "Pipeline 未初始化"})
+        return
+
+    if not msg.audio:
+        await ws.send_json({"type": "error", "content": "缺少音频数据"})
+        return
+
+    # 解码 base64 音频
+    try:
+        audio_bytes = base64.b64decode(msg.audio)
+    except Exception as e:
+        await ws.send_json({"type": "error", "content": f"音频解码失败: {e}"})
+        return
+
+    # 保存为临时文件
+    suffix = f".{msg.format}" if msg.format else ".webm"
+    cache_dir = Path("./data/cache")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False, dir=str(cache_dir))
+    tmp.write(audio_bytes)
+    tmp.close()
+    audio_path = tmp.name
+
+    await ws.send_json({"type": "status", "state": "thinking"})
+
+    # ASR 转文字
+    if not app_state.pipeline.asr:
+        await ws.send_json({"type": "error", "content": "ASR 服务未配置"})
+        Path(audio_path).unlink(missing_ok=True)
+        return
+
+    try:
+        transcription = await app_state.pipeline.asr.recognize(audio_path)
+        logger.info(f"[WS] ASR 转录: {transcription[:50]}")
+    except Exception as e:
+        logger.error(f"[WS] ASR 失败: {e}")
+        await ws.send_json({"type": "error", "content": "语音识别失败"})
+        return
+    finally:
+        Path(audio_path).unlink(missing_ok=True)
+
+    if not transcription or not transcription.strip():
+        await ws.send_json({"type": "text_done", "content": "抱歉，没有听清你说的话。"})
+        return
+
+    # 用转录文字调用流式输出
+    text_msg = ChatMessage(type="text", content=transcription.strip())
+    await _handle_text(ws, text_msg)
 
 
 def _verify_ws_token(ws: WebSocket) -> bool:
@@ -144,6 +220,20 @@ def _verify_ws_token(ws: WebSocket) -> bool:
         return False
 
     return hmac.compare_digest(token, expected)
+
+
+@router.get("/voice/{filename}")
+async def serve_voice(filename: str):
+    """提供 TTS 合成的音频文件"""
+    if not re.match(r'^voice_[a-f0-9]{8,}_\d+\.(wav|mp3|ogg)$', filename):
+        return {"error": "无效文件名"}
+
+    file_path = Path("./data/cache") / filename
+    if not file_path.exists():
+        return {"error": "文件不存在"}
+
+    media_type = "audio/wav" if filename.endswith(".wav") else "audio/mpeg"
+    return FileResponse(str(file_path), media_type=media_type)
 
 
 @router.websocket("/ws")

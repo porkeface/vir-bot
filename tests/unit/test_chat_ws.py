@@ -6,7 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from vir_bot.api.routers.chat_ws import ChatMessage, _handle_text, parse_message
+from vir_bot.api.routers.chat_ws import (
+    ChatMessage,
+    _handle_text,
+    _handle_voice,
+    _synthesize_and_send,
+    parse_message,
+    serve_voice,
+)
 from vir_bot.core.ai_provider import AIStreamChunk
 
 
@@ -102,6 +109,7 @@ async def test_handle_text_streaming_success():
     pipeline = MagicMock()
     pipeline._build_system_prompt.return_value = "system prompt"
     pipeline.ai.chat_stream = fake_stream
+    pipeline.tts = None
 
     app_state = MagicMock()
     app_state.pipeline = pipeline
@@ -133,6 +141,7 @@ async def test_handle_text_stream_fallback_to_sync():
     pipeline = MagicMock()
     pipeline._build_system_prompt.return_value = "system"
     pipeline.ai.chat_stream = failing_stream
+    pipeline.tts = None
 
     sync_response = MagicMock()
     sync_response.content = "同步回复"
@@ -167,6 +176,7 @@ async def test_handle_text_both_fail():
     pipeline._build_system_prompt.return_value = "system"
     pipeline.ai.chat_stream = failing_stream
     pipeline.process = AsyncMock(side_effect=RuntimeError("sync broke"))
+    pipeline.tts = None
 
     app_state = MagicMock()
     app_state.pipeline = pipeline
@@ -211,6 +221,7 @@ async def test_handle_text_empty_stream():
     pipeline = MagicMock()
     pipeline._build_system_prompt.return_value = "system"
     pipeline.ai.chat_stream = empty_stream
+    pipeline.tts = None
 
     app_state = MagicMock()
     app_state.pipeline = pipeline
@@ -222,3 +233,298 @@ async def test_handle_text_empty_stream():
 
     sent = [call.args[0] for call in ws.send_json.call_args_list]
     assert sent[-1] == {"type": "text_done", "content": "[无回复]"}
+
+
+# ---------------------------------------------------------------------------
+# _handle_voice 测试
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_pipeline_not_initialized():
+    """Pipeline 未初始化时返回错误消息。"""
+    ws = AsyncMock()
+    app_state = MagicMock()
+    app_state.pipeline = None
+
+    msg = ChatMessage(type="voice", audio="base64data", format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _handle_voice(ws, msg)
+
+    ws.send_json.assert_awaited_once_with(
+        {"type": "error", "content": "Pipeline 未初始化"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_missing_audio():
+    """缺少音频数据时返回错误消息。"""
+    ws = AsyncMock()
+    app_state = MagicMock()
+    app_state.pipeline = MagicMock()
+
+    msg = ChatMessage(type="voice", audio="", format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _handle_voice(ws, msg)
+
+    ws.send_json.assert_awaited_once_with(
+        {"type": "error", "content": "缺少音频数据"},
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_invalid_base64():
+    """无效 base64 数据时返回错误消息。"""
+    ws = AsyncMock()
+    app_state = MagicMock()
+    app_state.pipeline = MagicMock()
+
+    msg = ChatMessage(type="voice", audio="!!!invalid!!!", format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _handle_voice(ws, msg)
+
+    sent = [call.args[0] for call in ws.send_json.call_args_list]
+    assert sent[0]["type"] == "error"
+    assert "音频解码失败" in sent[0]["content"]
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_asr_not_configured():
+    """ASR 未配置时返回错误消息。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.asr = None
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    import base64 as b64
+
+    msg = ChatMessage(type="voice", audio=b64.b64encode(b"audio").decode(), format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        with patch("vir_bot.api.routers.chat_ws.tempfile") as mock_tempfile:
+            mock_tmp = MagicMock()
+            mock_tmp.name = "/tmp/test.wav"
+            mock_tempfile.NamedTemporaryFile.return_value = mock_tmp
+            await _handle_voice(ws, msg)
+
+    sent = [call.args[0] for call in ws.send_json.call_args_list]
+    assert any(s == {"type": "error", "content": "ASR 服务未配置"} for s in sent)
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_asr_failure():
+    """ASR 识别失败时返回错误消息。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.asr = AsyncMock()
+    pipeline.asr.recognize.side_effect = RuntimeError("ASR crashed")
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    import base64 as b64
+
+    msg = ChatMessage(type="voice", audio=b64.b64encode(b"audio").decode(), format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        with patch("vir_bot.api.routers.chat_ws.tempfile") as mock_tempfile:
+            mock_tmp = MagicMock()
+            mock_tmp.name = "/tmp/test.wav"
+            mock_tempfile.NamedTemporaryFile.return_value = mock_tmp
+            await _handle_voice(ws, msg)
+
+    sent = [call.args[0] for call in ws.send_json.call_args_list]
+    assert any(s == {"type": "error", "content": "语音识别失败"} for s in sent)
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_empty_transcription():
+    """ASR 返回空文字时发送提示消息。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.asr = AsyncMock()
+    pipeline.asr.recognize.return_value = "   "
+    pipeline.tts = None
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    import base64 as b64
+
+    msg = ChatMessage(type="voice", audio=b64.b64encode(b"audio").decode(), format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        with patch("vir_bot.api.routers.chat_ws.tempfile") as mock_tempfile:
+            mock_tmp = MagicMock()
+            mock_tmp.name = "/tmp/test.wav"
+            mock_tempfile.NamedTemporaryFile.return_value = mock_tmp
+            await _handle_voice(ws, msg)
+
+    sent = [call.args[0] for call in ws.send_json.call_args_list]
+    assert any(
+        s == {"type": "text_done", "content": "抱歉，没有听清你说的话。"}
+        for s in sent
+    )
+
+
+@pytest.mark.asyncio
+async def test_handle_voice_success_delegates_to_handle_text():
+    """ASR 成功转录后委托给 _handle_text 处理。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.asr = AsyncMock()
+    pipeline.asr.recognize.return_value = "你好世界"
+    pipeline._build_system_prompt.return_value = "system"
+    pipeline.tts = None
+
+    async def fake_stream(messages, system=None, **kw):
+        yield AIStreamChunk(delta="回复")
+        yield AIStreamChunk(delta="", finish_reason="stop")
+
+    pipeline.ai.chat_stream = fake_stream
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    import base64 as b64
+
+    msg = ChatMessage(type="voice", audio=b64.b64encode(b"audio").decode(), format="wav")
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        with patch("vir_bot.api.routers.chat_ws.tempfile") as mock_tempfile:
+            mock_tmp = MagicMock()
+            mock_tmp.name = "/tmp/test.wav"
+            mock_tempfile.NamedTemporaryFile.return_value = mock_tmp
+            await _handle_voice(ws, msg)
+
+    sent = [call.args[0] for call in ws.send_json.call_args_list]
+    assert any(s.get("type") == "text_delta" for s in sent)
+    assert any(s.get("type") == "text_done" and s.get("content") == "回复" for s in sent)
+
+
+# ---------------------------------------------------------------------------
+# _synthesize_and_send 测试
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_synthesize_and_send_no_pipeline():
+    """Pipeline 为 None 时直接返回。"""
+    ws = AsyncMock()
+    app_state = MagicMock()
+    app_state.pipeline = None
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _synthesize_and_send(ws, "hello")
+
+    ws.send_json.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_synthesize_and_send_no_tts():
+    """TTS 为 None 时直接返回。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.tts = None
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _synthesize_and_send(ws, "hello")
+
+    ws.send_json.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_synthesize_and_send_success():
+    """TTS 合成成功后发送 voice_url。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.tts = AsyncMock()
+    pipeline.tts.synthesize.return_value = "./data/cache/voice_abc12345_1234567890.wav"
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _synthesize_and_send(ws, "你好")
+
+    ws.send_json.assert_awaited_once_with({
+        "type": "voice_url",
+        "url": "/api/chat/ws/voice/voice_abc12345_1234567890.wav",
+    })
+
+
+@pytest.mark.asyncio
+async def test_synthesize_and_send_synthesize_returns_none():
+    """TTS 合成返回 None 时不发送消息。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.tts = AsyncMock()
+    pipeline.tts.synthesize.return_value = None
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _synthesize_and_send(ws, "你好")
+
+    ws.send_json.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_synthesize_and_send_exception():
+    """TTS 合成异常时静默处理。"""
+    ws = AsyncMock()
+    pipeline = MagicMock()
+    pipeline.tts = AsyncMock()
+    pipeline.tts.synthesize.side_effect = RuntimeError("TTS failed")
+    app_state = MagicMock()
+    app_state.pipeline = pipeline
+
+    with patch("vir_bot.api.routers.chat_ws._get_app_state", return_value=app_state):
+        await _synthesize_and_send(ws, "你好")
+
+    ws.send_json.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------
+# serve_voice 测试
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_serve_voice_invalid_filename():
+    """无效文件名返回错误。"""
+    result = await serve_voice("../../etc/passwd")
+    assert result == {"error": "无效文件名"}
+
+
+@pytest.mark.asyncio
+async def test_serve_voice_invalid_extension():
+    """无效扩展名返回错误。"""
+    result = await serve_voice("voice_abc12345_123.txt")
+    assert result == {"error": "无效文件名"}
+
+
+@pytest.mark.asyncio
+async def test_serve_voice_file_not_found():
+    """文件不存在返回错误。"""
+    result = await serve_voice("voice_abc12345_1234567890.wav")
+    assert result == {"error": "文件不存在"}
+
+
+@pytest.mark.asyncio
+async def test_serve_voice_valid_wav():
+    """有效 wav 文件返回 FileResponse。"""
+    with patch("vir_bot.api.routers.chat_ws.Path") as mock_path_cls:
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.__truediv__ = lambda self, x: mock_path
+        mock_path_cls.return_value = mock_path
+
+        with patch("vir_bot.api.routers.chat_ws.FileResponse") as mock_fr:
+            mock_fr.return_value = "response"
+            result = await serve_voice("voice_abc12345_1234567890.wav")
+
+    assert result != {"error": "无效文件名"}
+    assert result != {"error": "文件不存在"}
