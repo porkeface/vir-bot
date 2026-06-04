@@ -365,6 +365,7 @@ def create_app() -> FastAPI:
     from vir_bot.api.routers import (
         character,
         chat,
+        chat_ws,
         config_router,
         distillation,
         logs,
@@ -416,6 +417,7 @@ def create_app() -> FastAPI:
     except Exception:
         pass
     app.include_router(chat.router, prefix="/api/chat", tags=["对话"])
+    app.include_router(chat_ws.router, prefix="/api/chat", tags=["对话WS"])
 
     @app.get("/health")
     async def health():
