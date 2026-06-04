@@ -138,7 +138,7 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     for i, seg in enumerate(segments):
         await ws.send_json({"type": "text_done", "content": seg})
         if i < len(segments) - 1:
-            await _time.sleep(0.4)  # 段间延迟，模拟打字节奏
+            await asyncio.sleep(0.4)  # 段间延迟，模拟打字节奏
 
     # 语音用完整文本合成
     await _synthesize_and_send(ws, content)
