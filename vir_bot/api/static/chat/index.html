@@ -3,9 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>vir-bot Chat</title>
+  <title>vir-bot Chat Console</title>
+  <!-- Import Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
   <style>
     *,
     *::before,
@@ -16,25 +22,46 @@
     }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #232733;
-      --border: #2d3140;
-      --text: #e4e4e7;
-      --text2: #a1a1aa;
-      --text3: #71717a;
-      --accent: #6366f1;
+      --bg: #090a0f;
+      --bg-gradient: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+                     radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
+                     #090a0f;
+      
+      --surface: rgba(17, 19, 28, 0.7);
+      --surface-hover: rgba(26, 29, 43, 0.85);
+      --surface-solid: #11131c;
+      --surface-active: #1e2235;
+      
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.4);
+      
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-dark: #61616a;
+      
+      --accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --accent-solid: #6366f1;
       --accent-hover: #818cf8;
-      --radius: 12px;
+      --accent-light: #a5b4fc;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --error-glow: rgba(239, 68, 68, 0.2);
+      
+      --radius-lg: 16px;
+      --radius-md: 12px;
       --radius-sm: 8px;
-      --max-w: 800px;
+      
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     html,
     body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      font-family: 'Outfit', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       overflow: hidden;
@@ -42,167 +69,957 @@
 
     #app {
       display: flex;
-      flex-direction: column;
       height: 100%;
-      max-width: var(--max-w);
-      margin: 0 auto;
+      width: 100%;
+      position: relative;
     }
 
-    @media (max-width: 800px) {
-      #app {
-        max-width: 100%;
-      }
+    /* Scrollbar Style */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
     }
 
-    /* ── Header ─────────────────────────── */
-    .header {
+    /* ── Token Prompt (Auth Screen) ────── */
+    .token-prompt {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-gradient);
+      padding: 24px;
+      z-index: 10;
+    }
+
+    .token-card {
       background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      text-align: center;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .token-logo {
+      font-size: 52px;
+      margin-bottom: 8px;
+      animation: floatLogo 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatLogo {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-8px); }
+    }
+
+    .token-card h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(to right, #fff, var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .token-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .token-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .token-input-group label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .token-input-group input {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .token-input-group input:focus {
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .token-card button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .token-card button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+
+    /* ── Main Layout ────────────────────── */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 90;
+      display: none;
+    }
+
+    .sidebar-backdrop.open {
+      display: block;
+    }
+
+    .sidebar {
+      width: 320px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid var(--border);
+      transition: var(--transition);
+      z-index: 95;
       flex-shrink: 0;
     }
 
-    .header-title {
-      font-size: 16px;
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Avatar and Status */
+    .char-avatar-section {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 10px 20px;
+      text-align: center;
+    }
+
+    .char-avatar-glow-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .char-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 36px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px var(--accent-glow);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .char-avatar-glow {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: var(--accent-solid);
+      opacity: 0.15;
+      filter: blur(8px);
+      animation: pulseGlow 3s infinite alternate;
+      z-index: 1;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: scale(0.96); opacity: 0.1; }
+      100% { transform: scale(1.06); opacity: 0.3; }
+    }
+
+    .char-status-badge {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 3px solid #11131c;
+      z-index: 3;
+      transition: var(--transition);
+    }
+    
+    .char-status-badge.status-connected {
+      background-color: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+    .char-status-badge.status-disconnected {
+      background-color: var(--error);
+      box-shadow: 0 0 8px var(--error);
+    }
+    .char-status-badge.status-connecting {
+      background-color: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
+      animation: statusBreathing 1s infinite alternate;
+    }
+
+    @keyframes statusBreathing {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    .char-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .char-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Sidebar sections */
+    .sidebar-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .icon-btn-text {
+      background: transparent;
+      border: none;
+      color: var(--accent-light);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .icon-btn-text:hover {
+      color: white;
+    }
+
+    .char-details-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .detail-item label {
+      font-size: 11px;
+      color: var(--text-dark);
+      font-weight: 600;
+    }
+
+    .detail-value {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .text-clamp {
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Settings list */
+    .settings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .settings-btn {
+      width: 100%;
+      background: var(--surface-active);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      padding: 10px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .settings-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .settings-btn.danger-btn {
+      color: #fda4af;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .settings-btn.danger-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--error);
+    }
+
+    .setting-toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--surface-solid);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 18px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #27272a;
+      transition: .3s;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 10px;
+      width: 10px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text-muted);
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .slider {
+      background: var(--accent);
+      border-color: transparent;
+    }
+
+    .toggle-switch input:checked + .slider:before {
+      transform: translateX(18px);
+      background-color: white;
+    }
+
+    /* ── Chat Pane ──────────────────────── */
+    .chat-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg-gradient);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      height: 64px;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .menu-toggle-btn {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .menu-toggle-btn:hover {
+      background: var(--surface-active);
+    }
+
+    .header-title-area {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title-name {
+      font-size: 15px;
       font-weight: 600;
       color: var(--text);
     }
 
-    .header-btn {
-      background: var(--surface2);
+    .header-title-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-title-sub-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .header-title-sub-dot.status-connected { background-color: var(--success); }
+    .header-title-sub-dot.status-disconnected { background-color: var(--error); }
+    .header-title-sub-dot.status-connecting { background-color: var(--warning); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-action-btn {
+      background: var(--surface-active);
       border: 1px solid var(--border);
-      color: var(--text2);
-      padding: 6px 14px;
+      color: var(--text-muted);
+      padding: 8px 14px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       font-size: 13px;
-      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
     }
 
-    .header-btn:hover {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
+    .header-action-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.15);
     }
 
-    /* ── Messages ───────────────────────── */
-    .messages {
+    /* Welcome Dashboard */
+    .welcome-dashboard {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      max-width: 680px;
+      margin: 0 auto;
+      gap: 30px;
       overflow-y: auto;
+    }
+
+    .welcome-hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .welcome-hero .glow-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
+      margin-bottom: 8px;
+    }
+
+    .welcome-hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(to right, #fff, var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-hero p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .welcome-first-message {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      scroll-behavior: smooth;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 
-    .messages::-webkit-scrollbar {
-      width: 6px;
+    .first-message-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .messages::-webkit-scrollbar-track {
-      background: transparent;
+    .welcome-first-message p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      font-style: italic;
     }
 
-    .messages::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
+    .first-message-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      align-self: flex-start;
     }
 
-    .msg {
+    .first-message-btn:hover {
+      box-shadow: 0 4px 12px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .welcome-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition);
       display: flex;
-      animation: fadeIn 0.3s ease;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .msg-user {
-      justify-content: flex-end;
+    .welcome-tile:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent-solid);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
 
-    .msg-assistant {
-      justify-content: flex-start;
+    .welcome-tile .tile-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-light);
+    }
+
+    .welcome-tile .tile-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Messages Container */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .msg-row {
+      display: flex;
+      gap: 14px;
+      max-width: 85%;
+      animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-row.msg-user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .msg-row.msg-assistant {
+      align-self: flex-start;
+    }
+
+    .msg-avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .msg-row.msg-user .msg-avatar-circle {
+      background: linear-gradient(135deg, #27272a, #3f3f46);
+      color: var(--text);
+    }
+
+    .msg-row.msg-assistant .msg-avatar-circle {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 10px var(--accent-glow);
+    }
+
+    .msg-bubble-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .msg-row.msg-user .msg-bubble-wrapper {
+      align-items: flex-end;
+    }
+
+    .msg-row.msg-assistant .msg-bubble-wrapper {
+      align-items: flex-start;
     }
 
     .bubble {
-      max-width: 80%;
-      padding: 10px 14px;
-      border-radius: var(--radius);
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
       font-size: 14px;
       line-height: 1.6;
       word-break: break-word;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
 
-    .msg-user .bubble {
+    .msg-row.msg-user .bubble {
       background: var(--accent);
-      color: #fff;
-      border-bottom-right-radius: 4px;
+      color: white;
+      border-top-right-radius: 2px;
     }
 
-    .msg-assistant .bubble {
-      background: var(--surface2);
+    .msg-row.msg-assistant .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
       color: var(--text);
-      border-bottom-left-radius: 4px;
+      border-top-left-radius: 2px;
     }
 
+    /* Markdown inside Bubble styles */
     .bubble p {
-      margin: 0 0 8px 0;
+      margin-bottom: 8px;
     }
-
     .bubble p:last-child {
       margin-bottom: 0;
     }
 
-    .bubble code {
-      background: rgba(0, 0, 0, 0.25);
-      padding: 2px 5px;
+    /* Code Block styling */
+    .code-block-wrapper {
+      margin: 12px 0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .code-block-header {
+      background: #11131a;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .copy-code-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 2px 6px;
       border-radius: 4px;
-      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .copy-code-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .copy-code-btn.copied {
+      background: var(--success);
+      color: white;
+      border-color: var(--success);
     }
 
     .bubble pre {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 10px;
-      border-radius: var(--radius-sm);
+      background: #090a0f;
+      padding: 14px;
       overflow-x: auto;
-      margin: 8px 0;
+      margin: 0;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .bubble code {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'Fira Code', monospace;
     }
 
     .bubble pre code {
       background: none;
       padding: 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #e4e4e7;
     }
 
     .bubble a {
-      color: var(--accent-hover);
+      color: var(--accent-light);
       text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .bubble blockquote {
-      border-left: 3px solid var(--accent);
-      padding-left: 10px;
+      border-left: 3px solid var(--accent-solid);
+      padding-left: 12px;
       margin: 8px 0;
-      color: var(--text2);
+      color: var(--text-muted);
+      font-style: italic;
     }
 
     .bubble ul,
     .bubble ol {
       padding-left: 20px;
-      margin: 4px 0;
+      margin: 8px 0;
     }
 
-    /* ── Typing Dots ────────────────────── */
+    .bubble li {
+      margin-bottom: 4px;
+    }
+
+    /* Custom Voice Bubble */
+    .voice-bubble {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+      max-width: 260px;
+      margin-top: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .voice-bubble:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent-solid);
+    }
+
+    .voice-bubble.playing {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent-solid);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .voice-icon-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px var(--accent-glow);
+    }
+
+    .voice-bubble.playing .voice-icon-btn {
+      animation: voicePulse 1.4s infinite alternate;
+    }
+
+    @keyframes voicePulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); box-shadow: 0 0 10px var(--accent-solid); }
+    }
+
+    .voice-wave {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 20px;
+      padding: 0 4px;
+      flex: 1;
+    }
+
+    .voice-wave .bar {
+      width: 3px;
+      height: 6px;
+      background-color: var(--text-muted);
+      border-radius: 1.5px;
+      transition: height 0.2s, background-color 0.2s;
+    }
+
+    .voice-bubble.playing .voice-wave .bar {
+      background-color: var(--accent-light);
+      animation: wavePulse 1.2s ease-in-out infinite alternate;
+    }
+    
+    .voice-bubble.playing .voice-wave .bar-1 { animation-delay: 0.1s; height: 16px; }
+    .voice-bubble.playing .voice-wave .bar-2 { animation-delay: 0.3s; height: 10px; }
+    .voice-bubble.playing .voice-wave .bar-3 { animation-delay: 0.5s; height: 18px; }
+    .voice-bubble.playing .voice-wave .bar-4 { animation-delay: 0.2s; height: 12px; }
+    .voice-bubble.playing .voice-wave .bar-5 { animation-delay: 0.4s; height: 8px; }
+
+    @keyframes wavePulse {
+      0% { transform: scaleY(0.4); }
+      100% { transform: scaleY(1.1); }
+    }
+
+    .voice-duration {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Typing Dots */
     .typing-dots {
       display: flex;
-      gap: 4px;
-      padding: 4px 0;
+      gap: 5px;
+      padding: 6px 4px;
+      align-items: center;
     }
 
     .typing-dots span {
-      width: 7px;
-      height: 7px;
-      background: var(--text3);
+      width: 6px;
+      height: 6px;
+      background: var(--text-muted);
       border-radius: 50%;
       animation: bounce 1.4s infinite ease-in-out;
     }
@@ -215,348 +1032,600 @@
       animation-delay: 0.4s;
     }
 
-    /* ── Status Bar ─────────────────────── */
-    .status-bar {
-      text-align: center;
-      padding: 4px;
-      font-size: 12px;
-      color: var(--text3);
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1.1); opacity: 1; }
+    }
+
+    /* ── Input Container ────────────────── */
+    .input-container {
+      padding: 16px 24px 24px 24px;
+      background: linear-gradient(to top, var(--bg), transparent);
       flex-shrink: 0;
     }
 
-    .status-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-
-    .status-connected .status-dot {
-      background: #22c55e;
-    }
-
-    .status-disconnected .status-dot {
-      background: #ef4444;
-    }
-
-    .status-connecting .status-dot {
-      background: #eab308;
-      animation: pulse 1s infinite;
-    }
-
-    /* ── Input Area ─────────────────────── */
-    .input-area {
-      padding: 12px 16px;
+    .input-box {
       background: var(--surface);
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
-    }
-
-    .input-row textarea {
-      flex: 1;
-      background: var(--surface2);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 8px 12px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      transition: var(--transition);
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .input-box:focus-within {
+      border-color: var(--accent-solid);
+      box-shadow: 0 10px 30px var(--accent-glow);
+    }
+
+    .input-box textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
       color: var(--text);
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
+      padding: 10px 8px;
       font-size: 14px;
       line-height: 1.5;
-      resize: none;
       outline: none;
+      resize: none;
+      min-height: 38px;
+      max-height: 140px;
       font-family: inherit;
-      max-height: 120px;
-      min-height: 42px;
-      transition: border-color 0.2s;
     }
 
-    .input-row textarea:focus {
-      border-color: var(--accent);
+    .input-box textarea::placeholder {
+      color: var(--text-dark);
     }
 
-    .input-row textarea::placeholder {
-      color: var(--text3);
+    .input-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 4px;
     }
 
-    .btn-icon {
-      width: 42px;
-      height: 42px;
+    .action-btn {
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text2);
+      background: var(--surface-active);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.2s;
-      font-size: 18px;
+      transition: var(--transition);
     }
 
-    .btn-icon:hover {
+    .action-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: var(--text-muted);
+    }
+
+    .action-btn.btn-submit {
       background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 10px var(--accent-glow);
     }
 
-    .btn-mic.recording {
-      background: #ef4444;
-      color: #fff;
-      border-color: #ef4444;
-      animation: pulse 1.2s infinite;
+    .action-btn.btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px var(--accent-glow);
     }
 
-    .btn-send:disabled {
-      opacity: 0.4;
+    .action-btn.btn-submit:disabled {
+      opacity: 0.35;
       cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      background: var(--surface-solid);
+      color: var(--text-dark);
+      border: 1px solid var(--border);
     }
 
-    .btn-send:disabled:hover {
-      background: var(--surface2);
-      color: var(--text2);
-      border-color: var(--border);
+    .action-btn.btn-record.recording {
+      background: var(--error);
+      border-color: var(--error);
+      color: white;
+      animation: breathingMic 1.2s infinite alternate;
     }
 
-    /* ── Audio Playback ─────────────────── */
-    .audio-wrap {
-      margin-top: 8px;
+    @keyframes breathingMic {
+      0% { transform: scale(1); box-shadow: 0 0 4px var(--error); }
+      100% { transform: scale(1.08); box-shadow: 0 0 14px var(--error); }
     }
 
-    .audio-wrap audio {
-      width: 100%;
-      max-width: 280px;
-      height: 36px;
-      border-radius: 8px;
-    }
-
-    /* ── Welcome ────────────────────────── */
-    .welcome {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text3);
-      gap: 8px;
-      padding: 24px;
-    }
-
-    .welcome-icon {
-      font-size: 48px;
-      margin-bottom: 8px;
-    }
-
-    .welcome h2 {
-      font-size: 20px;
-      color: var(--text2);
-      font-weight: 500;
-    }
-
-    .welcome p {
-      font-size: 14px;
+    .input-tip {
+      font-size: 11px;
+      color: var(--text-dark);
       text-align: center;
-      max-width: 320px;
-      line-height: 1.6;
+      margin-top: 8px;
+      user-select: none;
     }
 
-    /* ── Token Prompt ───────────────────── */
-    .token-prompt {
-      flex: 1;
+    /* ── Character Edit Modal ────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 200;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 24px;
+      padding: 20px;
+      animation: fadeInModal 0.2s ease-out;
     }
 
-    .token-prompt input {
-      background: var(--surface2);
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-card {
+      background: #11131c;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      max-height: 85vh;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      animation: scaleInModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes scaleInModal {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-card-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-card-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .modal-close-btn:hover {
+      color: white;
+    }
+
+    .modal-card-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-card-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .form-group input, 
+    .form-group textarea {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .form-group input:focus, 
+    .form-group textarea:focus {
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .modal-card-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      width: 280px;
-      max-width: 90%;
-      outline: none;
-    }
-
-    .token-prompt input:focus {
-      border-color: var(--accent);
-    }
-
-    .token-prompt button {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 24px;
+      padding: 8px 16px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
+      font-size: 13.5px;
+      transition: var(--transition);
     }
 
-    .token-prompt button:hover {
-      background: var(--accent-hover);
+    .btn-modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    .token-prompt label {
-      color: var(--text2);
-      font-size: 14px;
+    .btn-modal-save {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: var(--transition);
+      box-shadow: 0 4px 10px var(--accent-glow);
     }
 
-    /* ── Animations ─────────────────────── */
+    .btn-modal-save:hover {
+      box-shadow: 0 6px 14px var(--accent-glow);
+    }
+
+    /* ── Responsive Styling ──────────────── */
+    @media (max-width: 900px) {
+      .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        box-shadow: 20px 0 40px rgba(0, 0, 0, 0.5);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .menu-toggle-btn {
+        display: block;
+      }
+    }
+
+    /* Global Animations */
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes pulse {
-      0%,
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.15);
-        opacity: 0.7;
-      }
-    }
-
-    @keyframes bounce {
-      0%,
-      80%,
-      100% {
-        transform: scale(0);
-      }
-      40% {
-        transform: scale(1);
-      }
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
   <div id="app">
-    <!-- Token Prompt -->
+    <!-- Token Prompt (Auth Screen) -->
     <div v-if="!token" class="token-prompt">
-      <label>请输入访问 Token</label>
-      <input
-        v-model="tokenInput"
-        placeholder="Token"
-        @keyup.enter="saveToken"
-      />
-      <button @click="saveToken">连接</button>
+      <div class="token-card">
+        <div class="token-logo">🤖</div>
+        <h2>vir-bot 控制台</h2>
+        <p>此站点启用了 Web 凭据访问保护，请输入访问 Token 进行连接和对话。</p>
+        
+        <div class="token-input-group">
+          <label>访问 Token</label>
+          <input
+            v-model="tokenInput"
+            type="password"
+            placeholder="请输入访问 Token..."
+            @keyup.enter="saveToken"
+          />
+        </div>
+        
+        <button @click="saveToken">验证并连接</button>
+      </div>
     </div>
 
-    <!-- Chat Interface -->
+    <!-- Main Application Chat Interface -->
     <template v-else>
-      <!-- Header -->
-      <div class="header">
-        <span class="header-title">vir-bot Chat</span>
-        <button class="header-btn" @click="showCard = !showCard">
-          {{ showCard ? '关闭' : '角色卡' }}
-        </button>
-      </div>
+      <!-- Sidebar Mobile Backdrop -->
+      <div 
+        :class="['sidebar-backdrop', { open: sidebarOpen }]" 
+        @click="sidebarOpen = false"
+      ></div>
 
-      <!-- Character Card (simple overlay) -->
-      <div
-        v-if="showCard"
-        style="
-          padding: 12px 16px;
-          background: var(--surface2);
-          border-bottom: 1px solid var(--border);
-          font-size: 13px;
-          color: var(--text2);
-          line-height: 1.6;
-        "
-      >
-        <strong style="color: var(--text)">角色卡</strong>
-        <p style="margin-top: 4px">
-          这里可以展示角色卡信息。后续接入后端角色卡 API。
-        </p>
-      </div>
-
-      <!-- Messages -->
-      <div class="messages" ref="messagesEl">
-        <!-- Welcome -->
-        <div v-if="messages.length === 0" class="welcome">
-          <div class="welcome-icon">🤖</div>
-          <h2>vir-bot</h2>
-          <p>你好！我是 vir-bot，有什么想聊的？</p>
-        </div>
-
-        <!-- Message List -->
-        <div
-          v-for="(msg, i) in messages"
-          :key="i"
-          :class="['msg', msg.role === 'user' ? 'msg-user' : 'msg-assistant']"
-        >
-          <div class="bubble" v-html="renderMarkdown(msg.content)"></div>
-          <div v-if="msg.audioUrl" class="audio-wrap" style="max-width: 80%">
-            <audio :src="msg.audioUrl" controls preload="none"></audio>
+      <!-- Left Sidebar (Role Card & System Settings) -->
+      <aside :class="['sidebar', { open: sidebarOpen }]">
+        <!-- Avatar Area -->
+        <div class="char-avatar-section">
+          <div class="char-avatar-glow-wrap">
+            <div class="char-avatar-glow"></div>
+            <div class="char-avatar">
+              {{ characterCard.name ? characterCard.name.charAt(0).toUpperCase() : 'V' }}
+            </div>
+            <div :class="['char-status-badge', statusClass]"></div>
           </div>
+          <span class="char-name">{{ characterCard.name || '加载中...' }}</span>
+          <span class="char-subtitle">{{ statusText }}</span>
         </div>
 
-        <!-- Typing Dots -->
-        <div v-if="waiting" class="msg msg-assistant">
-          <div class="bubble">
-            <div class="typing-dots">
-              <span></span>
-              <span></span>
-              <span></span>
+        <!-- Sidebar Options and Content -->
+        <div class="sidebar-content">
+          <!-- Role Details -->
+          <div class="sidebar-section">
+            <div class="section-title">
+              <span>角色设定</span>
+              <button class="icon-btn-text" @click="openEditModal">编辑设定</button>
+            </div>
+            <div class="char-details-card">
+              <div class="detail-item">
+                <label>姓名</label>
+                <div class="detail-value">{{ characterCard.name || '未设定' }}</div>
+              </div>
+              <div v-if="characterCard.description" class="detail-item">
+                <label>关于角色</label>
+                <div class="detail-value text-clamp">{{ characterCard.description }}</div>
+              </div>
+              <div v-if="characterCard.personality" class="detail-item">
+                <label>性格特征</label>
+                <div class="detail-value text-clamp">{{ characterCard.personality }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tools and Actions -->
+          <div class="sidebar-section">
+            <div class="section-title">工具与设置</div>
+            <div class="settings-list">
+              <button class="settings-btn" @click="triggerCardUpload" title="上传 SillyTavern 等角色卡 JSON">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                上传 JSON 角色卡
+              </button>
+              
+              <div class="setting-toggle-item">
+                <span>自动播放语音回复</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" v-model="autoplayVoice">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <button class="settings-btn danger-btn" @click="clearChat">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                清空对话历史
+              </button>
+
+              <button class="settings-btn" style="margin-top: 12px; font-size: 11px;" @click="resetToken">
+                重置访问 Token
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <!-- Status Bar -->
-      <div :class="['status-bar', statusClass]">
-        <span class="status-dot"></span>
-        {{ statusText }}
-      </div>
+      <!-- Right Chat Pane -->
+      <main class="chat-pane">
+        <!-- Header -->
+        <header class="chat-header">
+          <div class="header-left">
+            <button class="menu-toggle-btn" @click="sidebarOpen = !sidebarOpen">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div class="header-title-area">
+              <span class="header-title-name">{{ characterCard.name || 'vir-bot' }}</span>
+              <span class="header-title-sub">
+                <span :class="['header-title-sub-dot', statusClass]"></span>
+                {{ statusText }}
+              </span>
+            </div>
+          </div>
+          <div class="header-right">
+            <button class="header-action-btn" @click="openEditModal">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              <span>角色卡</span>
+            </button>
+          </div>
+        </header>
 
-      <!-- Input Area -->
-      <div class="input-area">
-        <div class="input-row">
-          <textarea
-            ref="inputEl"
-            v-model="inputText"
-            placeholder="输入消息..."
-            rows="1"
-            @input="autoResize"
-            @keydown="handleKeydown"
-          ></textarea>
-          <button
-            :class="['btn-icon', 'btn-mic', { recording: isRecording }]"
-            @click="toggleMic"
-            :title="isRecording ? '停止录音' : '语音输入'"
-          >
-            <template v-if="isRecording">⏹</template>
-            <template v-else>🎤</template>
-          </button>
-          <button
-            class="btn-icon btn-send"
-            :disabled="!inputText.trim() || waiting"
-            @click="sendMessage"
-            title="发送"
-          >
-            ▶
-          </button>
+        <!-- Messages Area -->
+        <div class="messages-container" ref="messagesEl">
+          <!-- Welcome Screen (Dashboard) -->
+          <div v-if="messages.length === 0" class="welcome-dashboard">
+            <div class="welcome-hero">
+              <div class="glow-icon">🤖</div>
+              <h1>你好！我是 {{ characterCard.name || 'vir-bot' }}</h1>
+              <p>{{ characterCard.description || '我是你的虚拟助手。有什么想聊聊的？可以直接在下方输入，也可以使用语音与我对话！' }}</p>
+            </div>
+
+            <!-- Welcome First Message Card -->
+            <div v-if="characterCard.first_message" class="welcome-first-message">
+              <div class="first-message-header">预设开场白</div>
+              <p>「 {{ characterCard.first_message }} 」</p>
+              <button class="first-message-btn" @click="useFirstMessage">以此开场白对话</button>
+            </div>
+
+            <!-- Suggestion Grid -->
+            <div class="welcome-grid">
+              <div 
+                v-for="(tile, idx) in quickPrompts" 
+                :key="idx" 
+                class="welcome-tile"
+                @click="handleQuickStart(tile.text)"
+              >
+                <div class="tile-title">{{ tile.title }}</div>
+                <div class="tile-desc">{{ tile.desc }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message List -->
+          <template v-else>
+            <div 
+              v-for="(msg, i) in messages" 
+              :key="i"
+              :class="['msg-row', msg.role === 'user' ? 'msg-user' : 'msg-assistant']"
+            >
+              <!-- Avatar Column -->
+              <div class="msg-avatar-circle">
+                {{ msg.role === 'user' ? 'U' : (characterCard.name ? characterCard.name.charAt(0).toUpperCase() : 'V') }}
+              </div>
+              
+              <!-- Content Column -->
+              <div class="msg-bubble-wrapper">
+                <div class="bubble" v-html="renderMarkdown(msg.content)" @click="handleBubbleClick"></div>
+                
+                <!-- Custom Voice Equalizer Player -->
+                <div 
+                  v-if="msg.audioUrl" 
+                  :class="['voice-bubble', { playing: playingMsg === msg && isAudioPlaying }]"
+                  @click="playAudio(msg)"
+                >
+                  <button class="voice-icon-btn">
+                    <svg v-if="playingMsg === msg && isAudioPlaying" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                  <div class="voice-wave">
+                    <span class="bar bar-1"></span>
+                    <span class="bar bar-2"></span>
+                    <span class="bar bar-3"></span>
+                    <span class="bar bar-4"></span>
+                    <span class="bar bar-5"></span>
+                  </div>
+                  <div class="voice-duration">
+                    {{ playingMsg === msg ? formatTime(audioCurrentTime) : '点击播放' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Streaming/Thinking Dots Loader -->
+          <div v-if="waiting" class="msg-row msg-assistant">
+            <div class="msg-avatar-circle">
+              {{ characterCard.name ? characterCard.name.charAt(0).toUpperCase() : 'V' }}
+            </div>
+            <div class="msg-bubble-wrapper">
+              <div class="bubble">
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-container">
+          <div class="input-box">
+            <textarea
+              ref="inputEl"
+              v-model="inputText"
+              placeholder="输入消息，发送给助理..."
+              rows="1"
+              @input="autoResize"
+              @keydown="handleKeydown"
+            ></textarea>
+            
+            <div class="input-actions">
+              <!-- Speech Recognition Mic Button -->
+              <button
+                :class="['action-btn', 'btn-record', { recording: isRecording }]"
+                @click="toggleMic"
+                :title="isRecording ? '点击结束语音录音' : '按此进行语音输入'"
+              >
+                <svg v-if="isRecording" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" x2="12" y1="19" y2="22"/>
+                </svg>
+              </button>
+
+              <!-- Send Message Button -->
+              <button
+                class="action-btn btn-submit"
+                :disabled="!inputText.trim() || waiting"
+                @click="sendMessage"
+                title="发送"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </button>
+            </div>
+          </div>
+          <div class="input-tip">
+            键盘 Shift + Enter 换行，Enter 发送。建议使用 Chrome 体验语音转文字。
+          </div>
+        </div>
+      </main>
+
+      <!-- Edit Character Card Modal Overlay -->
+      <div v-if="editingCard" class="modal-overlay" @click.self="editingCard = false">
+        <div class="modal-card">
+          <div class="modal-card-header">
+            <h3>编辑当前角色卡设定</h3>
+            <button class="modal-close-btn" @click="editingCard = false">&times;</button>
+          </div>
+          <div class="modal-card-body">
+            <div class="form-group">
+              <label>角色姓名 (Name)</label>
+              <input v-model="editForm.name" type="text" placeholder="例如: 艾莉西亚" />
+            </div>
+            <div class="form-group">
+              <label>简短介绍 (Description)</label>
+              <textarea v-model="editForm.description" rows="3" placeholder="角色的性格、背景简短描述..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>性格特征设定 (Personality)</label>
+              <textarea v-model="editForm.personality" rows="4" placeholder="详细的人格特征，说话语气等..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>预设首句开场白 (First Message)</label>
+              <textarea v-model="editForm.first_message" rows="3" placeholder="进入聊天室时的第一句招呼..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>当前所处场景 (Scenario)</label>
+              <textarea v-model="editForm.scenario" rows="3" placeholder="角色所处的情景、环境关系等..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>世界设定/背景常识 (World Info)</label>
+              <textarea v-model="editForm.world_info" rows="4" placeholder="包含世界规则、常识背景等设定信息..."></textarea>
+            </div>
+          </div>
+          <div class="modal-card-footer">
+            <button class="btn-modal-cancel" @click="editingCard = false">取消</button>
+            <button class="btn-modal-save" @click="saveCharacterCard">保存设定</button>
+          </div>
         </div>
       </div>
     </template>
@@ -565,12 +1634,39 @@
   <script>
     const { createApp, ref, computed, watch, nextTick, onMounted, onBeforeUnmount } = Vue;
 
-    // Configure marked
-    marked.setOptions({ breaks: true, gfm: true });
+    // ── Setup Custom Code Block Renderer for marked ──
+    const renderer = new marked.Renderer();
+    
+    function escapeHTML(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    renderer.code = (code, infostring, escaped) => {
+      const lang = (infostring || '').match(/\S*/)[0];
+      const escapedCode = encodeURIComponent(code);
+      return `<div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-lang">${lang || 'code'}</span>
+          <button class="copy-code-btn" data-code="${escapedCode}">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            复制
+          </button>
+        </div>
+        <pre><code class="language-${lang}">${escaped ? code : escapeHTML(code)}</code></pre>
+      </div>`;
+    };
+    
+    marked.setOptions({ renderer, breaks: true, gfm: true });
 
+    // ── App Startup ──
     createApp({
       setup() {
-        // ── Token ──────────────────────
+        // Token state
         const token = ref(localStorage.getItem('vb_token') || '');
         const tokenInput = ref('');
 
@@ -580,40 +1676,188 @@
             token.value = t;
             localStorage.setItem('vb_token', t);
             connectWS();
+            fetchCharacterCard();
           }
         }
 
-        // ── State ──────────────────────
+        function resetToken() {
+          if (confirm('确认重置访问 Token 吗？重置后需要重新登录。')) {
+            token.value = '';
+            localStorage.removeItem('vb_token');
+            if (ws) ws.close();
+            messages.value = [];
+          }
+        }
+
+        // Active State
         const messages = ref([]);
         const inputText = ref('');
         const waiting = ref(false);
-        const showCard = ref(false);
         const isRecording = ref(false);
+        const sidebarOpen = ref(window.innerWidth > 900);
+        
+        // Character Card Details
+        const characterCard = ref({
+          name: '',
+          description: '',
+          personality: '',
+          world_info: '',
+          scenario: '',
+          first_message: '',
+          example_dialogue: '',
+          extensions: {}
+        });
 
-        // ── Refs ───────────────────────
+        // Audio Helper State
+        const autoplayVoice = ref(true);
+        let currentAudio = null;
+        const playingMsg = ref(null);
+        const isAudioPlaying = ref(false);
+        const audioCurrentTime = ref(0);
+        const audioDuration = ref(0);
+        const audioProgress = ref(0);
+
+        // Edit Card Form
+        const editingCard = ref(false);
+        const editForm = ref({
+          name: '',
+          description: '',
+          personality: '',
+          first_message: '',
+          scenario: '',
+          world_info: '',
+        });
+
+        // Suggested prompts
+        const quickPrompts = [
+          { title: '💡 介绍自己', desc: '我想了解你的背景故事以及你可以做些什么。', text: '请介绍一下你自己，我想知道你的核心功能和特点。' },
+          { title: '🎭 场景模拟', desc: '设定一个特定的背景，我们来一次精彩的情景扮演。', text: '我们来模拟一个趣味的场景。你选择一个你喜欢的背景和人设，开始和我的对话吧！' },
+          { title: '📝 创意灵感', desc: '帮我起草文案、小说创意或提供有趣的点子。', text: '我想让你帮我写一段带有科幻色彩的创意短文，主题是「赛博世界的隐士」。' },
+          { title: '🎤 语音聊天', desc: '开启语音功能，我们直接使用中文对话。', text: '我们开启声音聊天模式吧，可以用语音来回应我。' }
+        ];
+
+        // Refs
         const messagesEl = ref(null);
         const inputEl = ref(null);
 
-        // ── WebSocket ──────────────────
+        // WebSocket
         let ws = null;
         let reconnectTimer = null;
-
         const connStatus = ref('disconnected'); // connected | disconnected | connecting
 
-        const statusClass = computed(() => {
-          return 'status-' + connStatus.value;
-        });
-
+        const statusClass = computed(() => 'status-' + connStatus.value);
+        
         const statusText = computed(() => {
           switch (connStatus.value) {
-            case 'connected':
-              return '已连接';
-            case 'connecting':
-              return '连接中...';
-            default:
-              return '未连接';
+            case 'connected': return '已连接';
+            case 'connecting': return '连接中...';
+            default: return '未连接';
           }
         });
+
+        async function fetchCharacterCard() {
+          if (!token.value) return;
+          try {
+            const response = await fetch('/api/character/', {
+              headers: {
+                'Authorization': `Bearer ${token.value}`
+              }
+            });
+            if (response.ok) {
+              const data = await response.json();
+              characterCard.value = data;
+            }
+          } catch (err) {
+            console.error('Failed to fetch character card:', err);
+          }
+        }
+
+        async function saveCharacterCard() {
+          try {
+            const res = await fetch('/api/character/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.value}`
+              },
+              body: JSON.stringify(editForm.value),
+            });
+            if (res.ok) {
+              characterCard.value = { ...characterCard.value, ...editForm.value };
+              editingCard.value = false;
+            } else {
+              alert('保存失败，请检查 token 或网络权限');
+            }
+          } catch (err) {
+            alert('保存出错: ' + err);
+          }
+        }
+
+        async function triggerCardUpload() {
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = '.json';
+          fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+              const res = await fetch('/api/character/upload', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token.value}`
+                },
+                body: formData,
+              });
+
+              if (res.ok) {
+                const data = await res.json();
+                alert(`角色卡「${data.name}」上传并加载成功！`);
+                fetchCharacterCard();
+              } else {
+                const errData = await res.json();
+                alert('上传失败: ' + (errData.detail || '格式错误'));
+              }
+            } catch (err) {
+              alert('上传出错: ' + err);
+            }
+          };
+          fileInput.click();
+        }
+
+        function openEditModal() {
+          editForm.value = {
+            name: characterCard.value.name || '',
+            description: characterCard.value.description || '',
+            personality: characterCard.value.personality || '',
+            first_message: characterCard.value.first_message || '',
+            scenario: characterCard.value.scenario || '',
+            world_info: characterCard.value.world_info || '',
+          };
+          editingCard.value = true;
+        }
+
+        function useFirstMessage() {
+          if (characterCard.value.first_message) {
+            messages.value.push({
+              role: 'assistant',
+              content: characterCard.value.first_message,
+              audioUrl: null
+            });
+            scrollToBottom();
+          }
+        }
+
+        function handleQuickStart(text) {
+          inputText.value = text;
+          autoResize();
+          nextTick(() => {
+            if (inputEl.value) inputEl.value.focus();
+          });
+        }
 
         function connectWS() {
           if (!token.value) return;
@@ -622,7 +1866,6 @@
           }
 
           connStatus.value = 'connecting';
-
           const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
           const url = `${proto}//${location.host}/api/chat/ws/ws?token=${encodeURIComponent(token.value)}`;
 
@@ -686,6 +1929,13 @@
                 const last = messages.value[messages.value.length - 1];
                 if (last.role === 'assistant') {
                   last.audioUrl = data.url;
+                  if (autoplayVoice.value) {
+                    // Slight delay to ensure the browser has registered the user interaction 
+                    // state before automatically triggering audio playback
+                    setTimeout(() => {
+                      playAudio(last);
+                    }, 100);
+                  }
                 }
               }
               break;
@@ -710,7 +1960,7 @@
           }
         }
 
-        // ── Send ───────────────────────
+        // Send logic
         function sendMessage() {
           const text = inputText.value.trim();
           if (!text || waiting.value) return;
@@ -732,7 +1982,7 @@
           } else {
             messages.value.push({
               role: 'assistant',
-              content: '**Error:** WebSocket 未连接，请稍后重试。',
+              content: '**Error:** WebSocket 未连接，正在尝试重新连接，请稍后重试。',
               audioUrl: null,
             });
             waiting.value = false;
@@ -740,7 +1990,6 @@
           }
         }
 
-        // ── Keyboard ───────────────────
         function handleKeydown(e) {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -748,17 +1997,15 @@
           }
         }
 
-        // ── Auto Resize Textarea ───────
         function autoResize() {
           nextTick(() => {
             const el = inputEl.value;
             if (!el) return;
             el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+            el.style.height = Math.min(el.scrollHeight, 140) + 'px';
           });
         }
 
-        // ── Scroll ─────────────────────
         function scrollToBottom() {
           nextTick(() => {
             const el = messagesEl.value;
@@ -768,7 +2015,6 @@
           });
         }
 
-        // ── Markdown ───────────────────
         function renderMarkdown(text) {
           if (!text) return '';
           try {
@@ -778,12 +2024,116 @@
           }
         }
 
-        // ── Voice Input (Web Speech API) ─
+        // Custom Code Block Copy Handlers
+        function handleBubbleClick(event) {
+          const copyBtn = event.target.closest('.copy-code-btn');
+          if (copyBtn) {
+            const encodedCode = copyBtn.getAttribute('data-code');
+            if (encodedCode) {
+              const code = decodeURIComponent(encodedCode);
+              navigator.clipboard.writeText(code).then(() => {
+                const originalContent = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  已复制
+                `;
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                  copyBtn.innerHTML = originalContent;
+                  copyBtn.classList.remove('copied');
+                }, 2000);
+              }).catch(err => {
+                console.error('Failed to copy code block:', err);
+              });
+            }
+          }
+        }
+
+        // Voice Equalizer / Playback Methods
+        function formatTime(secs) {
+          if (isNaN(secs) || !isFinite(secs)) return '0:00';
+          const m = Math.floor(secs / 60);
+          const s = Math.floor(secs % 60);
+          return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function playAudio(msg) {
+          if (!msg.audioUrl) return;
+
+          if (playingMsg.value === msg) {
+            if (currentAudio) {
+              if (currentAudio.paused) {
+                currentAudio.play().catch(err => console.error('Audio play failed:', err));
+              } else {
+                currentAudio.pause();
+              }
+            }
+            return;
+          }
+
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+          }
+
+          playingMsg.value = msg;
+          isAudioPlaying.value = false;
+          audioCurrentTime.value = 0;
+          audioProgress.value = 0;
+
+          currentAudio = new Audio(msg.audioUrl);
+
+          currentAudio.addEventListener('play', () => {
+            isAudioPlaying.value = true;
+          });
+
+          currentAudio.addEventListener('pause', () => {
+            isAudioPlaying.value = false;
+          });
+
+          currentAudio.addEventListener('timeupdate', () => {
+            audioCurrentTime.value = currentAudio.currentTime;
+            if (currentAudio.duration) {
+              audioProgress.value = (currentAudio.currentTime / currentAudio.duration) * 100;
+            }
+          });
+
+          currentAudio.addEventListener('loadedmetadata', () => {
+            audioDuration.value = currentAudio.duration;
+          });
+
+          currentAudio.addEventListener('ended', () => {
+            playingMsg.value = null;
+            isAudioPlaying.value = false;
+            audioCurrentTime.value = 0;
+            audioProgress.value = 0;
+          });
+
+          currentAudio.play().catch(err => {
+            console.error('Audio playback failed or was interrupted:', err);
+            playingMsg.value = null;
+            isAudioPlaying.value = false;
+          });
+        }
+
+        // Clear Chat History
+        function clearChat() {
+          if (confirm('确认清空聊天记录吗？清空后将无法恢复。')) {
+            if (currentAudio) {
+              currentAudio.pause();
+              currentAudio = null;
+            }
+            playingMsg.value = null;
+            isAudioPlaying.value = false;
+            messages.value = [];
+          }
+        }
+
+        // Voice Input (Web Speech API)
         let recognition = null;
 
         function initRecognition() {
-          const SpeechRecognition =
-            window.SpeechRecognition || window.webkitSpeechRecognition;
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
           if (!SpeechRecognition) return null;
 
           const rec = new SpeechRecognition();
@@ -792,7 +2142,6 @@
           rec.interimResults = false;
 
           rec.onstart = () => {
-            // 用户开始说话时发送打断信号
             if (ws && ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify({ type: 'interrupt' }));
             }
@@ -831,7 +2180,7 @@
           }
 
           if (!recognition) {
-            alert('您的浏览器不支持语音输入，请使用 Chrome。');
+            alert('您的浏览器不支持语音输入，请使用 Chrome/Edge 浏览器。');
             return;
           }
 
@@ -843,8 +2192,8 @@
           }
         }
 
-        // ── Lifecycle ──────────────────
-        onMounted(() => {
+        // Lifecycle Hooks
+        onMounted(async () => {
           // Check URL params for token
           const params = new URLSearchParams(window.location.search);
           const urlToken = params.get('token');
@@ -853,11 +2202,34 @@
             localStorage.setItem('vb_token', urlToken);
           }
 
-          if (token.value) {
-            connectWS();
+          if (!token.value) {
+            // Probe to check if authentication is active on the backend
+            try {
+              const res = await fetch('/api/character/');
+              if (res.status === 200) {
+                // Auth is disabled in the backend, set bypass token to skip token card
+                token.value = 'default_bypass';
+                localStorage.setItem('vb_token', 'default_bypass');
+              }
+            } catch (err) {
+              console.log('Authentication is enabled on backend or backend is offline.');
+            }
           }
 
-          // Focus input
+          if (token.value) {
+            connectWS();
+            fetchCharacterCard();
+          }
+
+          // Handle resizing on window changes for sidebar responsiveness
+          window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+              sidebarOpen.value = true;
+            } else {
+              sidebarOpen.value = false;
+            }
+          });
+
           nextTick(() => {
             if (inputEl.value) inputEl.value.focus();
           });
@@ -867,26 +2239,51 @@
           if (ws) ws.close();
           if (reconnectTimer) clearTimeout(reconnectTimer);
           if (recognition) recognition.abort();
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+          }
         });
 
         return {
           token,
           tokenInput,
           saveToken,
+          resetToken,
           messages,
           inputText,
           waiting,
-          showCard,
           isRecording,
+          sidebarOpen,
+          characterCard,
+          autoplayVoice,
+          editingCard,
+          editForm,
+          quickPrompts,
           messagesEl,
           inputEl,
           connStatus,
           statusClass,
           statusText,
+          fetchCharacterCard,
+          saveCharacterCard,
+          triggerCardUpload,
+          openEditModal,
+          useFirstMessage,
+          handleQuickStart,
           sendMessage,
           handleKeydown,
           autoResize,
           renderMarkdown,
+          handleBubbleClick,
+          playAudio,
+          playingMsg,
+          isAudioPlaying,
+          audioCurrentTime,
+          audioDuration,
+          audioProgress,
+          formatTime,
+          clearChat,
           toggleMic,
         };
       },
