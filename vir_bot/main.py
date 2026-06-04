@@ -365,6 +365,7 @@ def create_app() -> FastAPI:
     from vir_bot.api.routers import (
         character,
         chat,
+        chat_ws,
         config_router,
         distillation,
         logs,
@@ -416,6 +417,22 @@ def create_app() -> FastAPI:
     except Exception:
         pass
     app.include_router(chat.router, prefix="/api/chat", tags=["对话"])
+    app.include_router(chat_ws.router, prefix="/api/chat/ws", tags=["聊天WebSocket"])
+    # Serve the chat static UI (if present)
+    try:
+        from pathlib import Path
+
+        from fastapi.staticfiles import StaticFiles
+
+        chat_static_dir = Path(__file__).parent / "api" / "static" / "chat"
+        if chat_static_dir.exists():
+            app.mount(
+                "/chat",
+                StaticFiles(directory=str(chat_static_dir), html=True),
+                name="chat",
+            )
+    except Exception:
+        pass
 
     @app.get("/health")
     async def health():
