@@ -634,7 +634,7 @@
           connStatus.value = 'connecting';
 
           const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const url = `${proto}//${location.host}/api/chat/ws?token=${encodeURIComponent(token.value)}`;
+          const url = `${proto}//${location.host}/api/chat/ws/ws?token=${encodeURIComponent(token.value)}`;
 
           ws = new WebSocket(url);
 
