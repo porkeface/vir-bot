@@ -129,7 +129,18 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
 
     await ws.send_json({"type": "status", "state": "idle"})
     content = full_content if full_content else "[无回复]"
-    await ws.send_json({"type": "text_done", "content": content})
+
+    # 按换行拆分，每段独立发送（类似 Telegram 多条消息效果）
+    segments = [seg.strip() for seg in content.split("\n") if seg.strip()]
+    if not segments:
+        segments = [content]
+
+    for i, seg in enumerate(segments):
+        await ws.send_json({"type": "text_done", "content": seg})
+        if i < len(segments) - 1:
+            await _time.sleep(0.4)  # 段间延迟，模拟打字节奏
+
+    # 语音用完整文本合成
     await _synthesize_and_send(ws, content)
 
 
