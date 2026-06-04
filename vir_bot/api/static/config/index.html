@@ -542,7 +542,7 @@ const SECTIONS = {
         title: '认证',
         fields: [
           { path: 'web_console.auth.enabled', label: '启用 Token 认证', type: 'bool' },
-          { path: 'web_console.auth.token', label: 'Token', type: 'sensitive' },
+          { path: 'web_console.auth.token', label: 'Token', type: 'text', desc: 'Web 控制台访问 Token，修改后需重启服务生效' },
         ]
       },
       {
