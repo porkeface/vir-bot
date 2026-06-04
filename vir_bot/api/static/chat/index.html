@@ -1499,7 +1499,7 @@
               
               <!-- Content Column -->
               <div class="msg-bubble-wrapper">
-                <div class="bubble" v-html="renderMarkdown(msg.content)" @click="handleBubbleClick"></div>
+                <div v-if="msg.content" class="bubble" v-html="renderMarkdown(msg.content)" @click="handleBubbleClick"></div>
                 
                 <!-- Custom Voice Equalizer Player -->
                 <div 
@@ -1925,17 +1925,30 @@
               break;
 
             case 'voice_url':
-              if (messages.value.length > 0) {
-                const last = messages.value[messages.value.length - 1];
-                if (last.role === 'assistant') {
+              {
+                waiting.value = false;
+                const last = messages.value.length > 0 ? messages.value[messages.value.length - 1] : null;
+                if (last && last.role === 'assistant' && !last.audioUrl) {
                   last.audioUrl = data.url;
                   if (autoplayVoice.value) {
-                    // Slight delay to ensure the browser has registered the user interaction 
-                    // state before automatically triggering audio playback
                     setTimeout(() => {
                       playAudio(last);
                     }, 100);
                   }
+                } else {
+                  // Voice-only assistant message
+                  const newMsg = {
+                    role: 'assistant',
+                    content: '',
+                    audioUrl: data.url,
+                  };
+                  messages.value.push(newMsg);
+                  if (autoplayVoice.value) {
+                    setTimeout(() => {
+                      playAudio(newMsg);
+                    }, 100);
+                  }
+                  scrollToBottom();
                 }
               }
               break;

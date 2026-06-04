@@ -128,6 +128,9 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
 
     await ws.send_json({"type": "status", "state": "idle"})
 
+    from vir_bot.config import get_config
+    config = get_config()
+
     # 清理并按换行拆分，每段独立发送
     content = full_content if full_content else "[无回复]"
     content = re.sub(r"\[VOICE\]", "", content, flags=re.IGNORECASE).strip()
@@ -138,19 +141,60 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     if not segments:
         segments = [content]
 
-    for i, seg in enumerate(segments):
-        await ws.send_json({"type": "text_done", "content": seg})
-        if i < len(segments) - 1:
-            await asyncio.sleep(0.3)
+    # 判定语音模式与决策
+    voice_enabled = config.voice.enabled and config.voice.voice_response
+    voice_mode = getattr(config.voice, "voice_mode", "replace")
+    voice_decision = getattr(config.voice, "voice_decision", "ai")
 
-    await _synthesize_and_send(ws, content)
+    decided_voice = False
+    if voice_enabled:
+        if voice_decision == "always":
+            decided_voice = True
+        elif voice_decision == "ai":
+            from vir_bot.modules.voice import analyze_voice_suitability
+            suitable, reason = analyze_voice_suitability(content)
+            decided_voice = suitable
+            logger.info(f"[WS] AI 语音决策: {decided_voice} (原因: {reason})")
+        else:
+            # 兼容其他情况，检查是否有 [VOICE] 标记
+            decided_voice = "[VOICE]" in full_content.upper()
+
+    send_text = True
+    send_voice = False
+
+    if voice_enabled and decided_voice:
+        if voice_mode == "replace":
+            send_text = False
+            send_voice = True
+        elif voice_mode == "voice_only":
+            send_text = False
+            send_voice = True
+        elif voice_mode == "both":
+            send_text = True
+            send_voice = True
+    else:
+        send_text = True
+        send_voice = False
+
+    voice_sent = False
+    if send_voice:
+        voice_sent = await _synthesize_and_send(ws, content)
+        if not voice_sent and voice_mode == "replace":
+            # 语音发送失败，退回到文本
+            send_text = True
+
+    if send_text:
+        for i, seg in enumerate(segments):
+            await ws.send_json({"type": "text_done", "content": seg})
+            if i < len(segments) - 1:
+                await asyncio.sleep(0.3)
 
 
-async def _synthesize_and_send(ws: WebSocket, text: str) -> None:
-    """合成语音并发送音频 URL"""
+async def _synthesize_and_send(ws: WebSocket, text: str) -> bool:
+    """合成语音并发送音频 URL。返回 True 表示成功，False 表示失败。"""
     app_state = _get_app_state()
     if not app_state.pipeline or not app_state.pipeline.tts:
-        return
+        return False
 
     try:
         text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
@@ -164,8 +208,10 @@ async def _synthesize_and_send(ws: WebSocket, text: str) -> None:
                 "type": "voice_url",
                 "url": f"/api/chat/ws/voice/{filename}",
             })
+            return True
     except Exception as e:
         logger.error(f"[WS] TTS 合成失败: {e}")
+    return False
 
 
 async def _handle_interrupt(ws: WebSocket) -> None:
