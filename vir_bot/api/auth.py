@@ -65,6 +65,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if path == "/api/distillation/ws":
             return await call_next(request)
 
+        # WebSocket 端点豁免（有独立 token 验证）
+        if path.startswith("/api/chat/ws/"):
+            return await call_next(request)
+
         # CORS preflight 豁免（OPTIONS 请求不携带 Authorization 头）
         if request.method == "OPTIONS":
             return await call_next(request)
