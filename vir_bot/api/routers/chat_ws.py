@@ -1,6 +1,7 @@
 """WebSocket 聊天端点"""
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -26,6 +27,9 @@ router = APIRouter()
 
 # 消息大小上限（100 KB）
 MAX_MESSAGE_SIZE = 100_000
+
+# 活跃任务跟踪（用于打断机制）
+_active_tasks: dict[int, asyncio.Task] = {}
 
 
 @dataclass
@@ -70,6 +74,11 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
         await ws.send_json({"type": "error", "content": "Pipeline 未初始化"})
         return
 
+    # 注册当前任务（用于打断机制）
+    current_task = asyncio.current_task()
+    if current_task:
+        _active_tasks[id(ws)] = current_task
+
     # 通知前端进入思考状态
     await ws.send_json({"type": "status", "state": "thinking"})
 
@@ -88,6 +97,9 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
             if chunk.delta:
                 full_content += chunk.delta
                 await ws.send_json({"type": "text_delta", "content": chunk.delta})
+    except asyncio.CancelledError:
+        logger.info("[WS] AI 生成被用户打断")
+        return
     except Exception as e:
         logger.warning(f"[WS] 流式输出异常: {e}，回退到同步模式")
         platform_msg = PlatformMessage(
@@ -109,6 +121,11 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
                 await stream.aclose()
             except Exception:
                 pass
+        _active_tasks.pop(id(ws), None)
+
+    # 检查是否被打断（任务被取消）
+    if current_task and current_task.cancelled():
+        return
 
     await ws.send_json({"type": "status", "state": "idle"})
     content = full_content if full_content else "[无回复]"
@@ -139,8 +156,14 @@ async def _synthesize_and_send(ws: WebSocket, text: str) -> None:
 
 
 async def _handle_interrupt(ws: WebSocket) -> None:
-    """处理中断消息：记录日志，返回 idle 状态。"""
+    """处理中断消息：取消当前 AI 生成任务，返回 idle 状态。"""
     logger.info("[WS] 用户发送中断信号")
+    conn_id = id(ws)
+    task = _active_tasks.get(conn_id)
+    if task and not task.done():
+        task.cancel()
+        logger.info("[WS] 已取消当前 AI 任务")
+    _active_tasks.pop(conn_id, None)
     await ws.send_json({"type": "status", "state": "idle"})
 
 
