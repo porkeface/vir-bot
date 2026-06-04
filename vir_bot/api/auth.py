@@ -66,7 +66,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # WebSocket 端点豁免（有独立 token 验证）
-        if path.startswith("/api/chat/ws/"):
+        if path.startswith("/api/chat/ws"):
             return await call_next(request)
 
         # CORS preflight 豁免（OPTIONS 请求不携带 Authorization 头）
