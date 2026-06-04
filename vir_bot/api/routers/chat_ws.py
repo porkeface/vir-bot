@@ -67,6 +67,7 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     await ws.send_json({"type": "status", "state": "thinking"})
 
     full_content = ""
+    stream = None
     try:
         system_prompt = app_state.pipeline._build_system_prompt()
         messages = [{"role": "user", "content": msg.content}]
@@ -95,6 +96,12 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
             full_content = response.content if response else ""
         except Exception as e2:
             logger.error(f"[WS] 同步模式也失败: {e2}")
+    finally:
+        if stream is not None:
+            try:
+                await stream.aclose()
+            except Exception:
+                pass
 
     await ws.send_json({"type": "status", "state": "idle"})
     content = full_content if full_content else "[无回复]"
