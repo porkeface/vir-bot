@@ -693,14 +693,18 @@
                 streamContent.value = '';
                 waiting.value = false;
                 if (finalContent) {
-                  // 按换行拆分，每行独立气泡（Telegram 风格）
-                  const lines = finalContent.split('\n').filter(l => l.trim());
-                  for (const line of lines) {
-                    messages.value.push({
-                      role: 'assistant',
-                      content: line.trim(),
-                      audioUrl: null,
-                    });
+                  // 过滤 [VOICE] 标记
+                  const cleaned = finalContent.replace(/\[VOICE\]/gi, '').trim();
+                  if (cleaned) {
+                    // 按换行拆分，每行独立气泡（Telegram 风格）
+                    const lines = cleaned.split('\n').filter(l => l.trim());
+                    for (const line of lines) {
+                      messages.value.push({
+                        role: 'assistant',
+                        content: line.trim(),
+                        audioUrl: null,
+                      });
+                    }
                   }
                 }
                 scrollToBottom();
