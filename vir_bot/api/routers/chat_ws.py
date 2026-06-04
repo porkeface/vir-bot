@@ -96,7 +96,6 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
                 break
             if chunk.delta:
                 full_content += chunk.delta
-                await ws.send_json({"type": "text_delta", "content": chunk.delta})
     except asyncio.CancelledError:
         logger.info("[WS] AI 生成被用户打断")
         return
@@ -128,8 +127,22 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
         return
 
     await ws.send_json({"type": "status", "state": "idle"})
+
+    # 清理并按换行拆分，每段独立发送
     content = full_content if full_content else "[无回复]"
-    await ws.send_json({"type": "text_done", "content": content})
+    content = re.sub(r"\[VOICE\]", "", content, flags=re.IGNORECASE).strip()
+    if not content:
+        content = "[无回复]"
+
+    segments = [seg.strip() for seg in content.split("\n") if seg.strip()]
+    if not segments:
+        segments = [content]
+
+    for i, seg in enumerate(segments):
+        await ws.send_json({"type": "text_done", "content": seg})
+        if i < len(segments) - 1:
+            await asyncio.sleep(0.3)
+
     await _synthesize_and_send(ws, content)
 
 

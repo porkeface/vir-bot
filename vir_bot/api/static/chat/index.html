@@ -494,7 +494,7 @@
       <!-- Messages -->
       <div class="messages" ref="messagesEl">
         <!-- Welcome -->
-        <div v-if="messages.length === 0 && !streaming" class="welcome">
+        <div v-if="messages.length === 0" class="welcome">
           <div class="welcome-icon">🤖</div>
           <h2>vir-bot</h2>
           <p>你好！我是 vir-bot，有什么想聊的？</p>
@@ -512,16 +512,8 @@
           </div>
         </div>
 
-        <!-- Streaming Message -->
-        <div
-          v-if="streaming"
-          class="msg msg-assistant"
-        >
-          <div class="bubble" v-html="renderMarkdown(streamContent)"></div>
-        </div>
-
         <!-- Typing Dots -->
-        <div v-if="waiting && !streaming" class="msg msg-assistant">
+        <div v-if="waiting" class="msg msg-assistant">
           <div class="bubble">
             <div class="typing-dots">
               <span></span>
@@ -595,8 +587,6 @@
         const messages = ref([]);
         const inputText = ref('');
         const waiting = ref(false);
-        const streaming = ref(false);
-        const streamContent = ref('');
         const showCard = ref(false);
         const isRecording = ref(false);
 
@@ -676,36 +666,16 @@
 
         function handleMessage(data) {
           switch (data.type) {
-            case 'text_delta':
-              if (!streaming.value) {
-                streaming.value = true;
-                streamContent.value = '';
-                waiting.value = false;
-              }
-              streamContent.value += data.content || '';
-              scrollToBottom();
-              break;
-
             case 'text_done':
               {
-                const finalContent = streaming.value ? streamContent.value : (data.content || '');
-                streaming.value = false;
-                streamContent.value = '';
+                const content = (data.content || '').trim();
                 waiting.value = false;
-                if (finalContent) {
-                  // 过滤 [VOICE] 标记
-                  const cleaned = finalContent.replace(/\[VOICE\]/gi, '').trim();
-                  if (cleaned) {
-                    // 按换行拆分，每行独立气泡（Telegram 风格）
-                    const lines = cleaned.split('\n').filter(l => l.trim());
-                    for (const line of lines) {
-                      messages.value.push({
-                        role: 'assistant',
-                        content: line.trim(),
-                        audioUrl: null,
-                      });
-                    }
-                  }
+                if (content) {
+                  messages.value.push({
+                    role: 'assistant',
+                    content: content,
+                    audioUrl: null,
+                  });
                 }
                 scrollToBottom();
               }
@@ -735,7 +705,6 @@
                 audioUrl: null,
               });
               waiting.value = false;
-              streaming.value = false;
               scrollToBottom();
               break;
           }
@@ -907,8 +876,6 @@
           messages,
           inputText,
           waiting,
-          streaming,
-          streamContent,
           showCard,
           isRecording,
           messagesEl,
