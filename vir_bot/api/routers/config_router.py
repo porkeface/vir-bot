@@ -28,7 +28,6 @@ SENSITIVE_FIELDS: dict[str, str | None] = {
     "platforms.discord.bot_token": "VIRBOT_DISCORD_TOKEN",
     "platforms.telegram.bot_token": None,
     "mcp.hardware.mqtt.password": None,
-    "web_console.auth.token": "VIRBOT_CONSOLE_TOKEN",
     "voice.asr.api_key": None,
 }
 
