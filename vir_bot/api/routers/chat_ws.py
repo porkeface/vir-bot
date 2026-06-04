@@ -57,7 +57,7 @@ def parse_message(raw: str) -> ChatMessage | None:
 
 
 async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
-    """处理文本消息：调用 pipeline.process()，返回 text_done。"""
+    """处理文本消息：优先流式输出，失败回退到同步模式。"""
     app_state = _get_app_state()
     if app_state.pipeline is None:
         await ws.send_json({"type": "error", "content": "Pipeline 未初始化"})
@@ -66,22 +66,38 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     # 通知前端进入思考状态
     await ws.send_json({"type": "status", "state": "thinking"})
 
-    platform_msg = PlatformMessage(
-        platform=Platform.API,
-        msg_id=str(uuid.uuid4()),
-        user_id="ws_user",
-        user_name="WS用户",
-        content=msg.content,
-        msg_type=MessageType.TEXT,
-    )
-
+    full_content = ""
     try:
-        response = await app_state.pipeline.process(platform_msg)
-        content = response.content if response else "[无回复]"
-    except Exception as e:
-        logger.error(f"Pipeline 处理失败: {e}")
-        content = "抱歉，处理消息时出现错误。"
+        system_prompt = app_state.pipeline._build_system_prompt()
+        messages = [{"role": "user", "content": msg.content}]
 
+        stream = app_state.pipeline.ai.chat_stream(
+            messages=messages, system=system_prompt,
+        )
+        async for chunk in stream:
+            if chunk.finish_reason == "stop":
+                break
+            if chunk.delta:
+                full_content += chunk.delta
+                await ws.send_json({"type": "text_delta", "content": chunk.delta})
+    except Exception as e:
+        logger.warning(f"[WS] 流式输出异常: {e}，回退到同步模式")
+        platform_msg = PlatformMessage(
+            platform=Platform.API,
+            msg_id=str(uuid.uuid4()),
+            user_id="ws_user",
+            user_name="WS用户",
+            content=msg.content,
+            msg_type=MessageType.TEXT,
+        )
+        try:
+            response = await app_state.pipeline.process(platform_msg)
+            full_content = response.content if response else ""
+        except Exception as e2:
+            logger.error(f"[WS] 同步模式也失败: {e2}")
+
+    await ws.send_json({"type": "status", "state": "idle"})
+    content = full_content if full_content else "[无回复]"
     await ws.send_json({"type": "text_done", "content": content})
 
 
