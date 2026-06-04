@@ -1,6 +1,7 @@
 """WebSocket 聊天端点"""
 from __future__ import annotations
 
+import hmac
 import json
 import logging
 import uuid
@@ -15,6 +16,9 @@ from vir_bot.main import _get_app_state
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# 消息大小上限（100 KB）
+MAX_MESSAGE_SIZE = 100_000
 
 
 @dataclass
@@ -95,15 +99,54 @@ async def _handle_voice(ws: WebSocket, msg: ChatMessage) -> None:
     })
 
 
+def _verify_ws_token(ws: WebSocket) -> bool:
+    """从查询参数验证 WebSocket token。
+
+    如果认证未启用则直接放行。返回 True 表示通过，False 表示拒绝。
+    """
+    from vir_bot.config import get_config
+
+    config = get_config()
+
+    if not config.web_console.auth.enabled:
+        return True
+
+    expected = config.web_console.auth.token
+    if not expected:
+        logger.warning("[WS] 认证已启用但 token 未配置，拒绝连接")
+        return False
+
+    token = ws.query_params.get("token")
+    if not token:
+        return False
+
+    return hmac.compare_digest(token, expected)
+
+
 @router.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket) -> None:
     """WebSocket 聊天端点。"""
+    # 认证检查（在 accept 之前拒绝，减少资源消耗）
+    if not _verify_ws_token(ws):
+        await ws.close(code=4001, reason="认证失败")
+        logger.warning("[WS] 认证失败，连接已拒绝")
+        return
+
     await ws.accept()
     logger.info("[WS] 客户端已连接")
 
     try:
         while True:
             raw = await ws.receive_text()
+
+            # 消息大小限制
+            if len(raw) > MAX_MESSAGE_SIZE:
+                await ws.send_json({
+                    "type": "error",
+                    "content": "消息过大，请控制在 100KB 以内",
+                })
+                continue
+
             msg = parse_message(raw)
             if msg is None:
                 await ws.send_json({"type": "error", "content": "无效的消息格式"})
@@ -124,3 +167,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
         logger.info("[WS] 客户端已断开")
     except Exception as e:
         logger.error(f"[WS] 连接异常: {e}")
+        try:
+            await ws.close(code=1011, reason="服务器内部错误")
+        except Exception:
+            pass
