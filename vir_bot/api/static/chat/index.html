@@ -682,22 +682,25 @@
                 streamContent.value = '';
                 waiting.value = false;
               }
-              streamContent.value += data.delta || '';
+              streamContent.value += data.content || '';
               scrollToBottom();
               break;
 
             case 'text_done':
-              if (streaming.value) {
-                messages.value.push({
-                  role: 'assistant',
-                  content: streamContent.value,
-                  audioUrl: null,
-                });
+              {
+                const finalContent = streaming.value ? streamContent.value : (data.content || '');
+                if (finalContent) {
+                  messages.value.push({
+                    role: 'assistant',
+                    content: finalContent,
+                    audioUrl: null,
+                  });
+                }
                 streaming.value = false;
                 streamContent.value = '';
+                waiting.value = false;
+                scrollToBottom();
               }
-              waiting.value = false;
-              scrollToBottom();
               break;
 
             case 'voice_url':
@@ -710,9 +713,9 @@
               break;
 
             case 'status':
-              if (data.status === 'thinking') {
+              if (data.state === 'thinking') {
                 waiting.value = true;
-              } else if (data.status === 'idle') {
+              } else if (data.state === 'idle') {
                 waiting.value = false;
               }
               break;
@@ -720,7 +723,7 @@
             case 'error':
               messages.value.push({
                 role: 'assistant',
-                content: '**Error:** ' + (data.message || '未知错误'),
+                content: '**Error:** ' + (data.content || data.message || '未知错误'),
                 audioUrl: null,
               });
               waiting.value = false;
