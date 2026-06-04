@@ -689,16 +689,20 @@
             case 'text_done':
               {
                 const finalContent = streaming.value ? streamContent.value : (data.content || '');
-                if (finalContent) {
-                  messages.value.push({
-                    role: 'assistant',
-                    content: finalContent,
-                    audioUrl: null,
-                  });
-                }
                 streaming.value = false;
                 streamContent.value = '';
                 waiting.value = false;
+                if (finalContent) {
+                  // 按换行拆分，每行独立气泡（Telegram 风格）
+                  const lines = finalContent.split('\n').filter(l => l.trim());
+                  for (const line of lines) {
+                    messages.value.push({
+                      role: 'assistant',
+                      content: line.trim(),
+                      audioUrl: null,
+                    });
+                  }
+                }
                 scrollToBottom();
               }
               break;
