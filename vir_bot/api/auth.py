@@ -22,6 +22,9 @@ _EXEMPT_PATHS: set[str] = {
 _EXEMPT_PREFIXES: tuple[str, ...] = (
     "/docs/",
     "/static/",
+    "/chat/",
+    "/distillation/",
+    "/config/",
 )
 
 
