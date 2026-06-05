@@ -11,9 +11,8 @@ import re
 import tempfile
 import time as _time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -27,6 +26,9 @@ router = APIRouter()
 
 # 消息大小上限（100 KB）
 MAX_MESSAGE_SIZE = 100_000
+
+# 缓存目录（相对项目根）
+_CACHE_DIR = Path("data/cache")
 
 # 活跃任务跟踪（用于打断机制）
 _active_tasks: dict[int, asyncio.Task] = {}
@@ -69,10 +71,14 @@ def parse_message(raw: str) -> ChatMessage | None:
 
 async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     """处理文本消息：优先流式输出，失败回退到同步模式。"""
+    from vir_bot.config import get_config
+
     app_state = _get_app_state()
     if app_state.pipeline is None:
         await ws.send_json({"type": "error", "content": "Pipeline 未初始化"})
         return
+
+    config = get_config()
 
     # 注册当前任务（用于打断机制）
     current_task = asyncio.current_task()
@@ -86,10 +92,10 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
     stream = None
     try:
         system_prompt = app_state.pipeline._build_system_prompt()
-        messages = [{"role": "user", "content": msg.content}]
+        ai_messages = [{"role": "user", "content": msg.content}]
 
         stream = app_state.pipeline.ai.chat_stream(
-            messages=messages, system=system_prompt,
+            messages=ai_messages, system=system_prompt,
         )
         async for chunk in stream:
             if chunk.finish_reason == "stop":
@@ -128,20 +134,19 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
 
     await ws.send_json({"type": "status", "state": "idle"})
 
-    from vir_bot.config import get_config
-    config = get_config()
+    # 处理原始内容：提取 [VOICE] 标记后清理
+    raw_content = full_content if full_content else "[无回复]"
+    has_voice_tag = bool(re.search(r"\[VOICE\]", raw_content, re.IGNORECASE))
+    clean_content = re.sub(r"\[VOICE\]", "", raw_content, flags=re.IGNORECASE).strip()
+    if not clean_content:
+        clean_content = "[无回复]"
 
-    # 清理并按换行拆分，每段独立发送
-    content = full_content if full_content else "[无回复]"
-    content = re.sub(r"\[VOICE\]", "", content, flags=re.IGNORECASE).strip()
-    if not content:
-        content = "[无回复]"
-
-    segments = [seg.strip() for seg in content.split("\n") if seg.strip()]
+    # 按换行拆分段落
+    segments = [seg.strip() for seg in clean_content.split("\n") if seg.strip()]
     if not segments:
-        segments = [content]
+        segments = [clean_content]
 
-    # 判定语音模式与决策
+    # ── 语音决策 ──
     voice_enabled = config.voice.enabled and config.voice.voice_response
     voice_mode = getattr(config.voice, "voice_mode", "replace")
     voice_decision = getattr(config.voice, "voice_decision", "ai")
@@ -152,42 +157,48 @@ async def _handle_text(ws: WebSocket, msg: ChatMessage) -> None:
             decided_voice = True
         elif voice_decision == "ai":
             from vir_bot.modules.voice import analyze_voice_suitability
-            suitable, reason = analyze_voice_suitability(content)
+            suitable, reason = analyze_voice_suitability(clean_content)
             decided_voice = suitable
             logger.info(f"[WS] AI 语音决策: {decided_voice} (原因: {reason})")
         else:
-            # 兼容其他情况，检查是否有 [VOICE] 标记
-            decided_voice = "[VOICE]" in full_content.upper()
+            decided_voice = has_voice_tag
 
     send_text = True
     send_voice = False
 
     if voice_enabled and decided_voice:
-        if voice_mode == "replace":
-            send_text = False
-            send_voice = True
-        elif voice_mode == "voice_only":
+        if voice_mode in ("replace", "voice_only"):
             send_text = False
             send_voice = True
         elif voice_mode == "both":
             send_text = True
             send_voice = True
-    else:
-        send_text = True
-        send_voice = False
+    # else: send_text=True, send_voice=False（默认）
 
     voice_sent = False
     if send_voice:
-        voice_sent = await _synthesize_and_send(ws, content)
+        voice_sent = await _synthesize_and_send(ws, clean_content)
         if not voice_sent and voice_mode == "replace":
-            # 语音发送失败，退回到文本
-            send_text = True
+            send_text = True  # 语音失败，回退到文本
 
     if send_text:
         for i, seg in enumerate(segments):
             await ws.send_json({"type": "text_done", "content": seg})
             if i < len(segments) - 1:
                 await asyncio.sleep(0.3)
+
+    # 写入记忆（异步，不阻塞响应）
+    try:
+        await app_state.pipeline.memory.add_interaction(
+            user_msg=msg.content,
+            assistant_msg=clean_content,
+            metadata={
+                "platform": "web_chat",
+                "user_id": "ws_user",
+            },
+        )
+    except Exception as e:
+        logger.warning(f"[WS] 记忆写入失败: {e}")
 
 
 async def _synthesize_and_send(ws: WebSocket, text: str) -> bool:
@@ -198,8 +209,8 @@ async def _synthesize_and_send(ws: WebSocket, text: str) -> bool:
 
     try:
         text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
-        output_path = f"./data/cache/voice_{text_hash}_{int(_time.time())}.wav"
-        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        output_path = str(_CACHE_DIR / f"voice_{text_hash}_{int(_time.time())}.wav")
 
         result_path = await app_state.pipeline.tts.synthesize(text, output_path)
         if result_path:
@@ -244,14 +255,19 @@ async def _handle_voice(ws: WebSocket, msg: ChatMessage) -> None:
         await ws.send_json({"type": "error", "content": f"音频解码失败: {e}"})
         return
 
-    # 保存为临时文件
+    # 保存为临时文件（确保异常时也能清理）
     suffix = f".{msg.format}" if msg.format else ".webm"
-    cache_dir = Path("./data/cache")
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False, dir=str(cache_dir))
-    tmp.write(audio_bytes)
-    tmp.close()
-    audio_path = tmp.name
+    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    audio_path: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            suffix=suffix, delete=False, dir=str(_CACHE_DIR)
+        ) as tmp:
+            tmp.write(audio_bytes)
+            audio_path = tmp.name
+    except Exception as e:
+        await ws.send_json({"type": "error", "content": f"音频保存失败: {e}"})
+        return
 
     await ws.send_json({"type": "status", "state": "thinking"})
 
@@ -263,13 +279,14 @@ async def _handle_voice(ws: WebSocket, msg: ChatMessage) -> None:
 
     try:
         transcription = await app_state.pipeline.asr.recognize(audio_path)
-        logger.info(f"[WS] ASR 转录: {transcription[:50]}")
+        logger.info(f"[WS] ASR 转录: {transcription[:80]}")
     except Exception as e:
         logger.error(f"[WS] ASR 失败: {e}")
         await ws.send_json({"type": "error", "content": "语音识别失败"})
         return
     finally:
-        Path(audio_path).unlink(missing_ok=True)
+        if audio_path:
+            Path(audio_path).unlink(missing_ok=True)
 
     if not transcription or not transcription.strip():
         await ws.send_json({"type": "text_done", "content": "抱歉，没有听清你说的话。"})
@@ -304,17 +321,25 @@ def _verify_ws_token(ws: WebSocket) -> bool:
     return hmac.compare_digest(token, expected)
 
 
+_MEDIA_TYPES = {
+    ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
+    ".ogg": "audio/ogg",
+}
+
+
 @router.get("/voice/{filename}")
 async def serve_voice(filename: str):
     """提供 TTS 合成的音频文件"""
     if not re.match(r'^voice_[a-f0-9]{8,}_\d+\.(wav|mp3|ogg)$', filename):
         return {"error": "无效文件名"}
 
-    file_path = Path("./data/cache") / filename
+    file_path = _CACHE_DIR / filename
     if not file_path.exists():
         return {"error": "文件不存在"}
 
-    media_type = "audio/wav" if filename.endswith(".wav") else "audio/mpeg"
+    suffix = file_path.suffix.lower()
+    media_type = _MEDIA_TYPES.get(suffix, "application/octet-stream")
     return FileResponse(str(file_path), media_type=media_type)
 
 

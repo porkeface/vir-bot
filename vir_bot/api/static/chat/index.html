@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://unpkg.com/vue@3.5.16/dist/vue.global.prod.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" crossorigin="anonymous"></script>
   
   <style>
     *,
@@ -1930,25 +1930,18 @@
                 const last = messages.value.length > 0 ? messages.value[messages.value.length - 1] : null;
                 if (last && last.role === 'assistant' && !last.audioUrl) {
                   last.audioUrl = data.url;
-                  if (autoplayVoice.value) {
-                    setTimeout(() => {
-                      playAudio(last);
-                    }, 100);
-                  }
                 } else {
-                  // Voice-only assistant message
-                  const newMsg = {
+                  // 仅语音消息（replace 模式）
+                  messages.value.push({
                     role: 'assistant',
                     content: '',
                     audioUrl: data.url,
-                  };
-                  messages.value.push(newMsg);
-                  if (autoplayVoice.value) {
-                    setTimeout(() => {
-                      playAudio(newMsg);
-                    }, 100);
-                  }
+                  });
                   scrollToBottom();
+                }
+                if (autoplayVoice.value) {
+                  const target = messages.value[messages.value.length - 1];
+                  setTimeout(() => playAudio(target), 100);
                 }
               }
               break;
@@ -1973,10 +1966,15 @@
           }
         }
 
-        // Send logic
+        // Send logic (with debounce)
+        let lastSendTime = 0;
         function sendMessage() {
           const text = inputText.value.trim();
           if (!text || waiting.value) return;
+
+          const now = Date.now();
+          if (now - lastSendTime < 500) return; // 500ms 防抖
+          lastSendTime = now;
 
           messages.value.push({
             role: 'user',
@@ -2070,24 +2068,28 @@
           return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
+        function cleanupAudio() {
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.removeAttribute('src');
+            currentAudio.load();
+            currentAudio = null;
+          }
+        }
+
         function playAudio(msg) {
           if (!msg.audioUrl) return;
 
-          if (playingMsg.value === msg) {
-            if (currentAudio) {
-              if (currentAudio.paused) {
-                currentAudio.play().catch(err => console.error('Audio play failed:', err));
-              } else {
-                currentAudio.pause();
-              }
+          if (playingMsg.value === msg && currentAudio) {
+            if (currentAudio.paused) {
+              currentAudio.play().catch(() => {});
+            } else {
+              currentAudio.pause();
             }
             return;
           }
 
-          if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-          }
+          cleanupAudio();
 
           playingMsg.value = msg;
           isAudioPlaying.value = false;
@@ -2096,34 +2098,29 @@
 
           currentAudio = new Audio(msg.audioUrl);
 
-          currentAudio.addEventListener('play', () => {
-            isAudioPlaying.value = true;
-          });
-
-          currentAudio.addEventListener('pause', () => {
-            isAudioPlaying.value = false;
-          });
-
-          currentAudio.addEventListener('timeupdate', () => {
+          const onPlay = () => { isAudioPlaying.value = true; };
+          const onPause = () => { isAudioPlaying.value = false; };
+          const onTimeUpdate = () => {
             audioCurrentTime.value = currentAudio.currentTime;
             if (currentAudio.duration) {
               audioProgress.value = (currentAudio.currentTime / currentAudio.duration) * 100;
             }
-          });
-
-          currentAudio.addEventListener('loadedmetadata', () => {
-            audioDuration.value = currentAudio.duration;
-          });
-
-          currentAudio.addEventListener('ended', () => {
+          };
+          const onMeta = () => { audioDuration.value = currentAudio.duration; };
+          const onEnd = () => {
             playingMsg.value = null;
             isAudioPlaying.value = false;
             audioCurrentTime.value = 0;
             audioProgress.value = 0;
-          });
+          };
 
-          currentAudio.play().catch(err => {
-            console.error('Audio playback failed or was interrupted:', err);
+          currentAudio.addEventListener('play', onPlay);
+          currentAudio.addEventListener('pause', onPause);
+          currentAudio.addEventListener('timeupdate', onTimeUpdate);
+          currentAudio.addEventListener('loadedmetadata', onMeta);
+          currentAudio.addEventListener('ended', onEnd, { once: true });
+
+          currentAudio.play().catch(() => {
             playingMsg.value = null;
             isAudioPlaying.value = false;
           });
@@ -2132,10 +2129,7 @@
         // Clear Chat History
         function clearChat() {
           if (confirm('确认清空聊天记录吗？清空后将无法恢复。')) {
-            if (currentAudio) {
-              currentAudio.pause();
-              currentAudio = null;
-            }
+            cleanupAudio();
             playingMsg.value = null;
             isAudioPlaying.value = false;
             messages.value = [];
@@ -2206,6 +2200,10 @@
         }
 
         // Lifecycle Hooks
+        const handleResize = () => {
+          sidebarOpen.value = window.innerWidth > 900;
+        };
+
         onMounted(async () => {
           // Check URL params for token
           const params = new URLSearchParams(window.location.search);
@@ -2234,14 +2232,7 @@
             fetchCharacterCard();
           }
 
-          // Handle resizing on window changes for sidebar responsiveness
-          window.addEventListener('resize', () => {
-            if (window.innerWidth > 900) {
-              sidebarOpen.value = true;
-            } else {
-              sidebarOpen.value = false;
-            }
-          });
+          window.addEventListener('resize', handleResize);
 
           nextTick(() => {
             if (inputEl.value) inputEl.value.focus();
@@ -2252,10 +2243,8 @@
           if (ws) ws.close();
           if (reconnectTimer) clearTimeout(reconnectTimer);
           if (recognition) recognition.abort();
-          if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-          }
+          cleanupAudio();
+          window.removeEventListener('resize', handleResize);
         });
 
         return {
