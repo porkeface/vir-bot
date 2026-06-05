@@ -248,6 +248,22 @@ class VoiceTTSConfig(BaseModel):
     instruct_text: str = "用温柔甜美的女声说话"  # instruct2 模式的音色描述
 
 
+class VoiceRVCConfig(BaseModel):
+    """RVC 语音转换配置（后处理层，将 TTS 输出转换为目标音色）"""
+    enabled: bool = False                          # 是否启用 RVC 后处理
+    model_name: str = "default"                    # 模型名（对应 data/rvc_models/{model_name}/）
+    model_dir: str = "data/rvc_models"             # 模型根目录
+    f0up_key: int = 0                              # 音高偏移（半音，正值升调，负值降调）
+    f0_method: str = "rmvpe"                       # 基频提取方法: rmvpe | pm | harvest | crepe
+    index_rate: float = 0.75                       # 索引匹配率（0-1，控制音色相似度）
+    filter_radius: int = 3                         # 滤波半径（降噪，0-7）
+    rms_mix_rate: float = 0.25                     # RMS 混合率（响度匹配）
+    protect: float = 0.33                          # 保护辅音（0-0.5，防止齿音/气声失真）
+    device: str = "cpu"                            # 推理设备: cpu | cuda:0
+    half_precision: bool = True                    # 使用半精度推理（节省显存）
+    sample_rate: int = 48000                       # 模型采样率（RVC v2 通常 48000，v1 40000）
+
+
 class VoiceASRConfig(BaseModel):
     provider: str = "sensevoice"  # sensevoice | openai | whisper
     model: str = "iic/SenseVoiceSmall"
@@ -268,6 +284,7 @@ class VoiceConfig(BaseModel):
     voice_mode: str = "replace"   # replace | both | voice_only
     voice_decision: str = "ai"    # always | ai | never
     tts: VoiceTTSConfig = Field(default_factory=VoiceTTSConfig)
+    rvc: VoiceRVCConfig = Field(default_factory=VoiceRVCConfig)
     asr: VoiceASRConfig = Field(default_factory=VoiceASRConfig)
     wake_word: VoiceWakeWordConfig = Field(default_factory=VoiceWakeWordConfig)
 

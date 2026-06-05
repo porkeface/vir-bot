@@ -436,6 +436,63 @@ class TTSFallbackProvider(TTSProvider):
 
 
 # ============================================================================
+# RVC 语音转换装饰器
+# ============================================================================
+
+
+class RVCWrappedTTSProvider(TTSProvider):
+    """RVC 后处理装饰器：包装任意 TTSProvider，在 TTS 输出后执行 RVC 音色转换。
+
+    如果 RVC 转换失败，自动回退到原始 TTS 音频（不破坏链路）。
+    """
+
+    def __init__(
+        self,
+        inner: TTSProvider,
+        rvc_engine: "RVCInferenceEngine",
+        rvc_config: "VoiceRVCConfig",
+    ):
+        self.inner = inner
+        self.rvc_engine = rvc_engine
+        self.rvc_config = rvc_config
+
+    async def synthesize(self, text: str, output_path: str, **kwargs) -> str | None:
+        """TTS 合成 → RVC 转换。RVC 失败时回退到原始 TTS。"""
+        # Step 1: TTS 合成（写入 output_path）
+        tts_result = await self.inner.synthesize(text, output_path, **kwargs)
+        if not tts_result:
+            return None
+
+        # Step 2: RVC 转换
+        try:
+            from vir_bot.modules.voice.rvc import RVCEngineError
+
+            rvc_output = output_path.replace(".wav", "_rvc.wav")
+            converted = await self.rvc_engine.convert(
+                input_path=tts_result,
+                output_path=rvc_output,
+                f0up_key=self.rvc_config.f0up_key,
+                f0_method=self.rvc_config.f0_method,
+                index_rate=self.rvc_config.index_rate,
+                filter_radius=self.rvc_config.filter_radius,
+                rms_mix_rate=self.rvc_config.rms_mix_rate,
+                protect=self.rvc_config.protect,
+            )
+            if converted:
+                # 删除 TTS 原始文件，用 RVC 输出替换
+                Path(tts_result).unlink(missing_ok=True)
+                Path(converted).rename(output_path)
+                logger.info(f"[RVC] 音色转换完成: {output_path}")
+                return output_path
+        except RVCEngineError as e:
+            logger.warning(f"[RVC] 转换失败，回退到原始 TTS: {e}")
+        except Exception as e:
+            logger.warning(f"[RVC] 未知错误，回退到原始 TTS: {e}")
+
+        return tts_result  # RVC 失败，返回原始 TTS
+
+
+# ============================================================================
 # Edge TTS（轻量备选）
 # ============================================================================
 
@@ -711,7 +768,7 @@ async def convert_audio(input_path: str, output_path: str,
 
 
 def create_tts(config) -> TTSProvider | None:
-    """TTS 工厂函数。优先级：mimo(fallback→edge) > cosyvoice2 > edge"""
+    """TTS 工厂函数。优先级：mimo(fallback→edge) > edge。RVC 后处理可选。"""
     if not config.enabled:
         return None
 
@@ -721,13 +778,29 @@ def create_tts(config) -> TTSProvider | None:
         if provider == "mimo":
             primary = MiMoTTSProvider(config.tts)
             fallback = EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
-            return TTSFallbackProvider(primary, fallback)
-
-        if provider == "cosyvoice2":
+            tts: TTSProvider = TTSFallbackProvider(primary, fallback)
+        elif provider == "cosyvoice2":
             logger.warning("[TTS] cosyvoice2 provider 已弃用，回退到 edge-tts")
-            return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
+            tts = EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
+        else:
+            tts = EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
 
-        return EdgeTTSProvider(config.tts.voice_id, config.tts.speed)
+        # RVC 后处理包装
+        rvc_config = getattr(config, "rvc", None)
+        if rvc_config and rvc_config.enabled:
+            from vir_bot.modules.voice.rvc import RVCInferenceEngine
+
+            rvc_engine = RVCInferenceEngine(
+                model_dir=rvc_config.model_dir,
+                model_name=rvc_config.model_name,
+                device=rvc_config.device,
+                half_precision=rvc_config.half_precision,
+                sample_rate=rvc_config.sample_rate,
+            )
+            tts = RVCWrappedTTSProvider(tts, rvc_engine, rvc_config)
+            logger.info(f"[TTS] RVC 后处理已启用 (model={rvc_config.model_name})")
+
+        return tts
     except Exception as e:
         logger.error(f"[TTS] Provider 初始化失败: {e}")
         return None

@@ -42,6 +42,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+rvc = [
+    "rvc-python>=0.1.0",
+    "faiss-cpu>=1.7.0",
+]
 dev = [
     "ruff>=0.6.0",
     "pytest>=8.3.0",
