@@ -1,8 +1,8 @@
 // =============================================================================
-// Vue 3 Config App — 配置管理界面
+// Vue 3 Config App — 配置管理界面（主内容区）
 // =============================================================================
 
-const { createApp, reactive, ref, computed, onMounted, nextTick, toRaw } = Vue;
+const { createApp, reactive, ref, computed, onMounted } = Vue;
 
 // =============================================================================
 // Helpers
@@ -16,17 +16,19 @@ function setVal(obj, path, value) {
   const keys = path.split('.');
   let cur = obj;
   for (let i = 0; i < keys.length - 1; i++) {
-    if (!cur[keys[i]] || typeof cur[keys[i]] !== 'object') cur[keys[i]] = {};
+    if (cur[keys[i]] === undefined || cur[keys[i]] === null || typeof cur[keys[i]] !== 'object') {
+      cur[keys[i]] = {};
+    }
     cur = cur[keys[i]];
   }
   cur[keys[keys.length - 1]] = value;
 }
 
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
+// =============================================================================
+// 全局 currentSection（与侧边栏原生 JS 共享）
+// =============================================================================
+
+window.currentSectionRef = ref('app');
 
 // =============================================================================
 // Vue App
@@ -34,8 +36,8 @@ function esc(s) {
 
 const app = createApp({
   setup() {
-    // --- State (reactive for deep nesting) ---
-    const currentSection = ref('app');
+    // --- State ---
+    const currentSection = window.currentSectionRef;
     const configData = reactive({});
     const envHints = ref({});
     const sensitiveFields = ref([]);
@@ -45,26 +47,6 @@ const app = createApp({
 
     // --- Computed ---
     const section = computed(() => SECTIONS[currentSection.value] || { title: '', cards: [] });
-
-    const navItems = computed(() => {
-      const icons = {
-        app: '&#9881;', ai: '&#9889;', character: '&#128100;', expression: '&#128516;',
-        memory: '&#129504;', platforms: '&#127760;', pipeline: '&#128256;', mcp: '&#128295;',
-        voice: '&#127908;', visual: '&#128065;', web_console: '&#128187;', security: '&#128274;',
-        proactive: '&#128172;',
-      };
-      const labels = {
-        app: '应用', ai: 'AI 后端', character: '角色卡', expression: '表情包',
-        memory: '记忆系统', platforms: '平台接入', pipeline: '消息管道', mcp: 'MCP 工具',
-        voice: '语音', visual: '视觉', web_console: 'Web 控制台', security: '安全',
-        proactive: '主动消息',
-      };
-      return Object.keys(SECTIONS).map(key => ({
-        key,
-        icon: icons[key] || '&#9881;',
-        label: labels[key] || key,
-      }));
-    });
 
     // --- Toast ---
     function showToast(msg, type = 'info') {
@@ -81,7 +63,6 @@ const app = createApp({
     async function fetchAll() {
       try {
         const data = await ConfigAPI.fetchAll();
-        // Clear and merge into reactive (preserves reactivity)
         Object.keys(configData).forEach(k => delete configData[k]);
         Object.assign(configData, data.configData);
         envHints.value = data.envHints;
@@ -97,15 +78,15 @@ const app = createApp({
       const sec = SECTIONS[currentSection.value];
       if (!sec) return {};
       const data = {};
-
       for (const card of sec.cards) {
         for (const field of card.fields) {
           if (field.type === 'sensitive') continue;
           const val = getVal(configData, field.path);
+          // number 字段空值不发送，避免覆盖服务端默认值
+          if (field.type === 'number' && (val === '' || val === null || val === undefined)) continue;
           setVal(data, field.path, val);
         }
       }
-
       return data[currentSection.value] || data;
     }
 
@@ -123,10 +104,6 @@ const app = createApp({
       }
     }
 
-    function switchSection(key) {
-      currentSection.value = key;
-    }
-
     // --- Init ---
     onMounted(async () => {
       await fetchAll();
@@ -134,14 +111,14 @@ const app = createApp({
 
     return {
       currentSection, configData, envHints, sensitiveFields, optionsData,
-      saving, toast, section, navItems,
-      onFieldUpdate, saveSection, switchSection,
+      saving, toast, section,
+      onFieldUpdate, saveSection,
     };
   },
 });
 
 // =============================================================================
-// Field Component — 统一处理所有字段类型
+// Field Component
 // =============================================================================
 
 app.component('config-field', {
@@ -192,7 +169,6 @@ app.component('config-field', {
             {{ optionLabel(item) }}
           </option>
         </select>
-        <!-- Character preview -->
         <div v-if="field.source === 'characters' && selectedChar" class="char-preview">
           <span class="char-preview-name">{{ selectedChar.name }}</span>
           <span class="char-preview-path">{{ selectedChar.path }}</span>
@@ -389,7 +365,23 @@ app.component('object-list', {
 });
 
 // =============================================================================
-// Mount
+// Mount Vue app
 // =============================================================================
 
 app.mount('#app');
+
+// =============================================================================
+// 侧边栏导航（原生 JS，与 Vue 共享 currentSectionRef）
+// =============================================================================
+
+document.getElementById('navList').addEventListener('click', (e) => {
+  const item = e.target.closest('.nav-item');
+  if (item?.dataset.section) {
+    // 更新 Vue 响应式数据
+    window.currentSectionRef.value = item.dataset.section;
+    // 更新侧边栏高亮
+    document.querySelectorAll('.nav-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.section === item.dataset.section);
+    });
+  }
+});

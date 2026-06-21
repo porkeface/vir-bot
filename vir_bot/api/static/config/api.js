@@ -10,7 +10,15 @@ const ConfigAPI = {
       fetch('/api/config/sensitive-fields'),
       fetch('/api/config/options'),
     ]);
-    if (!sectionsRes.ok) throw new Error('获取配置失败');
+
+    // 检查所有响应状态
+    const errors = [];
+    if (!sectionsRes.ok) errors.push(`sections(${sectionsRes.status})`);
+    if (!hintsRes.ok) errors.push(`env-hints(${hintsRes.status})`);
+    if (!sensitiveRes.ok) errors.push(`sensitive-fields(${sensitiveRes.status})`);
+    if (!optionsRes.ok) errors.push(`options(${optionsRes.status})`);
+    if (errors.length > 0) throw new Error(`API 请求失败: ${errors.join(', ')}`);
+
     return {
       configData: (await sectionsRes.json()).sections || {},
       envHints: (await hintsRes.json()).hints || {},

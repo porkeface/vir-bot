@@ -40,8 +40,6 @@ a{color:var(--accent);text-decoration:none}
 .card+.card{margin-top:0}
 
 /* Form */
-.form-section{display:none}
-.form-section.active{display:block}
 .field-group{margin-bottom:16px}
 .field-group:last-child{margin-bottom:0}
 .field-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.3px}
@@ -81,12 +79,7 @@ select option{background:var(--surface2);color:var(--text)}
 .tag-remove:hover{opacity:1}
 .tags-input{border:none;background:none;outline:none;color:var(--text);font-size:13px;min-width:80px;flex:1}
 
-/* Subsection */
-.subsection-title{font-size:13px;font-weight:600;color:var(--text2);margin:20px 0 10px;padding-top:12px;border-top:1px solid var(--border)}
-.subsection-title:first-child{border-top:none;margin-top:0;padding-top:0}
-
-/* Info badge */
-.info-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);background:var(--accent-bg);padding:3px 8px;border-radius:4px;margin-left:8px}
+/* Character preview */
 .char-preview{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:6px;max-width:480px}
 .char-preview-name{font-weight:600;font-size:13px}
 .char-preview-path{font-size:11px;color:var(--text3)}
@@ -130,54 +123,62 @@ select option{background:var(--surface2);color:var(--text)}
 </head>
 <body>
 
-<div id="app">
-  <!-- Sidebar -->
-  <nav class="sidebar">
-    <div class="sidebar-header">
-      <h1>vir-bot</h1>
-      <p>配置管理</p>
-    </div>
-    <ul class="nav-list">
-      <li v-for="item in navItems" :key="item.key"
-          class="nav-item" :class="{ active: currentSection === item.key }"
-          @click="switchSection(item.key)">
-        <span class="nav-icon" v-html="item.icon"></span> {{ item.label }}
-      </li>
-    </ul>
-  </nav>
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>vir-bot</h1>
+    <p>配置管理</p>
+  </div>
+  <ul class="nav-list" id="navList"></ul>
+  <script src="sections.js?v=3"></script>
+  <script>
+    // 从 SECTIONS 动态生成侧边栏导航
+    (function() {
+      var icons = {
+        app: '&#9881;', ai: '&#9889;', character: '&#128100;', expression: '&#128516;',
+        memory: '&#129504;', platforms: '&#127760;', pipeline: '&#128256;', mcp: '&#128295;',
+        voice: '&#127908;', visual: '&#128065;', web_console: '&#128187;', security: '&#128274;',
+        proactive: '&#128172;'
+      };
+      var nav = document.getElementById('navList');
+      var keys = Object.keys(SECTIONS);
+      keys.forEach(function(key, i) {
+        var li = document.createElement('li');
+        li.className = 'nav-item' + (i === 0 ? ' active' : '');
+        li.dataset.section = key;
+        li.innerHTML = '<span class="nav-icon">' + (icons[key] || '&#9881;') + '</span> ' + SECTIONS[key].title;
+        nav.appendChild(li);
+      });
+    })();
+  </script>
+</nav>
 
-  <!-- Main content -->
-  <main class="main">
-    <div class="main-header">
-      <h2>{{ section.title }}</h2>
-      <button class="btn btn-primary" :disabled="saving" @click="saveSection">
-        {{ saving ? '保存中...' : '保存更改' }}
-      </button>
+<main class="main" id="app">
+  <div class="main-header">
+    <h2>{{ section.title }}</h2>
+    <button class="btn btn-primary" :disabled="saving" @click="saveSection">
+      {{ saving ? '保存中...' : '保存更改' }}
+    </button>
+  </div>
+  <div class="main-content">
+    <div v-for="card in section.cards" :key="card.title" class="card">
+      <div class="card-title">{{ card.title }}</div>
+      <div v-if="card.desc" class="card-desc">{{ card.desc }}</div>
+      <template v-for="field in card.fields" :key="field.path">
+        <config-field
+          :field="field"
+          :config-data="configData"
+          :env-hints="envHints"
+          :options-data="optionsData"
+          @update="onFieldUpdate">
+        </config-field>
+      </template>
     </div>
-    <div class="main-content">
-      <div v-for="card in section.cards" :key="card.title" class="card">
-        <div class="card-title">{{ card.title }}</div>
-        <div v-if="card.desc" class="card-desc">{{ card.desc }}</div>
-        <template v-for="field in card.fields" :key="field.path">
-          <config-field
-            :field="field"
-            :config-data="configData"
-            :env-hints="envHints"
-            :options-data="optionsData"
-            @update="onFieldUpdate">
-          </config-field>
-        </template>
-      </div>
-    </div>
-  </main>
-
-  <!-- Toast -->
+  </div>
   <div v-if="toast" class="toast" :class="toast.type">{{ toast.msg }}</div>
-</div>
+</main>
 
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<script src="sections.js"></script>
-<script src="api.js"></script>
-<script src="app.js"></script>
+<script src="vue.global.prod.js?v=3"></script>
+<script src="api.js?v=3"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
