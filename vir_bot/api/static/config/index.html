@@ -369,6 +369,10 @@ const SECTIONS = {
           { path: 'platforms.qq.access_token', label: 'Access Token', type: 'sensitive' },
           { path: 'platforms.qq.rate_limit.per_user', label: '每用户限速（条/分钟）', type: 'number' },
           { path: 'platforms.qq.rate_limit.per_group', label: '每群限速（条/分钟）', type: 'number' },
+          { path: 'platforms.qq.connection.suffix', label: '路径后缀', type: 'text', desc: 'WebSocket 路径后缀（如 /ws）' },
+          { path: 'platforms.qq.allowed_groups', label: '允许的群号', type: 'tags', desc: '留空表示不限制' },
+          { path: 'platforms.qq.allowed_users', label: '允许的用户号', type: 'tags', desc: '留空表示不限制' },
+          { path: 'platforms.qq.block_list', label: '黑名单', type: 'tags' },
         ]
       },
       {
@@ -390,6 +394,7 @@ const SECTIONS = {
           { path: 'platforms.wechat.wechat_work.agent_id', label: 'Agent ID', type: 'text' },
           { path: 'platforms.wechat.wechat_work.token', label: 'Token', type: 'sensitive' },
           { path: 'platforms.wechat.wechat_work.encoding_aes_key', label: 'AES Key', type: 'sensitive' },
+          { path: 'platforms.wechat.allowed_users', label: '允许的用户', type: 'tags' },
         ]
       },
       {
@@ -397,6 +402,14 @@ const SECTIONS = {
         fields: [
           { path: 'platforms.discord.enabled', label: '启用', type: 'bool' },
           { path: 'platforms.discord.bot_token', label: 'Bot Token', type: 'sensitive' },
+          { path: 'platforms.discord.guilds', label: '服务器列表', type: 'object-list',
+            desc: '配置允许的 Discord 服务器及频道',
+            itemFields: [
+              { key: 'id', label: '服务器 ID', type: 'text' },
+              { key: 'name', label: '名称', type: 'text' },
+              { key: 'allowed_channels', label: '允许频道', type: 'tags' },
+            ]},
+          { path: 'platforms.discord.rate_limit.per_channel', label: '每频道限速（条/分钟）', type: 'number' },
         ]
       },
       {
@@ -411,6 +424,9 @@ const SECTIONS = {
           ]},
           { path: 'platforms.telegram.rate_limit.per_user', label: '每用户限速', type: 'number' },
           { path: 'platforms.telegram.rate_limit.per_chat', label: '每聊天限速', type: 'number' },
+          { path: 'platforms.telegram.allowed_users', label: '允许的用户', type: 'tags' },
+          { path: 'platforms.telegram.allowed_chats', label: '允许的聊天', type: 'tags' },
+          { path: 'platforms.telegram.block_list', label: '黑名单', type: 'tags' },
         ]
       },
     ]
