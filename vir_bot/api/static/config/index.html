@@ -474,6 +474,15 @@ const SECTIONS = {
         fields: [
           { path: 'voice.enabled', label: '启用语音', type: 'bool' },
           { path: 'voice.voice_response', label: '语音回复', type: 'bool', desc: '收到语音消息时用语音回复' },
+          { path: 'voice.voice_mode', label: '回复模式', type: 'select', options: [
+            { value: 'replace', label: '替换（语音替代文字）' },
+            { value: 'append', label: '追加（语音附加在文字后）' },
+          ]},
+          { path: 'voice.voice_decision', label: '语音决策', type: 'select', options: [
+            { value: 'ai', label: 'AI 判断（推荐）' },
+            { value: 'always', label: '总是语音回复' },
+            { value: 'never', label: '从不语音回复' },
+          ]},
         ]
       },
       {
@@ -482,11 +491,61 @@ const SECTIONS = {
           { path: 'voice.tts.provider', label: 'TTS 引擎', type: 'select', options: [
             { value: 'edge', label: 'Edge TTS（微软云，免费）' },
             { value: 'cosyvoice2', label: 'CosyVoice 2（本地，支持声音克隆）' },
+            { value: 'mimo', label: 'MIMO TTS（mimo 云服务）' },
           ]},
-          { path: 'voice.tts.voice_id', label: '音色', type: 'select', source: 'tts_voices', desc: 'Edge TTS 音色选择' },
+          { path: 'voice.tts.voice_id', label: 'Edge 音色', type: 'select', source: 'tts_voices',
+            showWhen: { field: 'voice.tts.provider', equals: 'edge' } },
+          { path: 'voice.tts.model_dir', label: 'CosyVoice 模型目录', type: 'text',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.voice_sample_path', label: '声音样本路径', type: 'text', desc: '用于声音克隆的参考音频',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.voice_sample_text', label: '声音样本文本', type: 'text', desc: '参考音频对应的文本',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.instruct_text', label: '音色风格描述', type: 'text', desc: 'CosyVoice instruct2 模式',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.mimo_voice', label: 'MIMO 音色', type: 'text', desc: '如：冰糖',
+            showWhen: { field: 'voice.tts.provider', equals: 'mimo' } },
+          { path: 'voice.tts.mimo_style', label: 'MIMO 风格', type: 'text',
+            showWhen: { field: 'voice.tts.provider', equals: 'mimo' } },
+          { path: 'voice.tts.mimo_model', label: 'MIMO 模型', type: 'text',
+            showWhen: { field: 'voice.tts.provider', equals: 'mimo' } },
+          { path: 'voice.tts.ffmpeg_path', label: 'FFmpeg 路径', type: 'text', desc: '音频格式转换工具路径' },
+          { path: 'voice.tts.output_format', label: '输出格式', type: 'select', options: [
+            { value: 'ogg', label: 'OGG（推荐）' },
+            { value: 'mp3', label: 'MP3' },
+            { value: 'wav', label: 'WAV' },
+          ]},
           { path: 'voice.tts.speed', label: '语速', type: 'range', min: 0.5, max: 2, step: 0.1 },
-          { path: 'voice.tts.model_dir', label: 'CosyVoice 模型目录', type: 'text' },
-          { path: 'voice.tts.instruct_text', label: '音色风格描述', type: 'text', desc: 'CosyVoice instruct2 模式' },
+        ]
+      },
+      {
+        title: 'RVC（声音转换）',
+        desc: '对 TTS 输出进行音色后处理（需要 GPU）',
+        fields: [
+          { path: 'voice.rvc.enabled', label: '启用 RVC', type: 'bool' },
+          { path: 'voice.rvc.model_name', label: '模型名称', type: 'text' },
+          { path: 'voice.rvc.model_dir', label: '模型目录', type: 'text' },
+          { path: 'voice.rvc.f0up_key', label: '变调（半音）', type: 'number', desc: '正值升调，负值降调' },
+          { path: 'voice.rvc.f0_method', label: '基频提取算法', type: 'select', options: [
+            { value: 'rmvpe', label: 'RMVPE（推荐）' },
+            { value: 'pm', label: 'PM（快速）' },
+            { value: 'harvest', label: 'Harvest（高质量）' },
+            { value: 'crepe', label: 'Crepe（神经网络）' },
+          ]},
+          { path: 'voice.rvc.index_rate', label: '索引匹配率', type: 'range', min: 0, max: 1, step: 0.05, desc: '音色特征匹配程度' },
+          { path: 'voice.rvc.filter_radius', label: '滤波半径', type: 'number' },
+          { path: 'voice.rvc.rms_mix_rate', label: '响度混合率', type: 'range', min: 0, max: 1, step: 0.05 },
+          { path: 'voice.rvc.protect', label: '保护系数', type: 'range', min: 0, max: 0.5, step: 0.01, desc: '保护清辅音不被移除' },
+          { path: 'voice.rvc.device', label: '推理设备', type: 'select', options: [
+            { value: 'cuda:0', label: 'GPU (cuda:0)' },
+            { value: 'cpu', label: 'CPU' },
+          ]},
+          { path: 'voice.rvc.half_precision', label: '半精度推理', type: 'bool', desc: '使用 FP16，节省显存' },
+          { path: 'voice.rvc.sample_rate', label: '采样率', type: 'select', options: [
+            { value: '48000', label: '48000 Hz' },
+            { value: '44100', label: '44100 Hz' },
+            { value: '24000', label: '24000 Hz' },
+          ]},
         ]
       },
       {
@@ -508,7 +567,19 @@ const SECTIONS = {
             { value: 'cuda:0', label: 'GPU (cuda:0)' },
             { value: 'cpu', label: 'CPU' },
           ]},
-          { path: 'voice.asr.api_key', label: 'Whisper API Key', type: 'sensitive' },
+          { path: 'voice.asr.base_url', label: 'API 地址', type: 'text', desc: 'Whisper API 或远程 ASR 服务地址' },
+          { path: 'voice.asr.api_key', label: 'API Key', type: 'sensitive' },
+        ]
+      },
+      {
+        title: 'Wake Word（唤醒词）',
+        desc: '语音唤醒功能',
+        fields: [
+          { path: 'voice.wake_word.provider', label: '唤醒引擎', type: 'select', options: [
+            { value: 'porcupine', label: 'Porcupine（推荐）' },
+            { value: 'none', label: '不使用唤醒词' },
+          ]},
+          { path: 'voice.wake_word.keywords', label: '唤醒词列表', type: 'tags' },
         ]
       }
     ]
