@@ -60,6 +60,10 @@ class ProactiveService:
         self._expression = ExpressionLayer(ai_provider, character_card, memory_manager)
         self._reflector = Reflector(ai_provider)
 
+        # 候选行为选择器（P3）
+        from vir_bot.core.proactive.action_selector import ActionSelector
+        self._action_selector = ActionSelector()
+
         data_dir = Path(config.app.data_dir) if hasattr(config, "app") else Path("data")
         fact_path = str(data_dir / "memory" / "facts.json")
         self._fact_extractor = FactExtractor(ai_provider, fact_path)
@@ -75,6 +79,7 @@ class ProactiveService:
         self._daily_sent_date: str = ""
         self._recent_messages: dict[str, list[str]] = {}
         self._proactive_count_unanswered: dict[str, int] = {}
+        self._turn_counts: dict[str, int] = {}
 
         # AI provider 引用
         self._ai_provider = ai_provider
@@ -93,6 +98,7 @@ class ProactiveService:
         self._last_user_msg_ts[user_id] = now
         self._last_user_msg_content[user_id] = message
         self._proactive_count_unanswered[user_id] = 0
+        self._turn_counts[user_id] = self._turn_counts.get(user_id, 0) + 1
 
         # 通知驱动力系统
         self._drives.on_user_reply()
@@ -114,6 +120,18 @@ class ProactiveService:
             if elapsed < self.RECENTLY_SENT_COOLDOWN:
                 return ConversationState.RECENTLY_SENT
         return ConversationState.IDLE
+
+    def _get_relationship_stage(self, user_id: str) -> str:
+        """根据交互轮数计算关系阶段。"""
+        turn_count = self._turn_counts.get(user_id, 0)
+        if turn_count < 10:
+            return "stranger"
+        elif turn_count < 30:
+            return "acquaintance"
+        elif turn_count < 80:
+            return "friend"
+        else:
+            return "close"
 
     def _ensure_daily_count(self, user_id: str) -> int:
         from datetime import datetime
@@ -179,7 +197,8 @@ class ProactiveService:
 
         while self._running:
             try:
-                # 1. 获取驱动力快照
+                # 1. 更新驱动力衰减，然后获取快照
+                self._drives.tick()
                 drives = self._drives.snapshot()
 
                 # 2. 计算下次灵感时间
@@ -254,7 +273,25 @@ class ProactiveService:
         inspire: Any,
         context: Any,
     ) -> None:
-        """v4 管线：种子 → 生成 → 反思 → 发送"""
+        """v4 管线：行为选择 → 种子 → 生成 → 反思 → 发送"""
+
+        # 0. 候选行为选择
+        action = self._action_selector.select(
+            drives=drives,
+            context={
+                "proactive_count_today": context.proactive_count_today,
+                "silence_hours": (time.time() - context.last_user_msg_ts) / 3600,
+            },
+            relationship_stage=self._get_relationship_stage(user_id),
+            temperature=0.1,
+        )
+
+        # 如果选择了沉默，不发送
+        if action.action_type == "silence":
+            logger.info(f"[v4] 行为选择: 沉默 ({action.reason})")
+            return
+
+        logger.info(f"[v4] 行为选择: {action.action_type} ({action.reason})")
 
         # 1. 选择内容种子
         seed = await self._seed_selector.select(
@@ -434,6 +471,7 @@ class ProactiveService:
         user_id = "default"
 
         try:
+            self._drives.tick()
             drives = self._drives.snapshot()
 
             state = self._get_conv_state(user_id)

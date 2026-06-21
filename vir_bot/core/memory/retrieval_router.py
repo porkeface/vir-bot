@@ -419,9 +419,9 @@ class RetrievalRouter:
             elif name == "long_term":
                 result.long_term_records = res
 
-        # 图查询（如果启用）
+        # 图查询（如果启用）— 使用 BFS 激活扩散检索
         if self._graph_store:
-            graph_results = self._graph_store.query(subject=f"user:{user_id}")
+            graph_results = await self._search_graph_activated(query, user_id, top_k)
             result.graph_edges = graph_results
 
         # Re-Ranker：对检索结果重排序
@@ -464,6 +464,61 @@ class RetrievalRouter:
             top_k=top_k,
             filters={"user_id": user_id} if user_id else None,
         )
+
+    async def _search_graph_activated(
+        self, query: str, user_id: str, top_k: int
+    ) -> list:
+        """使用 BFS 激活扩散搜索记忆图（借鉴 NachoBot 海马体）。
+
+        如果 AI provider 可用，先用 LLM 从查询中提取关键词；
+        否则用简单的分词。
+        """
+        if not self._graph_store:
+            return []
+
+        # 提取关键词
+        keywords = await self._extract_keywords(query)
+        if not keywords:
+            # 回退到简单查询
+            return self._graph_store.query(subject=f"user:{user_id}")
+
+        # BFS 激活扩散检索
+        results = self._graph_store.activated_search(
+            keywords=keywords,
+            top_k=top_k,
+            max_depth=3,
+        )
+
+        # 将结果转换为 GraphEdge 列表（去重）
+        seen: set[tuple[str, str, str]] = set()
+        edges = []
+        for node, activation, related_edges in results:
+            for edge in related_edges:
+                key = (edge.subject, edge.predicate, edge.object)
+                if key not in seen:
+                    seen.add(key)
+                    edges.append(edge)
+
+        return edges[:top_k]
+
+    async def _extract_keywords(self, query: str) -> list[str]:
+        """从查询中提取关键词。"""
+        # 简单的分词（不调用 LLM）
+        import re
+        # 去除标点和常见停用词
+        stop_words = {
+            "的", "了", "是", "在", "我", "你", "他", "她", "它",
+            "吗", "呢", "吧", "啊", "呀", "哦", "嗯", "这", "那",
+            "什么", "怎么", "为什么", "哪里", "哪个", "哪些",
+            "喜欢", "讨厌", "记得", "知道", "想", "要", "会", "能",
+        }
+        # 分词：按标点和空格分割
+        tokens = re.split(r"[，。！？；：、\s,.!?;:\s]+", query)
+        keywords = [
+            t for t in tokens
+            if len(t) >= 2 and t not in stop_words
+        ]
+        return keywords[:5]
 
     async def retrieve_for_context(
         self,

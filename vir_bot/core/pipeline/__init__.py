@@ -129,6 +129,12 @@ class MessagePipeline:
         self._rate_limiter = RateLimiter()
         self._on_user_message: "Any | None" = None  # 由 main.py 注入，通知主动消息系统
 
+        # 工作记忆 & 关系阶段（P0/P1 增强）
+        from vir_bot.core.character import WorkingMemory, NarrativeSummary
+        self._working_memory: dict[str, WorkingMemory] = {}  # user_id -> WorkingMemory
+        self._narrative_summaries: dict[str, NarrativeSummary] = {}  # user_id -> NarrativeSummary
+        self._turn_counts: dict[str, int] = {}  # user_id -> turn count
+
     async def process(
         self,
         msg: PlatformMessage,
@@ -591,16 +597,19 @@ class MessagePipeline:
 
     async def _build_context(self, msg: PlatformMessage) -> tuple[str, list[dict]]:
         """构建 AI 上下文（默认主动检索长期记忆）。"""
+        # 更新轮次计数
+        self._turn_counts[msg.user_id] = self._turn_counts.get(msg.user_id, 0) + 1
+
         if hasattr(self.memory, "build_context"):
             system_prompt, conversation = await self.memory.build_context(
                 current_query=msg.content,
-                system_prompt=self._build_system_prompt(),
+                system_prompt=self._build_system_prompt(user_id=msg.user_id),
                 character_name=self.character.name,
                 long_term_top_k=self.config.long_term_top_k,
                 user_id=msg.user_id,
             )
         else:
-            system_prompt = self._build_system_prompt()
+            system_prompt = self._build_system_prompt(user_id=msg.user_id)
             conversation = self.memory.get_context_messages(n=20)
 
         # 检测用户语音偏好并注入 system prompt
@@ -624,8 +633,8 @@ class MessagePipeline:
                 return "text"
         return None
 
-    def _build_system_prompt(self) -> str:
-        """从角色卡构建系统提示词"""
+    def _build_system_prompt(self, user_id: str = "default") -> str:
+        """从角色卡构建增强版 7 层系统提示词"""
         from vir_bot.core.character import build_system_prompt
 
         ext = self.character.extensions
@@ -653,11 +662,34 @@ class MessagePipeline:
                 "如果你决定用文字，就像平时一样回复，什么都不用加。"
             )
 
+        # 获取用户的工作记忆和叙事摘要
+        working_memory = self._working_memory.get(user_id)
+        narrative_summary = self._narrative_summaries.get(user_id)
+
+        # 计算关系阶段（基于交互轮数，阈值可配置）
+        thresholds = ext.get("relationship_thresholds", {})
+        stranger_max = thresholds.get("stranger", 10)
+        acquaintance_max = thresholds.get("acquaintance", 30)
+        friend_max = thresholds.get("friend", 80)
+
+        turn_count = self._turn_counts.get(user_id, 0)
+        if turn_count < stranger_max:
+            relationship_stage = "stranger"
+        elif turn_count < acquaintance_max:
+            relationship_stage = "acquaintance"
+        elif turn_count < friend_max:
+            relationship_stage = "friend"
+        else:
+            relationship_stage = "close"
+
         system_prompt = build_system_prompt(
             card=self.character,
             voice_style=ext.get("voice_style", ""),
             personality_tags=ext.get("personality_tags", []),
             voice_preference=voice_preference,
+            working_memory=working_memory,
+            relationship_stage=relationship_stage,
+            narrative_summary=narrative_summary,
         )
 
         return system_prompt
@@ -705,7 +737,7 @@ class MessagePipeline:
             return response
 
     async def _update_memory(self, msg: PlatformMessage, response: "AIResponse") -> None:
-        """更新记忆"""
+        """更新记忆 + 工作记忆"""
         try:
             await self.memory.add_interaction(
                 user_msg=msg.content,
@@ -716,8 +748,101 @@ class MessagePipeline:
                     "msg_id": msg.msg_id,
                 },
             )
+            # 更新工作记忆
+            self._update_working_memory(msg.user_id, msg.content, response.content)
+            # 异步更新叙事摘要（不阻塞回复）
+            asyncio.create_task(self._maybe_update_narrative(msg.user_id))
         except Exception as e:
             logger.error(f"记忆更新失败: {e}")
+
+    def _update_working_memory(
+        self, user_id: str, user_msg: str, assistant_msg: str
+    ) -> None:
+        """基于最新一轮对话更新工作记忆（轻量级，不调用 LLM）。"""
+        import re as _re
+
+        from vir_bot.core.character import WorkingMemory
+
+        wm = self._working_memory.get(user_id)
+        if wm is None:
+            wm = WorkingMemory()
+            self._working_memory[user_id] = wm
+
+        # 简单的关键词提取更新话题
+        if len(user_msg) > 5:
+            wm.current_topic = user_msg[:50]
+
+        # 检测问题
+        if "?" in user_msg or "？" in user_msg:
+            questions = [s.strip() for s in user_msg.replace("？", "?").split("?") if s.strip()]
+            wm.pending_questions = questions[-3:]
+
+        # 提取实体（2-4字中文名词短语，排除常见停用词）
+        _stopwords = {
+            "什么", "怎么", "为什么", "可以", "不是", "但是", "因为", "所以",
+            "这个", "那个", "一个", "还是", "就是", "不是", "已经", "可能",
+            "应该", "觉得", "知道", "没有", "其实", "然后", "不过", "如果",
+        }
+        entities = _re.findall(r'[一-鿿]{2,4}', user_msg)
+        wm.mentioned_entities = [e for e in entities if e not in _stopwords][-5:]
+
+        # 检测情绪关键词
+        emotion_keywords = {
+            "开心": "happy", "高兴": "happy", "哈哈": "happy",
+            "难过": "sad", "伤心": "sad", "哭": "sad",
+            "生气": "angry", "烦": "angry", "气死": "angry",
+            "累": "tired", "困": "tired", "疲惫": "tired",
+            "无聊": "bored", "寂寞": "lonely", "想你": "missing",
+        }
+        for cn, en in emotion_keywords.items():
+            if cn in user_msg:
+                wm.user_emotion = en
+                break
+
+        wm.updated_at = time.time()
+
+    async def _maybe_update_narrative(self, user_id: str) -> None:
+        """每隔 N 轮更新叙事摘要。"""
+        from vir_bot.core.character import NarrativeSummary
+
+        turn_count = self._turn_counts.get(user_id, 0)
+        ns = self._narrative_summaries.get(user_id)
+
+        if ns is None:
+            ns = NarrativeSummary()
+            self._narrative_summaries[user_id] = ns
+
+        if not ns.needs_update(turn_count):
+            return
+
+        # 获取最近的对话
+        recent = self.memory.short_term.get_recent(10)
+        if len(recent) < 3:
+            return
+
+        conversation_text = "\n".join(
+            f"{'用户' if m.role == 'user' else '助手'}: {m.content}"
+            for m in recent
+        )
+
+        try:
+            response = await self.ai.chat(
+                messages=[{"role": "user", "content": f"""当前叙事摘要:
+{ns.summary or '(无)'}
+
+最近对话:
+{conversation_text}
+
+请更新叙事摘要。用第三人称记录对话的关键事件和情感发展，200字以内。
+不要分析，不要总结，像讲故事一样描述发生了什么。"""}],
+                system="你是叙事记录者。用第三人称记录对话的关键事件和情感发展。",
+                temperature=0.3,
+            )
+            ns.summary = response.content.strip()
+            ns.last_update_turn = turn_count
+            logger.info(f"[Narrative] 叙事摘要已更新: {ns.summary[:60]}...")
+        except Exception as e:
+            logger.warning(f"[Narrative] 叙事摘要更新失败: {e}")
 
     async def _update_memory_from_content(self, msg: PlatformMessage, content: str) -> None:
         """从字符串内容更新记忆（流式输出完成后调用）。"""
@@ -731,5 +856,9 @@ class MessagePipeline:
                     "msg_id": msg.msg_id,
                 },
             )
+            # 更新工作记忆
+            self._update_working_memory(msg.user_id, msg.content, content)
+            # 异步更新叙事摘要（不阻塞回复）
+            asyncio.create_task(self._maybe_update_narrative(msg.user_id))
         except Exception as e:
             logger.error(f"记忆更新失败: {e}")

@@ -155,6 +155,54 @@ class MemoryManager:
                 merger=merger,
             )
 
+        # 初始化 Buffer Zone（如果启用）
+        self.buffer_zone = None
+        if self._is_feature_enabled("buffer_zone"):
+            from .buffer_zone import MemoryBufferZone
+
+            bz_config = self._features.get("buffer_zone", {})
+            self.buffer_zone = MemoryBufferZone(
+                ai_provider=self._ai_provider,
+                memory_writer=self.memory_writer,
+                memory_updater=self.memory_updater,
+                token_threshold=bz_config.get("token_threshold", 1024),
+                max_buffer_age_seconds=bz_config.get("max_buffer_age_seconds", 600),
+            )
+            logger.info("BufferZone enabled: token_threshold=%d", bz_config.get("token_threshold", 1024))
+
+        # 初始化记忆整合器（如果启用）
+        self.memory_integrator = None
+        if self._is_feature_enabled("memory_integrator") and self._ai_provider:
+            from .memory_integrator import MemoryIntegrator
+
+            self.memory_integrator = MemoryIntegrator(
+                ai_provider=self._ai_provider,
+                semantic_store=self.semantic_store,
+            )
+            logger.info("MemoryIntegrator enabled")
+
+        # SQLite 语义存储（如果启用，替代 JSON）
+        self._sqlite_store = None
+        if self._is_feature_enabled("sqlite_store"):
+            from .sqlite_store import SqliteSemanticMemoryStore
+
+            sqlite_config = self._features.get("sqlite_store", {})
+            db_path = sqlite_config.get("db_path", "./data/memory/semantic.db")
+            self._sqlite_store = SqliteSemanticMemoryStore(db_path=db_path)
+            # 替换 semantic_store 引用，所有依赖组件自动切换
+            self.semantic_store = self._sqlite_store
+            # 重新初始化依赖 semantic_store 的组件
+            self.memory_updater = MemoryUpdater(
+                semantic_store=self.semantic_store,
+                enable_versioning=enable_versioning,
+                verifier=verifier,
+            )
+            self.retrieval_router.semantic_store = self.semantic_store
+            self.feedback_handler = FeedbackHandler(semantic_store=self.semantic_store)
+            if self.memory_integrator:
+                self.memory_integrator._store = self.semantic_store
+            logger.info("SqliteSemanticMemoryStore enabled and integrated: %s", db_path)
+
         logger.info("MemoryManager initialized with Wiki + RAG hybrid system")
 
     async def start_background_tasks(self) -> None:
@@ -257,11 +305,19 @@ class MemoryManager:
                 },
             )
 
-        await self._write_semantic_memory(
-            user_msg=user_msg,
-            assistant_msg=assistant_msg,
-            metadata=metadata,
-        )
+        # 语义记忆写入：优先使用 Buffer Zone，否则直接提取
+        if self.buffer_zone and self._ai_provider:
+            await self.buffer_zone.add(
+                user_msg=user_msg,
+                assistant_msg=assistant_msg,
+                user_id=user_id or "default",
+            )
+        else:
+            await self._write_semantic_memory(
+                user_msg=user_msg,
+                assistant_msg=assistant_msg,
+                metadata=metadata,
+            )
 
         await self._write_episodic_memory(
             user_msg=user_msg,
@@ -364,7 +420,7 @@ class MemoryManager:
             return
 
         # 如果启用了质量门，使用质量检查提取
-        if hasattr(self.memory_writer, '_is_quality_gate_enabled') and self.memory_writer._is_quality_gate_enabled():
+        if getattr(self.memory_writer, '_quality_gate', None) is not None:
             operations = await self.memory_writer.extract_with_quality_check(
                 user_msg=user_msg,
                 assistant_msg=assistant_msg,
@@ -381,6 +437,25 @@ class MemoryManager:
 
         if not operations:
             return
+
+        # 记忆整合：如果有整合器，先尝试整合
+        if self.memory_integrator:
+            integrated_ops = []
+            for op in operations:
+                if op.op in {"ADD", "UPDATE"}:
+                    integrated, new_obj, new_conf = await self.memory_integrator.try_integrate(
+                        user_id=user_id,
+                        namespace=op.namespace,
+                        predicate=op.predicate,
+                        new_object=op.object,
+                        new_confidence=op.confidence,
+                        source_text=op.source_text,
+                    )
+                    if integrated:
+                        op.object = new_obj
+                        op.confidence = new_conf
+                integrated_ops.append(op)
+            operations = integrated_ops
 
         await self.memory_updater.apply(
             user_id=user_id,

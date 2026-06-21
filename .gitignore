@@ -45,15 +45,22 @@ data/logs/
 
 # Claude Code 工作目录
 .claude/
+.ccb/
 skills-lock.json
 
 # MCP 工具临时文件
 .playwright-mcp/
 
 # Comet/OpenSpec 内部状态文件
+.openspec.yaml
+.comet.yaml
+.comet/
 openspec/changes/**/.comet.yaml
 openspec/changes/**/.comet/
 openspec/changes/**/.openspec.yaml
+
+# OpenSpec 已归档变更（不需要入库）
+openspec/changes/archive/
 
 # 蒸馏产物 & 个人数据（防止泄露聊天记录和角色卡）
 data/characters/
@@ -75,4 +82,8 @@ tools/
 
 # 工作报告等个人文档
 docs/2026-*.md
+
+# 研究分析资料（参考项目分析，不入仓库）
+docs/analysis/
+
 test_cosyvoice_quality.py
