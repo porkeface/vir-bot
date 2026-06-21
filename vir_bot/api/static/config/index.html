@@ -109,6 +109,23 @@ select option{background:var(--surface2);color:var(--text)}
 .range-wrap input[type=range]{flex:1;-webkit-appearance:none;background:var(--border);height:4px;border-radius:2px;outline:none}
 .range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer}
 .range-val{font-size:13px;color:var(--text2);min-width:36px;text-align:right;font-family:"Cascadia Code",Consolas,monospace}
+
+/* Object list (collapsible cards) */
+.object-list{display:flex;flex-direction:column;gap:8px;max-width:480px}
+.object-list-item{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.object-item-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);cursor:pointer;user-select:none}
+.object-item-header:hover{background:var(--border)}
+.object-item-summary{font-size:13px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.object-item-actions{display:flex;align-items:center;gap:8px}
+.object-item-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.object-item-btn:hover{color:var(--text);background:var(--surface)}
+.object-item-btn.danger:hover{color:var(--danger)}
+.object-item-body{padding:14px;display:none}
+.object-item-body.open{display:block}
+.object-item-body .field-group{margin-bottom:12px}
+.object-item-body .field-group:last-child{margin-bottom:0}
+.object-list-add{margin-top:8px;padding:6px 14px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:13px;cursor:pointer;width:100%;text-align:center}
+.object-list-add:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -315,16 +332,59 @@ const SECTIONS = {
         ]
       },
       {
-        title: '功能特性开关',
-        desc: '记忆系统高级功能，按需启用',
+        title: 'Re-Ranker（重排序）',
+        desc: 'Cross-Encoder 对检索结果重排序，提高精度',
         fields: [
-          { path: 'memory.features.reranker.enabled', label: 'Re-Ranker（重排序）', type: 'bool', desc: 'Cross-Encoder 对检索结果重排序，提高精度' },
-          { path: 'memory.features.composer.enabled', label: 'Composer（去重+冲突消解）', type: 'bool', desc: '合并重复记忆，解决冲突信息' },
-          { path: 'memory.features.quality_gate.enabled', label: 'Quality Gate（质量门）', type: 'bool', desc: 'LLM 判断记忆是否值得保存' },
-          { path: 'memory.features.verifier.enabled', label: 'Verifier（重复检测）', type: 'bool', desc: '写入前检测是否与已有记忆重复' },
-          { path: 'memory.features.lifecycle.enabled', label: 'Lifecycle（生命周期管理）', type: 'bool', desc: '自动衰减、合并、归档旧记忆' },
-          { path: 'memory.features.graph.enabled', label: 'Graph（图记忆）', type: 'bool', desc: 'NetworkX 实体关系图，支持多跳推理' },
-          { path: 'memory.features.versioning.enabled', label: 'Versioning（多版本）', type: 'bool', desc: '记忆带版本链，支持时间感知检索' },
+          { path: 'memory.features.reranker.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.reranker.model', label: '模型', type: 'text' },
+          { path: 'memory.features.reranker.top_k', label: 'Top K', type: 'number' },
+        ]
+      },
+      {
+        title: 'Composer（去重+冲突消解）',
+        desc: '合并重复记忆，解决冲突信息',
+        fields: [
+          { path: 'memory.features.composer.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.composer.max_tokens', label: '最大 Token', type: 'number' },
+        ]
+      },
+      {
+        title: 'Quality Gate（质量门）',
+        desc: 'LLM 判断记忆是否值得保存',
+        fields: [
+          { path: 'memory.features.quality_gate.enabled', label: '启用', type: 'bool' },
+        ]
+      },
+      {
+        title: 'Verifier（重复检测）',
+        desc: '写入前检测是否与已有记忆重复',
+        fields: [
+          { path: 'memory.features.verifier.enabled', label: '启用', type: 'bool' },
+        ]
+      },
+      {
+        title: 'Lifecycle（生命周期管理）',
+        desc: '自动衰减、合并、归档旧记忆',
+        fields: [
+          { path: 'memory.features.lifecycle.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.lifecycle.short_term_ttl', label: '短期记忆 TTL（天）', type: 'number' },
+          { path: 'memory.features.lifecycle.long_term_archive_after', label: '长期归档阈值（天）', type: 'number' },
+        ]
+      },
+      {
+        title: 'Graph（图记忆）',
+        desc: 'NetworkX 实体关系图，支持多跳推理',
+        fields: [
+          { path: 'memory.features.graph.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.graph.persist_path', label: '持久化路径', type: 'text' },
+        ]
+      },
+      {
+        title: 'Versioning（多版本）',
+        desc: '记忆带版本链，支持时间感知检索',
+        fields: [
+          { path: 'memory.features.versioning.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.versioning.max_versions', label: '最大版本数', type: 'number' },
         ]
       }
     ]
@@ -352,6 +412,10 @@ const SECTIONS = {
           { path: 'platforms.qq.access_token', label: 'Access Token', type: 'sensitive' },
           { path: 'platforms.qq.rate_limit.per_user', label: '每用户限速（条/分钟）', type: 'number' },
           { path: 'platforms.qq.rate_limit.per_group', label: '每群限速（条/分钟）', type: 'number' },
+          { path: 'platforms.qq.connection.suffix', label: '路径后缀', type: 'text', desc: 'WebSocket 路径后缀（如 /ws）' },
+          { path: 'platforms.qq.allowed_groups', label: '允许的群号', type: 'tags', desc: '留空表示不限制' },
+          { path: 'platforms.qq.allowed_users', label: '允许的用户号', type: 'tags', desc: '留空表示不限制' },
+          { path: 'platforms.qq.block_list', label: '黑名单', type: 'tags' },
         ]
       },
       {
@@ -373,6 +437,7 @@ const SECTIONS = {
           { path: 'platforms.wechat.wechat_work.agent_id', label: 'Agent ID', type: 'text' },
           { path: 'platforms.wechat.wechat_work.token', label: 'Token', type: 'sensitive' },
           { path: 'platforms.wechat.wechat_work.encoding_aes_key', label: 'AES Key', type: 'sensitive' },
+          { path: 'platforms.wechat.allowed_users', label: '允许的用户', type: 'tags' },
         ]
       },
       {
@@ -380,6 +445,14 @@ const SECTIONS = {
         fields: [
           { path: 'platforms.discord.enabled', label: '启用', type: 'bool' },
           { path: 'platforms.discord.bot_token', label: 'Bot Token', type: 'sensitive' },
+          { path: 'platforms.discord.guilds', label: '服务器列表', type: 'object-list',
+            desc: '配置允许的 Discord 服务器及频道',
+            itemFields: [
+              { key: 'id', label: '服务器 ID', type: 'text' },
+              { key: 'name', label: '名称', type: 'text' },
+              { key: 'allowed_channels', label: '允许频道', type: 'tags' },
+            ]},
+          { path: 'platforms.discord.rate_limit.per_channel', label: '每频道限速（条/分钟）', type: 'number' },
         ]
       },
       {
@@ -394,6 +467,9 @@ const SECTIONS = {
           ]},
           { path: 'platforms.telegram.rate_limit.per_user', label: '每用户限速', type: 'number' },
           { path: 'platforms.telegram.rate_limit.per_chat', label: '每聊天限速', type: 'number' },
+          { path: 'platforms.telegram.allowed_users', label: '允许的用户', type: 'tags' },
+          { path: 'platforms.telegram.allowed_chats', label: '允许的聊天', type: 'tags' },
+          { path: 'platforms.telegram.block_list', label: '黑名单', type: 'tags' },
         ]
       },
     ]
@@ -434,6 +510,8 @@ const SECTIONS = {
           { path: 'mcp.enabled', label: '启用 MCP 工具', type: 'bool' },
           { path: 'mcp.tool_discovery.enabled', label: '自动发现工具', type: 'bool', desc: '扫描 tools 目录自动注册' },
           { path: 'mcp.tool_discovery.auto_reload', label: '热重载', type: 'bool', desc: '工具文件变更后自动重新加载' },
+          { path: 'mcp.builtin_tools', label: '内置工具', type: 'tags', desc: '启动时自动加载的工具列表' },
+          { path: 'mcp.tool_discovery.directories', label: '工具目录', type: 'tags', desc: '扫描工具文件的目录列表' },
         ]
       },
       {
@@ -444,6 +522,7 @@ const SECTIONS = {
           { path: 'mcp.hardware.mqtt.broker_url', label: 'MQTT Broker', type: 'text' },
           { path: 'mcp.hardware.mqtt.username', label: '用户名', type: 'text' },
           { path: 'mcp.hardware.mqtt.password', label: '密码', type: 'sensitive' },
+          { path: 'mcp.hardware.mqtt.esp32_topics', label: 'ESP32 主题', type: 'tags', desc: 'MQTT 订阅主题列表' },
         ]
       }
     ]
@@ -457,6 +536,15 @@ const SECTIONS = {
         fields: [
           { path: 'voice.enabled', label: '启用语音', type: 'bool' },
           { path: 'voice.voice_response', label: '语音回复', type: 'bool', desc: '收到语音消息时用语音回复' },
+          { path: 'voice.voice_mode', label: '回复模式', type: 'select', options: [
+            { value: 'replace', label: '替换（语音替代文字）' },
+            { value: 'append', label: '追加（语音附加在文字后）' },
+          ]},
+          { path: 'voice.voice_decision', label: '语音决策', type: 'select', options: [
+            { value: 'ai', label: 'AI 判断（推荐）' },
+            { value: 'always', label: '总是语音回复' },
+            { value: 'never', label: '从不语音回复' },
+          ]},
         ]
       },
       {
@@ -465,11 +553,61 @@ const SECTIONS = {
           { path: 'voice.tts.provider', label: 'TTS 引擎', type: 'select', options: [
             { value: 'edge', label: 'Edge TTS（微软云，免费）' },
             { value: 'cosyvoice2', label: 'CosyVoice 2（本地，支持声音克隆）' },
+            { value: 'mimo', label: 'MIMO TTS（mimo 云服务）' },
           ]},
-          { path: 'voice.tts.voice_id', label: '音色', type: 'select', source: 'tts_voices', desc: 'Edge TTS 音色选择' },
+          { path: 'voice.tts.voice_id', label: 'Edge 音色', type: 'select', source: 'tts_voices',
+            showWhen: { field: 'voice.tts.provider', equals: 'edge' } },
+          { path: 'voice.tts.model_dir', label: 'CosyVoice 模型目录', type: 'text',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.voice_sample_path', label: '声音样本路径', type: 'text', desc: '用于声音克隆的参考音频',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.voice_sample_text', label: '声音样本文本', type: 'text', desc: '参考音频对应的文本',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.instruct_text', label: '音色风格描述', type: 'text', desc: 'CosyVoice instruct2 模式',
+            showWhen: { field: 'voice.tts.provider', equals: 'cosyvoice2' } },
+          { path: 'voice.tts.mimo_voice', label: 'MIMO 音色', type: 'text', desc: '如：冰糖',
+            showWhen: { field: 'voice.tts.provider', equals: 'mimo' } },
+          { path: 'voice.tts.mimo_style', label: 'MIMO 风格', type: 'text',
+            showWhen: { field: 'voice.tts.provider', equals: 'mimo' } },
+          { path: 'voice.tts.mimo_model', label: 'MIMO 模型', type: 'text',
+            showWhen: { field: 'voice.tts.provider', equals: 'mimo' } },
+          { path: 'voice.tts.ffmpeg_path', label: 'FFmpeg 路径', type: 'text', desc: '音频格式转换工具路径' },
+          { path: 'voice.tts.output_format', label: '输出格式', type: 'select', options: [
+            { value: 'ogg', label: 'OGG（推荐）' },
+            { value: 'mp3', label: 'MP3' },
+            { value: 'wav', label: 'WAV' },
+          ]},
           { path: 'voice.tts.speed', label: '语速', type: 'range', min: 0.5, max: 2, step: 0.1 },
-          { path: 'voice.tts.model_dir', label: 'CosyVoice 模型目录', type: 'text' },
-          { path: 'voice.tts.instruct_text', label: '音色风格描述', type: 'text', desc: 'CosyVoice instruct2 模式' },
+        ]
+      },
+      {
+        title: 'RVC（声音转换）',
+        desc: '对 TTS 输出进行音色后处理（需要 GPU）',
+        fields: [
+          { path: 'voice.rvc.enabled', label: '启用 RVC', type: 'bool' },
+          { path: 'voice.rvc.model_name', label: '模型名称', type: 'text' },
+          { path: 'voice.rvc.model_dir', label: '模型目录', type: 'text' },
+          { path: 'voice.rvc.f0up_key', label: '变调（半音）', type: 'number', desc: '正值升调，负值降调' },
+          { path: 'voice.rvc.f0_method', label: '基频提取算法', type: 'select', options: [
+            { value: 'rmvpe', label: 'RMVPE（推荐）' },
+            { value: 'pm', label: 'PM（快速）' },
+            { value: 'harvest', label: 'Harvest（高质量）' },
+            { value: 'crepe', label: 'Crepe（神经网络）' },
+          ]},
+          { path: 'voice.rvc.index_rate', label: '索引匹配率', type: 'range', min: 0, max: 1, step: 0.05, desc: '音色特征匹配程度' },
+          { path: 'voice.rvc.filter_radius', label: '滤波半径', type: 'number' },
+          { path: 'voice.rvc.rms_mix_rate', label: '响度混合率', type: 'range', min: 0, max: 1, step: 0.05 },
+          { path: 'voice.rvc.protect', label: '保护系数', type: 'range', min: 0, max: 0.5, step: 0.01, desc: '保护清辅音不被移除' },
+          { path: 'voice.rvc.device', label: '推理设备', type: 'select', options: [
+            { value: 'cuda:0', label: 'GPU (cuda:0)' },
+            { value: 'cpu', label: 'CPU' },
+          ]},
+          { path: 'voice.rvc.half_precision', label: '半精度推理', type: 'bool', desc: '使用 FP16，节省显存' },
+          { path: 'voice.rvc.sample_rate', label: '采样率', type: 'select', options: [
+            { value: '48000', label: '48000 Hz' },
+            { value: '44100', label: '44100 Hz' },
+            { value: '24000', label: '24000 Hz' },
+          ]},
         ]
       },
       {
@@ -491,7 +629,19 @@ const SECTIONS = {
             { value: 'cuda:0', label: 'GPU (cuda:0)' },
             { value: 'cpu', label: 'CPU' },
           ]},
-          { path: 'voice.asr.api_key', label: 'Whisper API Key', type: 'sensitive' },
+          { path: 'voice.asr.base_url', label: 'API 地址', type: 'text', desc: 'Whisper API 或远程 ASR 服务地址' },
+          { path: 'voice.asr.api_key', label: 'API Key', type: 'sensitive' },
+        ]
+      },
+      {
+        title: 'Wake Word（唤醒词）',
+        desc: '语音唤醒功能',
+        fields: [
+          { path: 'voice.wake_word.provider', label: '唤醒引擎', type: 'select', options: [
+            { value: 'porcupine', label: 'Porcupine（推荐）' },
+            { value: 'none', label: '不使用唤醒词' },
+          ]},
+          { path: 'voice.wake_word.keywords', label: '唤醒词列表', type: 'tags' },
         ]
       }
     ]
@@ -509,6 +659,11 @@ const SECTIONS = {
       {
         title: '摄像头',
         fields: [
+          { path: 'visual.camera.provider', label: '摄像头类型', type: 'select', options: [
+            { value: 'esp32', label: 'ESP32-CAM（网络摄像头）' },
+            { value: 'usb', label: 'USB 摄像头' },
+            { value: 'local', label: '本地图像' },
+          ]},
           { path: 'visual.camera.esp32_url', label: 'ESP32 地址', type: 'text' },
           { path: 'visual.camera.capture_interval', label: '采集间隔（秒）', type: 'number' },
         ]
@@ -516,6 +671,10 @@ const SECTIONS = {
       {
         title: '视觉模型',
         fields: [
+          { path: 'visual.vision.provider', label: '视觉引擎', type: 'select', options: [
+            { value: 'openai', label: 'OpenAI 兼容 API' },
+            { value: 'local', label: '本地模型' },
+          ]},
           { path: 'visual.vision.model', label: '模型名称', type: 'text' },
           { path: 'visual.vision.base_url', label: 'API 地址', type: 'text' },
           { path: 'visual.vision.max_image_size', label: '最大图片尺寸', type: 'number' },
@@ -680,12 +839,17 @@ function renderSection(key) {
     }
 
     container.appendChild(cardEl);
+    updateVisibility(cardEl);
   }
 }
 
 function renderField(field) {
   const group = document.createElement('div');
   group.className = 'field-group';
+  if (field.showWhen) {
+    group.dataset.showWhen = JSON.stringify(field.showWhen);
+    group.style.display = shouldShow(field.showWhen) ? '' : 'none';
+  }
 
   const label = document.createElement('label');
   label.className = 'field-label';
@@ -713,6 +877,7 @@ function renderField(field) {
       break;
     case 'number': group.appendChild(mkNumber(field.path, value)); break;
     case 'range': group.appendChild(mkRange(field.path, value, field)); break;
+    case 'object-list': group.appendChild(mkObjectList(field.path, value, field.itemFields)); break;
     case 'tags': group.appendChild(mkTags(field.path, value || [])); break;
     default: group.appendChild(mkText(field.path, value));
   }
@@ -743,6 +908,10 @@ function mkSelect(path, value, options) {
     if (String(value) === String(opt.value)) o.selected = true;
     el.appendChild(o);
   }
+  el.addEventListener('change', () => {
+    const card = el.closest('.card');
+    if (card) updateVisibility(card);
+  });
   return el;
 }
 
@@ -826,7 +995,11 @@ function mkToggle(path, value) {
   const text = document.createElement('span');
   text.className = 'toggle-label';
   text.textContent = value ? '已启用' : '已关闭';
-  input.addEventListener('change', () => { text.textContent = input.checked ? '已启用' : '已关闭'; });
+  input.addEventListener('change', () => {
+    text.textContent = input.checked ? '已启用' : '已关闭';
+    const card = input.closest('.card');
+    if (card) updateVisibility(card);
+  });
   wrap.appendChild(label); wrap.appendChild(text);
   return wrap;
 }
@@ -906,6 +1079,151 @@ function mkTags(path, value) {
   return container;
 }
 
+// --- Object-list (collapsible cards) ---
+
+function mkObjectList(path, value, itemFields) {
+  const container = document.createElement('div');
+  container.className = 'object-list';
+  container.dataset.path = path;
+  const items = Array.isArray(value) ? [...value] : [];
+
+  function renderItems() {
+    container.querySelectorAll('.object-list-item').forEach(el => el.remove());
+    const addBtn = container.querySelector('.object-list-add');
+    items.forEach((item, idx) => {
+      const el = createObjectListItem(path, idx, item, itemFields, items, () => {
+        items.splice(idx, 1);
+        renderItems();
+      });
+      container.insertBefore(el, addBtn);
+    });
+  }
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'object-list-add';
+  addBtn.type = 'button';
+  addBtn.textContent = '+ 添加';
+  addBtn.addEventListener('click', () => {
+    const newObj = {};
+    itemFields.forEach(f => { newObj[f.key] = f.type === 'tags' ? [] : ''; });
+    items.push(newObj);
+    renderItems();
+  });
+  container.appendChild(addBtn);
+
+  container._getItems = () => {
+    const result = [];
+    container.querySelectorAll('.object-list-item').forEach(el => {
+      const obj = {};
+      itemFields.forEach(f => {
+        if (f.type === 'tags') {
+          const tagsEl = el.querySelector(`.tags-container[data-sub-key="${f.key}"]`);
+          obj[f.key] = tagsEl && tagsEl._getItems ? tagsEl._getItems() : [];
+        } else {
+          const input = el.querySelector(`[data-sub-key="${f.key}"]`);
+          obj[f.key] = input ? input.value : '';
+        }
+      });
+      result.push(obj);
+    });
+    return result;
+  };
+
+  renderItems();
+  return container;
+}
+
+// --- Conditional visibility (showWhen) ---
+
+function shouldShow(condition) {
+  const trigger = document.querySelector(`[data-path="${condition.field}"]`);
+  if (!trigger) return true;
+  let currentVal;
+  if (trigger.type === 'checkbox') {
+    currentVal = String(trigger.checked);
+  } else {
+    currentVal = trigger.value;
+  }
+  return currentVal === String(condition.equals);
+}
+
+function updateVisibility(cardEl) {
+  cardEl.querySelectorAll('[data-show-when]').forEach(el => {
+    const cond = JSON.parse(el.dataset.showWhen);
+    el.style.display = shouldShow(cond) ? '' : 'none';
+  });
+}
+
+function createObjectListItem(parentPath, idx, item, itemFields, onRemove) {
+  const el = document.createElement('div');
+  el.className = 'object-list-item';
+
+  const header = document.createElement('div');
+  header.className = 'object-item-header';
+
+  const summary = document.createElement('span');
+  summary.className = 'object-item-summary';
+  const firstText = itemFields.find(f => f.type === 'text' || !f.type);
+  const summaryVal = firstText ? (item[firstText.key] || '') : '';
+  summary.textContent = summaryVal || `项目 #${idx + 1}`;
+
+  const actions = document.createElement('span');
+  actions.className = 'object-item-actions';
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'object-item-btn';
+  toggleBtn.type = 'button';
+  toggleBtn.textContent = '▼';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'object-item-btn danger';
+  delBtn.type = 'button';
+  delBtn.textContent = '✕';
+
+  actions.appendChild(toggleBtn);
+  actions.appendChild(delBtn);
+  header.appendChild(summary);
+  header.appendChild(actions);
+
+  const body = document.createElement('div');
+  body.className = 'object-item-body';
+
+  itemFields.forEach(f => {
+    const fg = document.createElement('div');
+    fg.className = 'field-group';
+    const lbl = document.createElement('label');
+    lbl.className = 'field-label';
+    lbl.textContent = f.label;
+    fg.appendChild(lbl);
+    if (f.type === 'tags') {
+      const tagsEl = mkTags(`${parentPath}[${idx}].${f.key}`, item[f.key] || []);
+      tagsEl.dataset.subKey = f.key;
+      fg.appendChild(tagsEl);
+    } else {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.dataset.subKey = f.key;
+      input.value = item[f.key] ?? '';
+      fg.appendChild(input);
+    }
+    body.appendChild(fg);
+  });
+
+  header.addEventListener('click', (e) => {
+    if (e.target === delBtn || delBtn.contains(e.target)) return;
+    body.classList.toggle('open');
+    toggleBtn.textContent = body.classList.contains('open') ? '▲' : '▼';
+  });
+
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    onRemove();
+  });
+
+  el.appendChild(header);
+  el.appendChild(body);
+  return el;
+}
+
 // =============================================================================
 // Collect & Save
 // =============================================================================
@@ -919,7 +1237,10 @@ function collectData(sectionKey) {
     for (const field of card.fields) {
       if (field.type === 'sensitive') continue;
 
-      if (field.type === 'tags') {
+      if (field.type === 'object-list') {
+        const el = document.querySelector(`.object-list[data-path="${field.path}"]`);
+        if (el && el._getItems) setVal(data, field.path, el._getItems());
+      } else if (field.type === 'tags') {
         const el = document.querySelector(`.tags-container[data-path="${field.path}"]`);
         if (el && el._getItems) setVal(data, field.path, el._getItems());
       } else if (field.type === 'bool') {
