@@ -697,12 +697,17 @@ function renderSection(key) {
     }
 
     container.appendChild(cardEl);
+    updateVisibility(cardEl);
   }
 }
 
 function renderField(field) {
   const group = document.createElement('div');
   group.className = 'field-group';
+  if (field.showWhen) {
+    group.dataset.showWhen = JSON.stringify(field.showWhen);
+    group.style.display = shouldShow(field.showWhen) ? '' : 'none';
+  }
 
   const label = document.createElement('label');
   label.className = 'field-label';
@@ -761,6 +766,10 @@ function mkSelect(path, value, options) {
     if (String(value) === String(opt.value)) o.selected = true;
     el.appendChild(o);
   }
+  el.addEventListener('change', () => {
+    const card = el.closest('.card');
+    if (card) updateVisibility(card);
+  });
   return el;
 }
 
@@ -844,7 +853,11 @@ function mkToggle(path, value) {
   const text = document.createElement('span');
   text.className = 'toggle-label';
   text.textContent = value ? '已启用' : '已关闭';
-  input.addEventListener('change', () => { text.textContent = input.checked ? '已启用' : '已关闭'; });
+  input.addEventListener('change', () => {
+    text.textContent = input.checked ? '已启用' : '已关闭';
+    const card = input.closest('.card');
+    if (card) updateVisibility(card);
+  });
   wrap.appendChild(label); wrap.appendChild(text);
   return wrap;
 }
@@ -976,6 +989,27 @@ function mkObjectList(path, value, itemFields) {
 
   renderItems();
   return container;
+}
+
+// --- Conditional visibility (showWhen) ---
+
+function shouldShow(condition) {
+  const trigger = document.querySelector(`[data-path="${condition.field}"]`);
+  if (!trigger) return true;
+  let currentVal;
+  if (trigger.type === 'checkbox') {
+    currentVal = String(trigger.checked);
+  } else {
+    currentVal = trigger.value;
+  }
+  return currentVal === String(condition.equals);
+}
+
+function updateVisibility(cardEl) {
+  cardEl.querySelectorAll('[data-show-when]').forEach(el => {
+    const cond = JSON.parse(el.dataset.showWhen);
+    el.style.display = shouldShow(cond) ? '' : 'none';
+  });
 }
 
 function createObjectListItem(parentPath, idx, item, itemFields, onRemove) {
