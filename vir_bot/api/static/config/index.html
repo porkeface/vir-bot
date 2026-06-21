@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>vir-bot 配置管理</title>
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -41,6 +40,8 @@ a{color:var(--accent);text-decoration:none}
 .card+.card{margin-top:0}
 
 /* Form */
+.form-section{display:none}
+.form-section.active{display:block}
 .field-group{margin-bottom:16px}
 .field-group:last-child{margin-bottom:0}
 .field-label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.3px}
@@ -145,7 +146,7 @@ select option{background:var(--surface2);color:var(--text)}
     </ul>
   </nav>
 
-  <!-- Main -->
+  <!-- Main content -->
   <main class="main">
     <div class="main-header">
       <h2>{{ section.title }}</h2>
@@ -159,12 +160,11 @@ select option{background:var(--surface2);color:var(--text)}
         <div v-if="card.desc" class="card-desc">{{ card.desc }}</div>
         <template v-for="field in card.fields" :key="field.path">
           <config-field
-            v-if="!field.showWhen || shouldShow(field)"
             :field="field"
             :config-data="configData"
             :env-hints="envHints"
             :options-data="optionsData"
-            @update="(path, val) => setVal(configData, path, val)">
+            @update="onFieldUpdate">
           </config-field>
         </template>
       </div>
@@ -175,8 +175,9 @@ select option{background:var(--surface2);color:var(--text)}
   <div v-if="toast" class="toast" :class="toast.type">{{ toast.msg }}</div>
 </div>
 
-<script src="api.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="sections.js"></script>
+<script src="api.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

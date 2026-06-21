@@ -2,7 +2,31 @@
 // Vue 3 Config App — 配置管理界面
 // =============================================================================
 
-const { createApp, ref, computed, onMounted, nextTick } = Vue;
+const { createApp, reactive, ref, computed, onMounted, nextTick, toRaw } = Vue;
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function getVal(obj, path) {
+  return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
+}
+
+function setVal(obj, path, value) {
+  const keys = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!cur[keys[i]] || typeof cur[keys[i]] !== 'object') cur[keys[i]] = {};
+    cur = cur[keys[i]];
+  }
+  cur[keys[keys.length - 1]] = value;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
 
 // =============================================================================
 // Vue App
@@ -10,9 +34,9 @@ const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
 const app = createApp({
   setup() {
-    // --- State ---
+    // --- State (reactive for deep nesting) ---
     const currentSection = ref('app');
-    const configData = ref({});
+    const configData = reactive({});
     const envHints = ref({});
     const sensitiveFields = ref([]);
     const optionsData = ref({});
@@ -42,38 +66,24 @@ const app = createApp({
       }));
     });
 
-    // --- Helpers ---
-    function getVal(obj, path) {
-      return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
-    }
-
-    function setVal(obj, path, value) {
-      const keys = path.split('.');
-      let cur = obj;
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!cur[keys[i]] || typeof cur[keys[i]] !== 'object') cur[keys[i]] = {};
-        cur = cur[keys[i]];
-      }
-      cur[keys[keys.length - 1]] = value;
-    }
-
+    // --- Toast ---
     function showToast(msg, type = 'info') {
       toast.value = { msg, type };
       setTimeout(() => { toast.value = null; }, 3000);
     }
 
-    // --- showWhen ---
-    function shouldShow(field) {
-      if (!field.showWhen) return true;
-      const val = getVal(configData.value, field.showWhen.field);
-      return String(val) === String(field.showWhen.equals);
+    // --- Field update handler ---
+    function onFieldUpdate(path, value) {
+      setVal(configData, path, value);
     }
 
     // --- API ---
     async function fetchAll() {
       try {
         const data = await ConfigAPI.fetchAll();
-        configData.value = data.configData;
+        // Clear and merge into reactive (preserves reactivity)
+        Object.keys(configData).forEach(k => delete configData[k]);
+        Object.assign(configData, data.configData);
         envHints.value = data.envHints;
         sensitiveFields.value = data.sensitiveFields;
         optionsData.value = data.optionsData;
@@ -82,7 +92,7 @@ const app = createApp({
       }
     }
 
-    // --- Data collection ---
+    // --- Data collection for save ---
     function collectData() {
       const sec = SECTIONS[currentSection.value];
       if (!sec) return {};
@@ -91,8 +101,7 @@ const app = createApp({
       for (const card of sec.cards) {
         for (const field of card.fields) {
           if (field.type === 'sensitive') continue;
-
-          const val = getVal(configData.value, field.path);
+          const val = getVal(configData, field.path);
           setVal(data, field.path, val);
         }
       }
@@ -126,28 +135,28 @@ const app = createApp({
     return {
       currentSection, configData, envHints, sensitiveFields, optionsData,
       saving, toast, section, navItems,
-      getVal, setVal, shouldShow, showToast,
-      saveSection, switchSection,
+      onFieldUpdate, saveSection, switchSection,
     };
   },
 });
 
 // =============================================================================
-// Field Component
+// Field Component — 统一处理所有字段类型
 // =============================================================================
 
 app.component('config-field', {
   props: ['field', 'configData', 'envHints', 'optionsData'],
   emits: ['update'],
   template: `
-    <div class="field-group" v-if="field.type !== 'sensitive' || true" v-show="!field.showWhen || parentShow">
+    <div class="field-group" v-show="visible">
       <label class="field-label">{{ field.label }}</label>
       <div v-if="field.desc" class="field-desc">{{ field.desc }}</div>
 
       <!-- Sensitive -->
       <template v-if="field.type === 'sensitive'">
         <div class="sensitive-field">
-          <input type="text" :value="displaySensitive" readonly style="background:var(--surface);color:var(--text3);cursor:not-allowed;font-style:italic">
+          <input type="text" :value="currentVal || '***未设置***'"
+                 readonly style="background:var(--surface);color:var(--text3);cursor:not-allowed;font-style:italic">
         </div>
         <div class="env-hint" v-if="envHint">
           通过环境变量设置: <code>{{ envHint }}</code>
@@ -161,7 +170,7 @@ app.component('config-field', {
       <template v-else-if="field.type === 'bool'">
         <div class="toggle-wrap">
           <label class="toggle">
-            <input type="checkbox" :checked="currentVal" @change="onBoolChange">
+            <input type="checkbox" :checked="currentVal" @change="$emit('update', field.path, $event.target.checked)">
             <span class="toggle-slider"></span>
           </label>
           <span class="toggle-label">{{ currentVal ? '已启用' : '已关闭' }}</span>
@@ -170,14 +179,14 @@ app.component('config-field', {
 
       <!-- Select (static) -->
       <template v-else-if="field.type === 'select' && !field.source">
-        <select :value="currentVal" @change="onSelectChange">
+        <select :value="currentVal" @change="$emit('update', field.path, $event.target.value)">
           <option v-for="opt in field.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
       </template>
 
       <!-- Select (dynamic) -->
       <template v-else-if="field.type === 'select' && field.source">
-        <select :value="currentVal" @change="onSelectChange">
+        <select :value="currentVal" @change="onDynamicSelectChange">
           <option value="">-- 请选择 --</option>
           <option v-for="item in dynamicOptions" :key="optionValue(item)" :value="optionValue(item)">
             {{ optionLabel(item) }}
@@ -192,7 +201,9 @@ app.component('config-field', {
 
       <!-- Number -->
       <template v-else-if="field.type === 'number'">
-        <input type="number" :value="currentVal" @input="onNumberInput" style="max-width:480px">
+        <input type="number" :value="currentVal"
+               @input="$emit('update', field.path, $event.target.value === '' ? '' : Number($event.target.value))"
+               style="max-width:480px">
       </template>
 
       <!-- Range -->
@@ -200,39 +211,42 @@ app.component('config-field', {
         <div class="range-wrap">
           <input type="range" :value="currentVal ?? field.min ?? 0"
                  :min="field.min ?? 0" :max="field.max ?? 1" :step="field.step ?? 0.01"
-                 @input="onRangeInput">
+                 @input="$emit('update', field.path, Number($event.target.value))">
           <span class="range-val">{{ Number(currentVal ?? field.min ?? 0).toFixed(2) }}</span>
         </div>
       </template>
 
       <!-- Tags -->
       <template v-else-if="field.type === 'tags'">
-        <tags-input :model-value="currentVal || []" @update:model-value="onTagsUpdate"></tags-input>
+        <tags-input :model-value="currentVal || []"
+                    @update:model-value="$emit('update', field.path, $event)"></tags-input>
       </template>
 
       <!-- Object-list -->
       <template v-else-if="field.type === 'object-list'">
-        <object-list :value="currentVal || []" :item-fields="field.itemFields" @update="onObjectListUpdate"></object-list>
+        <object-list :value="currentVal || []" :item-fields="field.itemFields"
+                     @update="$emit('update', field.path, $event)"></object-list>
       </template>
 
       <!-- Text (default) -->
       <template v-else>
-        <input type="text" :value="currentVal" @input="onTextInput" style="max-width:480px">
+        <input type="text" :value="currentVal"
+               @input="$emit('update', field.path, $event.target.value)"
+               style="max-width:480px">
       </template>
     </div>
   `,
   computed: {
     currentVal() {
-      return this.getVal(this.configData, this.field.path);
+      return getVal(this.configData, this.field.path);
     },
-    parentShow() {
-      return !this.field.showWhen || this.shouldShowField();
+    visible() {
+      if (!this.field.showWhen) return true;
+      const val = getVal(this.configData, this.field.showWhen.field);
+      return String(val) === String(this.field.showWhen.equals);
     },
     envHint() {
       return this.envHints[this.field.path] || '';
-    },
-    displaySensitive() {
-      return this.currentVal || '***未设置***';
     },
     dynamicOptions() {
       return this.optionsData[this.field.source] || [];
@@ -243,19 +257,12 @@ app.component('config-field', {
     },
   },
   methods: {
-    getVal(obj, path) {
-      return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
-    },
-    shouldShowField() {
-      if (!this.field.showWhen) return true;
-      const val = this.getVal(this.configData, this.field.showWhen.field);
-      return String(val) === String(this.field.showWhen.equals);
-    },
     optionValue(item) {
       if (this.field.source === 'characters') return item.path;
       if (this.field.source === 'lora_adapters') return item.path;
       if (this.field.source === 'tts_voices') return item.id;
       if (this.field.source === 'embedding_models') return item.id;
+      if (this.field.source === 'knowledge_dirs') return item;
       return item;
     },
     optionLabel(item) {
@@ -263,22 +270,12 @@ app.component('config-field', {
       if (this.field.source === 'lora_adapters') return item.name;
       if (this.field.source === 'tts_voices') return item.name;
       if (this.field.source === 'embedding_models') return item.name;
+      if (this.field.source === 'knowledge_dirs') return item;
       return item;
     },
-    onTextInput(e) { this.$emit('update', this.field.path, e.target.value); },
-    onNumberInput(e) {
-      const v = e.target.value;
-      this.$emit('update', this.field.path, v === '' ? '' : Number(v));
+    onDynamicSelectChange(e) {
+      this.$emit('update', this.field.path, e.target.value);
     },
-    onBoolChange(e) { this.$emit('update', this.field.path, e.target.checked); },
-    onSelectChange(e) {
-      let val = e.target.value;
-      // Keep as string - don't convert to number for select values
-      this.$emit('update', this.field.path, val);
-    },
-    onRangeInput(e) { this.$emit('update', this.field.path, Number(e.target.value)); },
-    onTagsUpdate(val) { this.$emit('update', this.field.path, val); },
-    onObjectListUpdate(val) { this.$emit('update', this.field.path, val); },
   },
 });
 
@@ -349,10 +346,12 @@ app.component('object-list', {
           <div v-for="f in itemFields" :key="f.key" class="field-group">
             <label class="field-label">{{ f.label }}</label>
             <template v-if="f.type === 'tags'">
-              <tags-input :model-value="item[f.key] || []" @update:model-value="val => updateItemKey(idx, f.key, val)"></tags-input>
+              <tags-input :model-value="item[f.key] || []"
+                          @update:model-value="val => updateItemKey(idx, f.key, val)"></tags-input>
             </template>
             <template v-else>
-              <input type="text" :value="item[f.key] || ''" @input="e => updateItemKey(idx, f.key, e.target.value)">
+              <input type="text" :value="item[f.key] || ''"
+                     @input="e => updateItemKey(idx, f.key, e.target.value)">
             </template>
           </div>
         </div>

@@ -1,5 +1,5 @@
 // =============================================================================
-// Config API — 与后端 /api/config/* 交互
+// Config API — 并行获取所有配置数据
 // =============================================================================
 
 const ConfigAPI = {
@@ -10,6 +10,7 @@ const ConfigAPI = {
       fetch('/api/config/sensitive-fields'),
       fetch('/api/config/options'),
     ]);
+    if (!sectionsRes.ok) throw new Error('获取配置失败');
     return {
       configData: (await sectionsRes.json()).sections || {},
       envHints: (await hintsRes.json()).hints || {},
@@ -25,7 +26,7 @@ const ConfigAPI = {
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      const e = await res.json();
+      const e = await res.json().catch(() => ({}));
       throw new Error(e.detail || '保存失败');
     }
     return await res.json();
