@@ -510,6 +510,8 @@ const SECTIONS = {
           { path: 'mcp.enabled', label: '启用 MCP 工具', type: 'bool' },
           { path: 'mcp.tool_discovery.enabled', label: '自动发现工具', type: 'bool', desc: '扫描 tools 目录自动注册' },
           { path: 'mcp.tool_discovery.auto_reload', label: '热重载', type: 'bool', desc: '工具文件变更后自动重新加载' },
+          { path: 'mcp.builtin_tools', label: '内置工具', type: 'tags', desc: '启动时自动加载的工具列表' },
+          { path: 'mcp.tool_discovery.directories', label: '工具目录', type: 'tags', desc: '扫描工具文件的目录列表' },
         ]
       },
       {
@@ -520,6 +522,7 @@ const SECTIONS = {
           { path: 'mcp.hardware.mqtt.broker_url', label: 'MQTT Broker', type: 'text' },
           { path: 'mcp.hardware.mqtt.username', label: '用户名', type: 'text' },
           { path: 'mcp.hardware.mqtt.password', label: '密码', type: 'sensitive' },
+          { path: 'mcp.hardware.mqtt.esp32_topics', label: 'ESP32 主题', type: 'tags', desc: 'MQTT 订阅主题列表' },
         ]
       }
     ]
