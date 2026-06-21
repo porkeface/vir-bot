@@ -109,6 +109,23 @@ select option{background:var(--surface2);color:var(--text)}
 .range-wrap input[type=range]{flex:1;-webkit-appearance:none;background:var(--border);height:4px;border-radius:2px;outline:none}
 .range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer}
 .range-val{font-size:13px;color:var(--text2);min-width:36px;text-align:right;font-family:"Cascadia Code",Consolas,monospace}
+
+/* Object list (collapsible cards) */
+.object-list{display:flex;flex-direction:column;gap:8px;max-width:480px}
+.object-list-item{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.object-item-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);cursor:pointer;user-select:none}
+.object-item-header:hover{background:var(--border)}
+.object-item-summary{font-size:13px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.object-item-actions{display:flex;align-items:center;gap:8px}
+.object-item-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.object-item-btn:hover{color:var(--text);background:var(--surface)}
+.object-item-btn.danger:hover{color:var(--danger)}
+.object-item-body{padding:14px;display:none}
+.object-item-body.open{display:block}
+.object-item-body .field-group{margin-bottom:12px}
+.object-item-body .field-group:last-child{margin-bottom:0}
+.object-list-add{margin-top:8px;padding:6px 14px;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:13px;cursor:pointer;width:100%;text-align:center}
+.object-list-add:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -713,6 +730,7 @@ function renderField(field) {
       break;
     case 'number': group.appendChild(mkNumber(field.path, value)); break;
     case 'range': group.appendChild(mkRange(field.path, value, field)); break;
+    case 'object-list': group.appendChild(mkObjectList(field.path, value, field.itemFields)); break;
     case 'tags': group.appendChild(mkTags(field.path, value || [])); break;
     default: group.appendChild(mkText(field.path, value));
   }
@@ -906,6 +924,130 @@ function mkTags(path, value) {
   return container;
 }
 
+// --- Object-list (collapsible cards) ---
+
+function mkObjectList(path, value, itemFields) {
+  const container = document.createElement('div');
+  container.className = 'object-list';
+  container.dataset.path = path;
+  const items = Array.isArray(value) ? [...value] : [];
+
+  function renderItems() {
+    container.querySelectorAll('.object-list-item').forEach(el => el.remove());
+    const addBtn = container.querySelector('.object-list-add');
+    items.forEach((item, idx) => {
+      const el = createObjectListItem(path, idx, item, itemFields, items, () => {
+        items.splice(idx, 1);
+        renderItems();
+      });
+      container.insertBefore(el, addBtn);
+    });
+  }
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'object-list-add';
+  addBtn.type = 'button';
+  addBtn.textContent = '+ 添加';
+  addBtn.addEventListener('click', () => {
+    const newObj = {};
+    itemFields.forEach(f => { newObj[f.key] = f.type === 'tags' ? [] : ''; });
+    items.push(newObj);
+    renderItems();
+  });
+  container.appendChild(addBtn);
+
+  container._getItems = () => {
+    const result = [];
+    container.querySelectorAll('.object-list-item').forEach(el => {
+      const obj = {};
+      itemFields.forEach(f => {
+        if (f.type === 'tags') {
+          const tagsEl = el.querySelector(`.tags-container[data-sub-key="${f.key}"]`);
+          obj[f.key] = tagsEl && tagsEl._getItems ? tagsEl._getItems() : [];
+        } else {
+          const input = el.querySelector(`[data-sub-key="${f.key}"]`);
+          obj[f.key] = input ? input.value : '';
+        }
+      });
+      result.push(obj);
+    });
+    return result;
+  };
+
+  renderItems();
+  return container;
+}
+
+function createObjectListItem(parentPath, idx, item, itemFields, onRemove) {
+  const el = document.createElement('div');
+  el.className = 'object-list-item';
+
+  const header = document.createElement('div');
+  header.className = 'object-item-header';
+
+  const summary = document.createElement('span');
+  summary.className = 'object-item-summary';
+  const firstText = itemFields.find(f => f.type === 'text' || !f.type);
+  const summaryVal = firstText ? (item[firstText.key] || '') : '';
+  summary.textContent = summaryVal || `项目 #${idx + 1}`;
+
+  const actions = document.createElement('span');
+  actions.className = 'object-item-actions';
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'object-item-btn';
+  toggleBtn.type = 'button';
+  toggleBtn.textContent = '▼';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'object-item-btn danger';
+  delBtn.type = 'button';
+  delBtn.textContent = '✕';
+
+  actions.appendChild(toggleBtn);
+  actions.appendChild(delBtn);
+  header.appendChild(summary);
+  header.appendChild(actions);
+
+  const body = document.createElement('div');
+  body.className = 'object-item-body';
+
+  itemFields.forEach(f => {
+    const fg = document.createElement('div');
+    fg.className = 'field-group';
+    const lbl = document.createElement('label');
+    lbl.className = 'field-label';
+    lbl.textContent = f.label;
+    fg.appendChild(lbl);
+    if (f.type === 'tags') {
+      const tagsEl = mkTags(`${parentPath}[${idx}].${f.key}`, item[f.key] || []);
+      tagsEl.dataset.subKey = f.key;
+      fg.appendChild(tagsEl);
+    } else {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.dataset.subKey = f.key;
+      input.value = item[f.key] ?? '';
+      fg.appendChild(input);
+    }
+    body.appendChild(fg);
+  });
+
+  header.addEventListener('click', (e) => {
+    if (e.target === delBtn || delBtn.contains(e.target)) return;
+    body.classList.toggle('open');
+    toggleBtn.textContent = body.classList.contains('open') ? '▲' : '▼';
+  });
+
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    onRemove();
+  });
+
+  el.appendChild(header);
+  el.appendChild(body);
+  return el;
+}
+
 // =============================================================================
 // Collect & Save
 // =============================================================================
@@ -919,7 +1061,10 @@ function collectData(sectionKey) {
     for (const field of card.fields) {
       if (field.type === 'sensitive') continue;
 
-      if (field.type === 'tags') {
+      if (field.type === 'object-list') {
+        const el = document.querySelector(`.object-list[data-path="${field.path}"]`);
+        if (el && el._getItems) setVal(data, field.path, el._getItems());
+      } else if (field.type === 'tags') {
         const el = document.querySelector(`.tags-container[data-path="${field.path}"]`);
         if (el && el._getItems) setVal(data, field.path, el._getItems());
       } else if (field.type === 'bool') {
