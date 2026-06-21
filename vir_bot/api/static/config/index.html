@@ -332,16 +332,59 @@ const SECTIONS = {
         ]
       },
       {
-        title: '功能特性开关',
-        desc: '记忆系统高级功能，按需启用',
+        title: 'Re-Ranker（重排序）',
+        desc: 'Cross-Encoder 对检索结果重排序，提高精度',
         fields: [
-          { path: 'memory.features.reranker.enabled', label: 'Re-Ranker（重排序）', type: 'bool', desc: 'Cross-Encoder 对检索结果重排序，提高精度' },
-          { path: 'memory.features.composer.enabled', label: 'Composer（去重+冲突消解）', type: 'bool', desc: '合并重复记忆，解决冲突信息' },
-          { path: 'memory.features.quality_gate.enabled', label: 'Quality Gate（质量门）', type: 'bool', desc: 'LLM 判断记忆是否值得保存' },
-          { path: 'memory.features.verifier.enabled', label: 'Verifier（重复检测）', type: 'bool', desc: '写入前检测是否与已有记忆重复' },
-          { path: 'memory.features.lifecycle.enabled', label: 'Lifecycle（生命周期管理）', type: 'bool', desc: '自动衰减、合并、归档旧记忆' },
-          { path: 'memory.features.graph.enabled', label: 'Graph（图记忆）', type: 'bool', desc: 'NetworkX 实体关系图，支持多跳推理' },
-          { path: 'memory.features.versioning.enabled', label: 'Versioning（多版本）', type: 'bool', desc: '记忆带版本链，支持时间感知检索' },
+          { path: 'memory.features.reranker.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.reranker.model', label: '模型', type: 'text' },
+          { path: 'memory.features.reranker.top_k', label: 'Top K', type: 'number' },
+        ]
+      },
+      {
+        title: 'Composer（去重+冲突消解）',
+        desc: '合并重复记忆，解决冲突信息',
+        fields: [
+          { path: 'memory.features.composer.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.composer.max_tokens', label: '最大 Token', type: 'number' },
+        ]
+      },
+      {
+        title: 'Quality Gate（质量门）',
+        desc: 'LLM 判断记忆是否值得保存',
+        fields: [
+          { path: 'memory.features.quality_gate.enabled', label: '启用', type: 'bool' },
+        ]
+      },
+      {
+        title: 'Verifier（重复检测）',
+        desc: '写入前检测是否与已有记忆重复',
+        fields: [
+          { path: 'memory.features.verifier.enabled', label: '启用', type: 'bool' },
+        ]
+      },
+      {
+        title: 'Lifecycle（生命周期管理）',
+        desc: '自动衰减、合并、归档旧记忆',
+        fields: [
+          { path: 'memory.features.lifecycle.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.lifecycle.short_term_ttl', label: '短期记忆 TTL（天）', type: 'number' },
+          { path: 'memory.features.lifecycle.long_term_archive_after', label: '长期归档阈值（天）', type: 'number' },
+        ]
+      },
+      {
+        title: 'Graph（图记忆）',
+        desc: 'NetworkX 实体关系图，支持多跳推理',
+        fields: [
+          { path: 'memory.features.graph.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.graph.persist_path', label: '持久化路径', type: 'text' },
+        ]
+      },
+      {
+        title: 'Versioning（多版本）',
+        desc: '记忆带版本链，支持时间感知检索',
+        fields: [
+          { path: 'memory.features.versioning.enabled', label: '启用', type: 'bool' },
+          { path: 'memory.features.versioning.max_versions', label: '最大版本数', type: 'number' },
         ]
       }
     ]
