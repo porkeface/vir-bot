@@ -25,6 +25,7 @@ _EXEMPT_PREFIXES: tuple[str, ...] = (
     "/chat/",
     "/distillation/",
     "/config/",
+    "/api/config/",
 )
 
 
