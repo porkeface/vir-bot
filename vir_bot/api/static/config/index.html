@@ -659,6 +659,11 @@ const SECTIONS = {
       {
         title: '摄像头',
         fields: [
+          { path: 'visual.camera.provider', label: '摄像头类型', type: 'select', options: [
+            { value: 'esp32', label: 'ESP32-CAM（网络摄像头）' },
+            { value: 'usb', label: 'USB 摄像头' },
+            { value: 'local', label: '本地图像' },
+          ]},
           { path: 'visual.camera.esp32_url', label: 'ESP32 地址', type: 'text' },
           { path: 'visual.camera.capture_interval', label: '采集间隔（秒）', type: 'number' },
         ]
@@ -666,6 +671,10 @@ const SECTIONS = {
       {
         title: '视觉模型',
         fields: [
+          { path: 'visual.vision.provider', label: '视觉引擎', type: 'select', options: [
+            { value: 'openai', label: 'OpenAI 兼容 API' },
+            { value: 'local', label: '本地模型' },
+          ]},
           { path: 'visual.vision.model', label: '模型名称', type: 'text' },
           { path: 'visual.vision.base_url', label: 'API 地址', type: 'text' },
           { path: 'visual.vision.max_image_size', label: '最大图片尺寸', type: 'number' },
