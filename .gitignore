@@ -10,6 +10,9 @@ venv/
 env/
 ENV/
 
+# Node.js 依赖
+node_modules/
+
 # IDE 配置
 .vscode/
 .idea/
